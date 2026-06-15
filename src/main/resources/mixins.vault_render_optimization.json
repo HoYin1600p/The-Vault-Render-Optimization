@@ -1,0 +1,14 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "dev.hoyin1600p.vault_render_optimization.mixin",
+  "compatibilityLevel": "JAVA_17",
+  "refmap": "mixins.vault_render_optimization.refmap.json",
+  "client": [
+    "VaultEventMixin",
+    "VaultArmorItemMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
