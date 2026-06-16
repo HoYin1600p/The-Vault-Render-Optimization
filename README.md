@@ -21,9 +21,9 @@ This keeps HUD/render paths from fully deserializing Vault gear data every frame
 
 Armor damageability follows the newer Asgard Vault jar behavior by querying Vault's own `GearDataCache` for the gear state instead of deserializing full gear data directly from `VaultArmorItem.isDamageable`.
 
-### Vault Event Dispatch Cache
+### Vault Biome Color Event Dispatch Cache
 
-Vault's generic event dispatcher is also optimized with a cached, priority-ordered listener snapshot. This avoids rebuilding and copying the listener tree for every event invocation, which is especially important for `BiomeColorsEvent` during chunk rebuild block and fluid tint lookups.
+Vault's biome color event dispatcher is also optimized with a cached, priority-ordered listener snapshot. This avoids rebuilding and copying the listener tree for every `BiomeColorsEvent` invocation during chunk rebuild block and fluid tint lookups. Other Vault events keep their original dispatch behavior.
 
 ## Build
 
