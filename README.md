@@ -21,9 +21,13 @@ This keeps HUD/render paths from fully deserializing Vault gear data every frame
 
 Armor damageability follows the newer Asgard Vault jar behavior by querying Vault's own `GearDataCache` for the gear state instead of deserializing full gear data directly from `VaultArmorItem.isDamageable`.
 
-### Vault Biome Color Event Dispatch Cache
+### Vault Client Render Event Dispatch Cache
 
-Vault's biome color event dispatcher is also optimized with a cached, priority-ordered listener snapshot. This avoids rebuilding and copying the listener tree for every `BiomeColorsEvent` invocation during chunk rebuild block and fluid tint lookups. Other Vault events keep their original dispatch behavior.
+Selected high-frequency Vault client render event dispatchers are also optimized with cached, priority-ordered listener snapshots. This avoids rebuilding and copying the listener tree for every `BiomeColorsEvent`, `DimensionEffectEvent`, `AmbientLightEvent`, and `RenderLevelLastEvent` invocation during chunk rebuild block/fluid tint, lighting, and end-of-level render hooks. Other Vault events keep their original dispatch behavior.
+
+### Chunk Rebuild Diagnostics
+
+Temporary Embeddium chunk rebuild diagnostics are enabled by default. Every few seconds the client log receives a `[VRO chunk diagnostics]` summary covering rebuild schedules, render-thread `updateChunks`, region uploads, upload batch setup, stolen chunk rebuild tasks, rebuild task timings, and sampled schedule callers. Launch with `-Dvault_render_optimization.chunkDiagnostics=false` to disable the diagnostic logging without removing the jar.
 
 ## Build
 
@@ -35,8 +39,8 @@ Output:
 
 `build/libs/vault_render_optimization.0.1.jar`
 
-By default the build looks for The Vault in the Prism Launcher bootstrap instance under the current Windows user profile. If the jar lives somewhere else, pass an override:
+By default the build looks for The Vault and Embeddium in the Prism Launcher bootstrap instance under the current Windows user profile. If either jar lives somewhere else, pass overrides:
 
 ```powershell
-.\gradlew.bat clean build -Pvault_mod_jar="C:\path\to\the_vault.jar"
+.\gradlew.bat clean build -Pvault_mod_jar="C:\path\to\the_vault.jar" -Pembeddium_mod_jar="C:\path\to\embeddium.jar"
 ```

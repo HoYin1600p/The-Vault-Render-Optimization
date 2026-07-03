@@ -74,12 +74,19 @@ if (!vaultModJarFile.exists()) {
     throw new GradleException("The Vault mod jar was not found at ${vaultModJarFile}. Set -Pvault_mod_jar=path/to/the_vault.jar if your instance path differs.")
 }
 
+def defaultEmbeddiumModJar = new File(System.getProperty('user.home'), 'AppData/Roaming/PrismLauncher/instances/vaultcrafters-bootstrap-1.0.0/.minecraft/mods/embeddium-0.3.18+mc1.18.2.jar')
+def embeddiumModJarFile = file(findProperty('embeddium_mod_jar') ?: defaultEmbeddiumModJar)
+if (!embeddiumModJarFile.exists()) {
+    throw new GradleException("Embeddium was not found at ${embeddiumModJarFile}. Set -Pembeddium_mod_jar=path/to/embeddium.jar if your instance path differs.")
+}
+
 dependencies {
     minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
 
     annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
 
     compileOnly files(vaultModJarFile)
+    compileOnly files(embeddiumModJarFile)
 }
 
 tasks.named('processResources', ProcessResources).configure {

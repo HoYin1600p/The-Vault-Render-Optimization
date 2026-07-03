@@ -1,7 +1,10 @@
 package dev.hoyin1600p.vault_render_optimization.mixin;
 
 import iskallia.vault.core.event.Event;
+import iskallia.vault.core.event.client.AmbientLightEvent;
 import iskallia.vault.core.event.client.BiomeColorsEvent;
+import iskallia.vault.core.event.client.DimensionEffectEvent;
+import iskallia.vault.core.event.client.RenderLevelLastEvent;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -33,7 +36,7 @@ public abstract class VaultEventMixin {
 
     @Inject(method = "invoke", at = @At("HEAD"), cancellable = true)
     private void vault_render_optimization$invokeFromCachedSnapshot(Object data, CallbackInfoReturnable<Object> cir) {
-        if (!((Object) this instanceof BiomeColorsEvent)) {
+        if (!this.vault_render_optimization$usesCachedSnapshot()) {
             return;
         }
 
@@ -52,6 +55,15 @@ public abstract class VaultEventMixin {
         }
 
         cir.setReturnValue(data);
+    }
+
+    @Unique
+    private boolean vault_render_optimization$usesCachedSnapshot() {
+        Object event = this;
+        return event instanceof BiomeColorsEvent
+                || event instanceof DimensionEffectEvent
+                || event instanceof AmbientLightEvent
+                || event instanceof RenderLevelLastEvent;
     }
 
     @Inject(
