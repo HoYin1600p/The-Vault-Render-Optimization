@@ -68,7 +68,7 @@ repositories {
     }
 }
 
-def defaultVaultModJar = new File(System.getProperty('user.home'), 'AppData/Roaming/PrismLauncher/instances/vaultcrafters-bootstrap-1.0.0/.minecraft/mods/the_vault-1.18.2-3.21.5-remastered.jar')
+def defaultVaultModJar = new File(System.getProperty('user.home'), 'AppData/Roaming/PrismLauncher/instances/vaultcrafters-bootstrap-1.0.0/.minecraft/mods/the_vault-1.18.2-3.21.5-remastered.6819.jar')
 def vaultModJarFile = file(findProperty('vault_mod_jar') ?: defaultVaultModJar)
 if (!vaultModJarFile.exists()) {
     throw new GradleException("The Vault mod jar was not found at ${vaultModJarFile}. Set -Pvault_mod_jar=path/to/the_vault.jar if your instance path differs.")

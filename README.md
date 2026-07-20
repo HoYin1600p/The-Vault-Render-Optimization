@@ -21,13 +21,23 @@ This keeps HUD/render paths from fully deserializing Vault gear data every frame
 
 Armor damageability follows the newer Asgard Vault jar behavior by querying Vault's own `GearDataCache` for the gear state instead of deserializing full gear data directly from `VaultArmorItem.isDamageable`.
 
+Armor texture paths are cached alongside durability, and armor model rendering uses Vault's built-in gear-model cache and per-entity armor-layer cache. This avoids repeatedly parsing gear data and rebuilding the same armor layer for every rendered frame.
+
+### Vault Tool Model Cache
+
+Resolved model locations for identified Vault tools are cached per `ItemStack`. Unidentified tools continue through Vault's original animated preview path.
+
+### Ability HUD Cache
+
+The learned-ability list used by Vault HUD and overlay rendering is retained until the client receives an ability-tree update. This avoids walking the complete ability tree in several render paths.
+
+### Damage Number Allocation Fix
+
+Floored damage numbers reuse Vault's existing render-thread formatter instead of constructing a new `DecimalFormat` for every visible damage number on every frame.
+
 ### Vault Client Render Event Dispatch Cache
 
 Selected high-frequency Vault client render event dispatchers are also optimized with cached, priority-ordered listener snapshots. This avoids rebuilding and copying the listener tree for every `BiomeColorsEvent`, `DimensionEffectEvent`, `AmbientLightEvent`, and `RenderLevelLastEvent` invocation during chunk rebuild block/fluid tint, lighting, and end-of-level render hooks. Other Vault events keep their original dispatch behavior.
-
-### Chunk Rebuild Diagnostics
-
-Temporary Embeddium chunk rebuild diagnostics are enabled by default. Every few seconds the client log receives a `[VRO chunk diagnostics]` summary covering rebuild schedules, render-thread `updateChunks`, region uploads, upload batch setup, stolen chunk rebuild tasks, rebuild task timings, and sampled schedule callers. Launch with `-Dvault_render_optimization.chunkDiagnostics=false` to disable the diagnostic logging without removing the jar.
 
 ## Build
 

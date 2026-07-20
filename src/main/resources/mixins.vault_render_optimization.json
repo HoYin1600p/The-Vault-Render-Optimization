@@ -5,12 +5,12 @@
   "compatibilityLevel": "JAVA_17",
   "refmap": "mixins.vault_render_optimization.refmap.json",
   "client": [
-    "ChunkBuilderDiagnosticsMixin",
-    "ChunkRenderRebuildTaskDiagnosticsMixin",
-    "RenderRegionManagerDiagnosticsMixin",
-    "RenderSectionManagerDiagnosticsMixin",
+    "ClientAbilityDataMixin",
+    "ToolItemRendererMixin",
+    "VaultArmorRenderPropertiesMixin",
     "VaultEventMixin",
-    "VaultArmorItemMixin"
+    "VaultArmorItemMixin",
+    "VaultDamageNumberRendererMixin"
   ],
   "injectors": {
     "defaultRequire": 1
