@@ -11,7 +11,8 @@
     "VaultArmorRenderPropertiesMixin",
     "VaultEventMixin",
     "VaultArmorItemMixin",
-    "VaultDamageNumberRendererMixin"
+    "VaultDamageNumberRendererMixin",
+    "VaultMapKeybindMixin"
   ],
   "injectors": {
     "defaultRequire": 1

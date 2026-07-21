@@ -39,6 +39,10 @@ Floored damage numbers reuse Vault's existing render-thread formatter instead of
 
 Selected high-frequency Vault client render event dispatchers are also optimized with cached, priority-ordered listener snapshots. This avoids rebuilding and copying the listener tree for every `BiomeColorsEvent`, `DimensionEffectEvent`, `AmbientLightEvent`, and `RenderLevelLastEvent` invocation during chunk rebuild block/fluid tint, lighting, and end-of-level render hooks. Other Vault events keep their original dispatch behavior.
 
+### World Map Key Compatibility
+
+The Vault's open-map key binding is active only while a client vault is active. This prevents its default `M` binding from consuming the same Forge key click used by Xaero's World Map in overworld dimensions, while preserving the Vault map inside vaults.
+
 ## Build
 
 ```powershell
@@ -47,7 +51,7 @@ Selected high-frequency Vault client render event dispatchers are also optimized
 
 Output:
 
-`build/libs/vault_render_optimization.0.1.jar`
+`build/libs/vault_render_optimization.0.2.jar`
 
 By default the build looks for The Vault and Embeddium in the Prism Launcher bootstrap instance under the current Windows user profile. If either jar lives somewhere else, pass overrides:
 
