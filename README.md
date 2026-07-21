@@ -43,6 +43,10 @@ Selected high-frequency Vault client render event dispatchers are also optimized
 
 The Vault's open-map key binding is active only while a client vault is active. This prevents its default `M` binding from consuming the same Forge key click used by Xaero's World Map in overworld dimensions, while preserving the Vault map inside vaults.
 
+### Client Crash Guards
+
+Known stale client state is repaired where recovery is deterministic. Vault Integrations altar conduits initialize a missing placement position before ticking. Powah cable registration replaces a stale cable at the same position and continues its normal adjacent-network refresh instead of terminating the client after the replacement has already happened. Both guards are client-only and leave server behavior unchanged.
+
 ## Build
 
 ```powershell
