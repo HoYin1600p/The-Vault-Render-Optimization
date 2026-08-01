@@ -2,7 +2,9 @@
 
 Small client-side Forge 1.18.2 optimization mod for Vault Hunters.
 
-The same jar supports the VaultCrafters Bootstrap, Asgard-SMP, Wolds Vaults, and Vault Hunters Third Edition instances. The Vault, Vault Integrations, Powah, Create Addition, and Entity Collision FPS Fix integrations are selected only when the corresponding mod is present. There are no hard mod dependencies beyond Minecraft and Forge.
+Vault Hunters Third Edition is the shipping baseline. The same jar is also compiled against the custom VaultCrafters Bootstrap, Asgard-SMP, and Wolds Vaults instances as compatibility targets; mods found only in those private instances are not assumed to be part of the shipped pack. The Vault, Vault Integrations, Powah, Create Addition, and Entity Collision FPS Fix integrations are selected only when the corresponding mod is present. There are no hard mod dependencies beyond Minecraft and Forge.
+
+Prospective optimization sources, licenses, overlap checks, and validation requirements are tracked in [`docs/PERFORMANCE_BACKPORT_RESEARCH.md`](docs/PERFORMANCE_BACKPORT_RESEARCH.md).
 
 ## Current Optimizations
 

@@ -1,0 +1,367 @@
+# Client Performance Backport Research
+
+Research date: 2026-08-01
+
+This document records performance projects and implementation ideas that may be
+useful to a Forge 1.18.2 Vault Hunters client. It is a design and provenance
+ledger, not permission to copy source code. No candidate described here has
+been implemented unless a later commit and `THIRD_PARTY_NOTICES.md` entry say
+otherwise.
+
+## Product Baseline
+
+`Vault Hunters Third Edition` is the only Prism instance treated as the
+shipping modpack baseline. The Bootstrap, Asgard-SMP, Wolds, and other local
+instances contain private customizations and are compatibility test
+environments only. A mod appearing in those other instances is not assumed to
+be available to ordinary users.
+
+VH Accelerator is the deliberate exception: it may be installed in a copy of
+Third Edition to verify compatibility before shipping this mod.
+
+The inspected Third Edition client already includes these relevant projects:
+
+| Installed project | Inspected jar | Existing responsibility |
+| --- | --- | --- |
+| Embeddium | `embeddium-0.3.18+mc1.18.2.jar` | Chunk and immediate renderer optimization |
+| ModernFix | `modernfix-forge-5.18.0+mc1.18.2.jar` | Memory leaks, startup, resource and general fixes |
+| FerriteCore | `ferritecore-4.2.2-forge.jar` | Object and model memory reductions |
+| LazyDFU | `lazydfu-1.0-1.18+.jar` | Deferred data-fixer initialization |
+| FastWorkbench | `FastWorkbench-1.18.2-6.1.1.jar` | Crafting recipe lookup |
+| Clumps | `Clumps-forge-1.18.2-8.0.0+17.jar` | Experience-orb aggregation |
+| Spark | `spark-1.10.38-forge.jar` | Profiling and diagnostics |
+
+The shipping baseline does **not** currently include MemoryLeakFix, Saturn,
+Entity Culling, Starlight, Smooth Boot, Fastload, or ImmediatelyFast. Their
+presence in another local instance does not make them a baseline dependency.
+
+VH Accelerator already owns parallel and guarded model/blockstate preparation,
+persistent model/material/recipe/fuel/JEI caches, asynchronous JEI search and
+validation, registry/CTM/voxel-shape work, and launch/login/world-transfer
+optimizations. VRO should not reproduce those systems.
+
+## Implementation Rules
+
+1. Preserve gameplay and visible output by default. Optional visual compromises
+   must be clearly named, configurable, and disabled by default.
+2. Prefer small independent mechanisms with measurable hot paths over wholesale
+   ports of another optimization mod.
+3. Implement from first principles against Minecraft/Forge APIs. Do not copy
+   source simply because a license would permit it.
+4. Record the design source, inspected revision, license, and adaptation in
+   `THIRD_PARTY_NOTICES.md` when an implementation is committed.
+5. Respect author policies that are stricter than the repository license.
+   MemoryLeakFix and MoreCulling explicitly request that their work not be
+   merged into other mods without permission.
+6. Automatically disable an optimization when its original standalone mod is
+   present, unless coexistence has been proven safe.
+7. Keep shader-sensitive, multithreaded, and renderer-lifecycle changes behind
+   separate switches and commits so they can be isolated quickly.
+8. Validate first against a copied Third Edition instance. Use custom Oculus,
+   Embeddium, Distant Horizons, and shader instances only as additional
+   compatibility tests.
+
+## Ranked Shortlist
+
+| Priority | Candidate | Likely value | Risk | Recommendation |
+| --- | --- | --- | --- | --- |
+| P1 | Particle frustum culling and light cache | Better frame time in particle-heavy scenes; less repeated lighting work | Low to medium | Implement a conservative VRO version first |
+| P1 | Empty-render and zero-work fast paths | Small CPU reductions every frame with almost no behavior change | Low | Implement as individually gated mixins |
+| P1 | MemoryLeakFix 1.1.5 standalone test | Better long-session retention and fewer stale references | Low to medium | Test the public mod; do not merge its source without permission |
+| P1 | Jasione standalone test | Lower allocation and GC pressure without visual changes | Medium | A/B test its public 1.18.2 Forge build before considering integration |
+| P2 | ImmediatelyFast/Reforged A/B test | Potentially substantial GUI, text, entity, and upload gains | Medium to high | Test standalone first; only isolate proven mechanisms later |
+| P2 | Entity and block-entity renderer lookup cache | Small gain in entity-heavy scenes | Medium | Consider after P1, with reload invalidation |
+| P3 | Static block-entity model batching | Large gain in chest/bed-heavy areas | High | Dedicated project with a strict vanilla allowlist |
+| P3 | Occlusion culling | Potential gain in dense bases | High | Prefer a standalone trial; compatibility holes are likely |
+
+## P1: Conservative Particle Work
+
+### Design sources
+
+- Particle Core: https://github.com/fzzyhmstrs/pc
+- Flerovium: https://github.com/MoePus/Flerovium
+- BadOptimizations: https://github.com/imthosea/BadOptimizations
+
+Particle Core provides the clearest modern reference. Its feature set includes
+particle frustum checks, particle light lookup caching, movement/position
+caching, render-distance and count controls, asynchronous ticking, and spawn
+suppression. Forge support begins after 1.18.2, which makes the safe mechanisms
+real backport candidates.
+
+The recommended first implementation is deliberately narrower:
+
+- Skip a particle only when its finite bounding box is outside the current
+  camera frustum.
+- Preserve particles with custom, invalid, or effectively infinite bounds.
+- Cache packed light for a particle within a client tick when its block position
+  has not changed.
+- Invalidate naturally on position/tick change, world change, and renderer
+  teardown.
+- Provide a particle-class compatibility blacklist.
+- Do not reduce particle count, distance, or spawn rate.
+- Do not move particle ticking to worker threads.
+
+Embeddium already accelerates particle vertex submission. The proposed work
+should avoid duplicating that and focus only on visibility and repeated light
+queries. This is especially relevant to the previously profiled mob-spawner and
+rapid-death-particle workload.
+
+Asynchronous particle ticking is deferred. Modded particles commonly touch
+world, entity, texture, and renderer state that is not thread-safe, so it has a
+much larger stability surface than culling or same-tick caching.
+
+## P1: Zero-Work Render Fast Paths
+
+### Design source
+
+- BadOptimizations: https://github.com/imthosea/BadOptimizations
+
+The safest ideas are early exits that preserve the exact rendered result:
+
+- Return before particle extraction/render setup when every particle queue is
+  empty.
+- Return before debug-renderer setup when no debug renderer has work.
+- Skip tutorial ticking outside the demo/tutorial conditions.
+- Skip toast-renderer setup when there is no current, queued, or transitioning
+  toast.
+- Skip effect-scale FOV calculations when the configured effect scale is zero.
+
+Each fast path should be a separate mixin/config key. This keeps failures
+attributable and permits a single optimization to be disabled without losing
+the rest.
+
+BadOptimizations also contains entity/block-entity renderer lookup caching,
+lightmap caching, and sky-color caching. Renderer lookup caching is a possible
+P2 item if it is invalidated on resource reload and renderer registration.
+Lightmap and sky-color caching are not suitable for the first batch: this pack
+has custom shaders, dynamic lighting, Vault dimensions, and a history of
+lighting regressions. Every modded input and invalidation event would need to be
+identified first.
+
+## P1: Standalone MemoryLeakFix Trial
+
+### Source
+
+- MemoryLeakFix: https://github.com/FxMorin/MemoryLeakFix
+
+Forge 1.18.2 builds exist. Relevant fixes include stale client hit/crosshair
+references, screenshot native-buffer cleanup on failure, the 1.18.2 TagKey
+interner leak, retained living-entity brain memories, failed resource-read
+buffers, and a biome temperature ThreadLocal issue.
+
+ModernFix 5.18 already enables its biome-temperature-cache removal and several
+world/buffer leak repairs, so that area is overlapping and must not be applied
+twice. The remaining value is long-session retention rather than immediate
+average FPS.
+
+Recommendation: test the public MemoryLeakFix 1.1.5 jar in a copied Third
+Edition instance, profile retained heap over a multi-hour session, and check
+disconnect/reconnect and dimension transitions. Do not merge MemoryLeakFix code
+into VRO without author permission. For independently implemented vanilla bug
+fixes, use the corresponding Mojang issue and vanilla-version correction as the
+primary design source.
+
+## P1: Standalone Jasione Trial
+
+### Sources
+
+- Jasione: https://github.com/decce6/Jasione
+- Project page: https://modrinth.com/mod/jasione
+
+Jasione analyzes bytecode uses of `Enum.values()`. When its analysis proves that
+the returned array is neither modified nor allowed to escape, it redirects the
+call to a generated cached holder instead of allocating a clone. Unsafe or
+unproven uses remain unchanged.
+
+The project supplies a native Forge 1.18.2 target against Forge 40.3.12. It is a
+good allocation/GC experiment because it does not intentionally alter visuals
+or game logic. It is also very new and transforms a broad set of loaded classes,
+so it should remain a standalone A/B test first. Capture startup transformation
+failures and compare allocation profiles, GC pauses, launch time, and mod
+compatibility before considering it for the shipping stack.
+
+Reimplementing this inside VRO is not recommended initially. A general
+bytecode-analysis transformer has a much larger maintenance and compatibility
+surface than VRO's targeted mixins.
+
+## P2: ImmediatelyFast and ImmediatelyFastReforged
+
+### Sources
+
+- ImmediatelyFast: https://github.com/RaphiMC/ImmediatelyFast
+- ImmediatelyFastReforged: https://github.com/CCr4ft3r/ImmediatelyFastReforged
+
+The official discontinued 1.18.2 branch implements immediate-mode batching,
+faster buffer uploads, text/font lookup improvements, font atlas resizing, HUD
+batching, and a map texture atlas. Newer branches add stronger batching,
+redundant-framebuffer-switch avoidance, sign text buffering, and further text
+paths.
+
+This family has the highest plausible direct FPS upside in GUI/text/entity-heavy
+scenes, but it intersects areas that have already produced pack-specific bugs:
+Hydrate animated text, Xaero overlays, Oculus framebuffers, frozen HUD state,
+and shader toggles. The correct first step is a public standalone Forge 1.18.2
+A/B test in a copied Third Edition instance, not a wholesale merge.
+
+If profiling proves a specific path valuable, isolate it behind a VRO setting.
+Map atlas work and non-UI buffer upload are safer initial candidates than HUD
+batching, screen batching, sign buffering, or framebuffer lifecycle changes.
+VRO must disable an equivalent feature when either ImmediatelyFast variant is
+installed.
+
+## P3: Static Block-Entity Rendering
+
+### Design sources
+
+- Enhanced Block Entities: https://github.com/FoundationGames/EnhancedBlockEntities
+- Optimised Block Entities: https://github.com/maDU59/OptimisedBlockEntities
+- Better Block Entities: https://github.com/ceeden/betterblockentities
+- Better Beds: https://github.com/TeamMidnightDust/BetterBeds
+
+These projects replace some immediate block-entity rendering with baked models,
+terrain/chunk meshes, or hybrid renderers that use immediate rendering only
+while animated. This can be valuable in chest-heavy bases because static
+geometry no longer incurs a complete block-entity render call every frame.
+
+It is not low-risk for this pack. Custom chests, Sophisticated Storage,
+Botania, Create, resource packs, model data, shaders, and animation state all
+create invalidation and compatibility requirements. A future implementation
+should begin with an exact allowlist of vanilla beds or vanilla chests, keep the
+normal renderer as fallback, and rebuild affected chunks whenever animation or
+model data changes. Custom block entities must remain untouched until tested
+individually.
+
+## P3: Entity and Face Culling
+
+### Design sources
+
+- Entity Culling: https://github.com/tr7zw/EntityCulling
+- More Culling: https://github.com/FxMorin/MoreCulling
+- Culler: https://github.com/iMeeTake/Culler
+- Cull Less Leaves Reforged: https://github.com/CCr4ft3r/CullLessLeavesReforged
+
+Entity Culling performs asynchronous occlusion/path checks and has a Forge
+1.18.2 release. It is suitable for a standalone compatibility test, but its
+custom protective license means its implementation should not be copied.
+
+More Culling covers block-face, leaf, rain, item-frame/map, and painting
+culling. Its author explicitly prohibits merging it into another mod without
+permission. Generic first-principles ideas such as avoiding the back face of a
+wall-mounted painting may still be researched from Minecraft's renderer, but
+the project code should not be incorporated.
+
+Culler and leaf-culling projects intentionally remove distant or interior
+visuals. That violates the default no-visible-change rule. They are optional
+ideas only and are not recommended for the shipping configuration.
+
+## Existing Projects With Little Backport Value
+
+### FerriteCore
+
+The shipping instance already has FerriteCore 4.2.2, the final relevant 1.18.2
+line. Major newer features such as data-component compaction depend on modern
+Minecraft systems that do not exist in 1.18.2. No low-risk FerriteCore backport
+was identified.
+
+### ModernFix
+
+ModernFix 5.18 already covers many 1.18.2 memory, resource, model, world, and
+thread-priority concerns. Newer branches contain promising names such as
+attribute-supplier deduplication, compact entity models, profile-texture URL
+caching, and tag-ID caching, but they need API-by-API analysis and an overlap
+check against VH Accelerator. They are research candidates, not a first batch.
+
+The installed configuration leaves dynamic entity renderers, dynamic resources,
+faster item rendering, packet leak repair, and spawn-chunk removal disabled.
+Those defaults likely reflect compatibility or behavior tradeoffs and should
+not be silently bypassed by VRO.
+
+### Flerovium
+
+Flerovium's fast entity and particle vertex writers substantially overlap
+Embeddium. Its reusable ideas reduce to particle frustum checks and light
+caching, already covered by the safer Particle Core proposal. Item-render LOD
+or face culling changes visuals and should not be enabled by default.
+
+## Rejected or Deferred
+
+| Project or idea | Decision | Reason |
+| --- | --- | --- |
+| AsyncParticles / asynchronous particle ticking | Defer | Modded particle and renderer state is frequently not thread-safe |
+| Exordium and Gnetum | Reject for shipping | Reduced HUD update rates can freeze or visibly step time-sensitive overlays |
+| Video Tape framebuffer cleanup | Reject | The current author describes the approach as unreliable; Cleaner-driven GL teardown can conflict with Oculus/DH ownership |
+| GPUBooster framebuffer/VBO pooling | Defer | Broad OpenGL lifecycle changes, shader risk, and substantial version mismatch |
+| ThreadTweak and StutterFix | Reject for default | Global thread/yield changes conflict with ModernFix and tuned Java 24 arguments; hardware dependent |
+| Krypton/Pluto | Defer | Network optimization offers little direct client FPS; Third Edition already has Connectivity |
+| Lithium/Canary/C2ME/Noisium/Starlight | Out of current scope | Primarily server, integrated-world, generation, or lighting architecture; high compatibility cost |
+| Lazy Language Loader/Lightspeed/FastQuit | Out of current scope | Startup, reload, or shutdown only; VH Accelerator already owns much of this area |
+| Nvidium/VulkanMod | Reject | Vendor/backend constraints and shader incompatibility |
+| Saturn | Reject | Source/provenance is unavailable and behavior overlaps FerriteCore/ModernFix |
+| Fast Paintings | Reject | No usable source and restrictive distribution terms |
+| Dynamic FPS | Not relevant | Saves resources while unfocused; does not improve active gameplay FPS |
+
+## Validation Gates
+
+Every candidate must pass these gates before it is considered shippable:
+
+1. Build against every supported Vault jar using
+   `scripts/build-pack-compatibility.ps1`.
+2. Test in a copy of Vault Hunters Third Edition with no custom-instance-only
+   performance mod accidentally present.
+3. Record an equivalent baseline and candidate Spark client profile in the same
+   location, time of day, camera path, and workload.
+4. Measure frame-time percentiles and allocations, not only average FPS.
+5. Exercise particle-heavy mob deaths, item processing, dense block entities,
+   animated text, HUD overlays, inventories, maps, and resource reloads.
+6. Exercise disconnect/reconnect, dimension changes, death/respawn, window
+   resizing, fullscreen changes, and a multi-hour session.
+7. In a separate compatibility instance, test shaders off/on/reload plus Oculus
+   and Distant Horizons toggles. No renderer optimization may retain stale
+   framebuffer or world state.
+8. Compare screenshots or deterministic captures. Default optimizations must not
+   suppress visible content or alter lighting, animation timing, transparency,
+   or model state.
+9. Confirm automatic coexistence behavior with each original standalone mod.
+10. Archive profiles, logs, configuration, jar hash, and exact commit used for
+    every accepted result.
+
+## Source Revision Ledger
+
+All revisions below were inspected on 2026-08-01. A revision identifies the
+research input; it does not imply code was copied.
+
+| Project | Revision | License observed | Notes |
+| --- | --- | --- | --- |
+| AsyncParticles | `87636d03147a5f8ceaa35540f8ac6ce63acdbb61` | LGPL-3.0 | Modern branch; deferred multithreading reference |
+| BadOptimizations | `5de4a3ad4299909178d8995dc0bc80626be48d44` | MIT | Primary zero-work and cache reference |
+| Better Block Entities | `cb2937e94ec9399f0f9f54905aff81b9ae5c1797` | LGPL-3.0+ | Modern block-entity reference |
+| Better Beds | `0a9f7ea0a1cdb0b1924492da4489414cd627fb49` | MIT | Narrow static bed-model reference |
+| Cull Less Leaves Reforged | `c132993ad7968b43a4d49986d656a4d3ce087684` | LGPL-3.0 | Optional visual compromise only |
+| Culler | `da5e258ec3d6f966ffec4d4ffede76a9764a2377` | MIT | Distance-culling reference |
+| Enhanced Block Entities | `b0b202a18a1acbddfc038e5403bde973bece7c98` | LGPL-3.0 | Static/hybrid block-entity reference |
+| Entity Culling | `2b5135a5b6003235b57cb16fa61b312fbc03cc66` | tr7zw Protective License | Standalone test only |
+| Exordium | `15f93fe30cc105d9e58c1d4a26eadc6cd27a9333` | LGPL-3.0 | HUD throttling rejected |
+| FerriteCore | `0cef1f2add1f1329aa6e690e8e292acd625c5c6d` | MIT | Modern branch comparison |
+| Flerovium | `69aa397e12b2863672d90b31ca7773f3d7e1fbba` | LGPL-3.0 | Modern Forge renderer reference |
+| Gnetum | `8eb41b5c9399c3bf1864803a96571853674fb475` | LGPL-3.0 | HUD throttling rejected |
+| GPUBooster | `5ed54b4936dac15f1e9f0208037173d241fa428f` | GPL-3.0 | OpenGL lifecycle work deferred |
+| ImmediatelyFast | `ead67a194e5e330d0a410adeec092bd0ca5d19d6` | LGPL-3.0 | Modern branch comparison |
+| ImmediatelyFast 1.18.2 | `acc0bc96e9dc60174cc42c4b0cf16cac891e7446` | LGPL-3.0 | Discontinued official 1.18.2 branch |
+| ImmediatelyFastReforged | `903a113b2cdef681d39d42f44599de9e8c39088d` | LGPL-3.0 | Forge port reference |
+| Jasione | `2e5d28d25e05660f7b7f9e8bdfb0a9d5f380168f` | LGPL-3.0-only | Tag 1.0.6; includes Forge 1.18.2 target |
+| Krypton | `e5f006ad6ebbb44572114f165d7bcc2406eabb54` | LGPL-3.0 | Network work deferred |
+| Lazy Language Loader | `58a5c0cc2b76564c51497d3439168515855ea225` | LGPL-3.0 | Startup/reload only |
+| Lithium | `c42972b6e9d21c8ff45559df6b271802050a22e2` | LGPL-3.0 | Mostly non-render architecture reference |
+| MemoryLeakFix | `988f54c14db0d86e13dd5dcce284178b2278e581` | LGPL-2.1-only plus author merge policy | Standalone test; permission required to merge |
+| ModernFix | `535b389e1b9858a007f1eda095f95f41f71a6bef` | LGPL-3.0 | Current branch comparison |
+| ModernFix 1.18.2 | `94c848b0debbb5291ab3c709353e3f11613fd14d` | LGPL-3.0 | Branch/tag basis for installed 5.18 behavior |
+| More Culling | `3d3c1bdb1dd2b90c820e6fef1cbe0b8f7f19d787` | GPL-3.0 plus author merge policy | Permission required to merge |
+| Optimised Block Entities | `7f50c538b7370c6936e186a268d37ce33644162f` | LGPL-3.0+ | Modern block-entity reference |
+| Particle Core | `1151fe6aca4e1c3b62459de3e3a99ec32af2ac99` | MIT | Primary particle reference |
+| StutterFix | `05eb1855e3812687c130b8e11515ef923543d954` | MIT | Global scheduling change rejected |
+| ThreadTweak | `d418794b049f29b128c877b2cf030346b6df4ac5` | MIT | Global scheduling change rejected |
+| Video Tape | `4b330488fb9510fe9ff8e7b02aee8b8016a1e56e` | MIT-0 | Framebuffer cleanup rejected |
+
+Before implementing from any entry, refresh its upstream repository, record the
+new exact revision, review its current license and author policy, and add a
+specific notice describing what was independently adapted.
