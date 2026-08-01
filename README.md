@@ -2,6 +2,8 @@
 
 Small client-side Forge 1.18.2 optimization mod for Vault Hunters.
 
+The same jar supports the VaultCrafters Bootstrap, Asgard-SMP, Wolds Vaults, and Vault Hunters Third Edition instances. The Vault, Vault Integrations, Powah, Create Addition, and Entity Collision FPS Fix integrations are selected only when the corresponding mod is present. There are no hard mod dependencies beyond Minecraft and Forge.
+
 ## Current Optimizations
 
 This client-side mod targets render and chunk rebuild hotspots seen in Spark/JFR profiles from a Vault Hunters 1.18.2 client.
@@ -69,8 +71,27 @@ Output:
 
 `build/libs/vault_render_optimization.0.3-dev.jar`
 
-By default the build looks for The Vault and Embeddium in the Prism Launcher bootstrap instance under the current Windows user profile. If either jar lives somewhere else, pass overrides:
+By default the build looks for The Vault in the supported Prism Launcher instances under the current Windows user profile. If the jar lives somewhere else, pass an override:
 
 ```powershell
-.\gradlew.bat clean build -Pvault_mod_jar="C:\path\to\the_vault.jar" -Pembeddium_mod_jar="C:\path\to\embeddium.jar"
+.\gradlew.bat clean build -Pvault_mod_jar="C:\path\to\the_vault.jar"
 ```
+
+The normal build discovers the active The Vault jar in the known Prism instances and uses VaultCrafters Bootstrap as its primary target. Embeddium is not a compile-time or runtime dependency.
+
+Before retaining a release or test jar, run the complete compatibility matrix:
+
+```powershell
+.\scripts\build-pack-compatibility.ps1
+```
+
+This compiles the complete source against each installed The Vault jar, performs a final build against the primary target, and copies the resulting universal jar into `libs`.
+
+Validated pack targets:
+
+| Prism instance | The Vault jar |
+| --- | --- |
+| VaultCrafters Bootstrap | `the_vault-1.18.2-20.0.3-remastered.jar` |
+| Asgard-SMP | `the_vault-1.18.2-3.21.62.jar` |
+| Wolds Vaults | `the_vault-1.18.2-3.21.5.6573.jar` |
+| Vault Hunters Third Edition | `the_vault-1.18.2-3.21.6.6884.jar` |

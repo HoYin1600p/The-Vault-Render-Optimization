@@ -68,16 +68,37 @@ repositories {
     }
 }
 
-def defaultVaultModJar = new File(System.getProperty('user.home'), 'AppData/Roaming/PrismLauncher/instances/vaultcrafters-bootstrap-1.0.0/.minecraft/mods/the_vault-1.18.2-3.21.5-remastered.6853.jar')
-def vaultModJarFile = file(findProperty('vault_mod_jar') ?: defaultVaultModJar)
-if (!vaultModJarFile.exists()) {
-    throw new GradleException("The Vault mod jar was not found at ${vaultModJarFile}. Set -Pvault_mod_jar=path/to/the_vault.jar if your instance path differs.")
+def prismInstancesDirectory = new File(System.getProperty('user.home'), 'AppData/Roaming/PrismLauncher/instances')
+def knownVaultInstances = [
+        [name: 'VaultCrafters Bootstrap', folder: 'vaultcrafters-bootstrap-1.0.0', minecraft: '.minecraft'],
+        [name: 'Asgard-SMP', folder: 'Asgard-SMP', minecraft: 'minecraft'],
+        [name: 'Wolds Vaults', folder: 'Wolds-Vaults-0.32.2', minecraft: 'minecraft'],
+        [name: 'Vault Hunters Third Edition', folder: 'Vault Hunters Third Edition', minecraft: 'minecraft'],
+]
+
+def discoveredVaultModJars = knownVaultInstances.collect { instance ->
+    def modsDirectory = new File(prismInstancesDirectory, "${instance.folder}/${instance.minecraft}/mods")
+    def candidates = modsDirectory.listFiles()?.findAll {
+        it.isFile() && it.name.startsWith('the_vault-') && it.name.endsWith('.jar')
+    } ?: []
+
+    if (candidates.size() > 1) {
+        throw new GradleException("More than one active The Vault jar was found for ${instance.name}: ${candidates*.name}")
+    }
+
+    candidates ? [name: instance.name, jar: candidates.first()] : null
+}.findAll { it != null }
+
+def defaultVaultModJar = discoveredVaultModJars.find { it.name == 'VaultCrafters Bootstrap' }?.jar
+        ?: discoveredVaultModJars.first()?.jar
+def configuredVaultModJar = findProperty('vault_mod_jar') ?: defaultVaultModJar
+if (configuredVaultModJar == null) {
+    throw new GradleException('No The Vault mod jar was discovered. Set -Pvault_mod_jar=path/to/the_vault.jar.')
 }
 
-def defaultEmbeddiumModJar = new File(System.getProperty('user.home'), 'AppData/Roaming/PrismLauncher/instances/vaultcrafters-bootstrap-1.0.0/.minecraft/mods/embeddium-0.3.18+mc1.18.2.jar')
-def embeddiumModJarFile = file(findProperty('embeddium_mod_jar') ?: defaultEmbeddiumModJar)
-if (!embeddiumModJarFile.exists()) {
-    throw new GradleException("Embeddium was not found at ${embeddiumModJarFile}. Set -Pembeddium_mod_jar=path/to/embeddium.jar if your instance path differs.")
+def vaultModJarFile = file(configuredVaultModJar)
+if (!vaultModJarFile.exists()) {
+    throw new GradleException("The Vault mod jar was not found at ${vaultModJarFile}. Set -Pvault_mod_jar=path/to/the_vault.jar if your instance path differs.")
 }
 
 dependencies {
@@ -86,7 +107,16 @@ dependencies {
     annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
 
     compileOnly files(vaultModJarFile)
-    compileOnly files(embeddiumModJarFile)
+}
+
+tasks.register('printVaultCompatibilityTargets') {
+    group = 'verification'
+    description = 'Prints the discovered Vault Hunters jars used by the compatibility build matrix.'
+    doLast {
+        discoveredVaultModJars.each { target ->
+            println "${target.name}: ${target.jar}"
+        }
+    }
 }
 
 tasks.named('processResources', ProcessResources).configure {

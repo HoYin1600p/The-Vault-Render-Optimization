@@ -16,9 +16,18 @@ public final class VaultRenderOptimizationMixinPlugin implements IMixinConfigPlu
             "ClientEntityCollisionMixin",
             "ClientLivingEntityCollisionMixin"
     );
-    private static final Map<String, String> OPTIONAL_MIXIN_MODS = Map.of(
-            "CreateAdditionEnergyNetworkManagerAccessor", "createaddition",
-            "PowahCableNetAccessor", "powah"
+    private static final Map<String, String> OPTIONAL_MIXIN_MODS = Map.ofEntries(
+            Map.entry("AltarConduitClientCrashGuardMixin", "vaultintegrations"),
+            Map.entry("ClientAbilityDataMixin", "the_vault"),
+            Map.entry("CreateAdditionEnergyNetworkManagerAccessor", "createaddition"),
+            Map.entry("PowahCableNetAccessor", "powah"),
+            Map.entry("PowahCableNetClientCrashGuardMixin", "powah"),
+            Map.entry("ToolItemRendererMixin", "the_vault"),
+            Map.entry("VaultArmorItemMixin", "the_vault"),
+            Map.entry("VaultArmorRenderPropertiesMixin", "the_vault"),
+            Map.entry("VaultDamageNumberRendererMixin", "the_vault"),
+            Map.entry("VaultEventMixin", "the_vault"),
+            Map.entry("VaultMapKeybindMixin", "the_vault")
     );
 
     private LoadingModList loadingModList;
@@ -46,7 +55,8 @@ public final class VaultRenderOptimizationMixinPlugin implements IMixinConfigPlu
     }
 
     private boolean isModLoaded(String modId) {
-        return loadingModList != null && loadingModList.getModFileById(modId) != null;
+        LoadingModList modList = loadingModList != null ? loadingModList : FMLLoader.getLoadingModList();
+        return modList != null && modList.getModFileById(modId) != null;
     }
 
     @Override
