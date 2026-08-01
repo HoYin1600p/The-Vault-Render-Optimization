@@ -89,7 +89,7 @@ def discoveredVaultModJars = knownVaultInstances.collect { instance ->
     candidates ? [name: instance.name, jar: candidates.first()] : null
 }.findAll { it != null }
 
-def defaultVaultModJar = discoveredVaultModJars.find { it.name == 'VaultCrafters Bootstrap' }?.jar
+def defaultVaultModJar = discoveredVaultModJars.find { it.name == 'Vault Hunters Third Edition' }?.jar
         ?: discoveredVaultModJars.first()?.jar
 def configuredVaultModJar = findProperty('vault_mod_jar') ?: defaultVaultModJar
 if (configuredVaultModJar == null) {

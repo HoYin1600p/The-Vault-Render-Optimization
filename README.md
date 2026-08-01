@@ -63,6 +63,21 @@ When a world or dimension unloads, retained Create Addition energy-network and P
 
 Create and Flywheel are not patched here because the installed versions already invalidate their world-attached caches during the Forge world-unload event.
 
+### Generic Client Render Fast Paths
+
+The mod also includes conservative, independently configurable client optimizations that do not intentionally change visible output:
+
+- Particle block-light results are reused while the particle remains in the same block during the same client tick. Subclasses with custom/full-bright lighting remain untouched.
+- Particle renderer OpenGL setup is skipped when every retained render queue is empty. Forge already performs particle frustum culling in 1.18.2, so VRO does not add a redundant culling pass.
+- Toast rendering is skipped before the first toast and whenever the last queued/visible toast has finished.
+- The completed tutorial's empty tick is skipped when no timed tutorial toast is active.
+- Debug rendering is skipped when neither chunk borders nor game-test markers are visible.
+- Non-player entity and block-entity renderer lookups are cached on their type objects. Both caches are cleared and rebuilt after every resource reload.
+
+These features are enabled by default in `config/vault_render_optimization-client.toml` and can be disabled individually. The equivalent empty-work and renderer-cache mixins disable themselves when BadOptimizations is installed. The particle-light cache disables itself when Particle Core or Flerovium is installed.
+
+The implementation was independently written for Forge 1.18.2 after studying the MIT-licensed Particle Core and BadOptimizations projects. Exact research revisions and attribution are recorded in `THIRD_PARTY_NOTICES.md` and [`docs/PERFORMANCE_BACKPORT_RESEARCH.md`](docs/PERFORMANCE_BACKPORT_RESEARCH.md).
+
 ## Build
 
 ```powershell
@@ -79,7 +94,7 @@ By default the build looks for The Vault in the supported Prism Launcher instanc
 .\gradlew.bat clean build -Pvault_mod_jar="C:\path\to\the_vault.jar"
 ```
 
-The normal build discovers the active The Vault jar in the known Prism instances and uses VaultCrafters Bootstrap as its primary target. Embeddium is not a compile-time or runtime dependency.
+The normal build discovers the active The Vault jar in the known Prism instances and uses Vault Hunters Third Edition as its shipping target. Embeddium is not a compile-time or runtime dependency.
 
 Before retaining a release or test jar, run the complete compatibility matrix:
 

@@ -39,7 +39,7 @@ try {
         }
     }
 
-    $primaryTarget = $targets | Where-Object Name -eq 'VaultCrafters Bootstrap' | Select-Object -First 1
+    $primaryTarget = $targets | Where-Object Name -eq 'Vault Hunters Third Edition' | Select-Object -First 1
     Write-Host "Building universal jar against the primary target: $($primaryTarget.Jar)"
     & $gradleWrapper clean build "-Pvault_mod_jar=$($primaryTarget.Jar)" --console=plain
     if ($LASTEXITCODE -ne 0) {

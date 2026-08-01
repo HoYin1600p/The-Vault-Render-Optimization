@@ -63,14 +63,20 @@ optimizations. VRO should not reproduce those systems.
 
 ## Ranked Shortlist
 
+Implementation update: the current development branch now contains the safe P1
+particle-light and empty-work paths plus the P2 entity/block-entity renderer
+lookup caches. Forge 1.18.2 was confirmed to already perform particle frustum
+culling, so that portion was not duplicated. The standalone trials and P3 work
+remain unimplemented.
+
 | Priority | Candidate | Likely value | Risk | Recommendation |
 | --- | --- | --- | --- | --- |
-| P1 | Particle frustum culling and light cache | Better frame time in particle-heavy scenes; less repeated lighting work | Low to medium | Implement a conservative VRO version first |
-| P1 | Empty-render and zero-work fast paths | Small CPU reductions every frame with almost no behavior change | Low | Implement as individually gated mixins |
+| P1 | Particle frustum culling and light cache | Better frame time in particle-heavy scenes; less repeated lighting work | Low to medium | Light cache implemented; Forge already supplies culling |
+| P1 | Empty-render and zero-work fast paths | Small CPU reductions every frame with almost no behavior change | Low | Implemented as individually gated mixins |
 | P1 | MemoryLeakFix 1.1.5 standalone test | Better long-session retention and fewer stale references | Low to medium | Test the public mod; do not merge its source without permission |
 | P1 | Jasione standalone test | Lower allocation and GC pressure without visual changes | Medium | A/B test its public 1.18.2 Forge build before considering integration |
 | P2 | ImmediatelyFast/Reforged A/B test | Potentially substantial GUI, text, entity, and upload gains | Medium to high | Test standalone first; only isolate proven mechanisms later |
-| P2 | Entity and block-entity renderer lookup cache | Small gain in entity-heavy scenes | Medium | Consider after P1, with reload invalidation |
+| P2 | Entity and block-entity renderer lookup cache | Small gain in entity-heavy scenes | Medium | Implemented with reload invalidation |
 | P3 | Static block-entity model batching | Large gain in chest/bed-heavy areas | High | Dedicated project with a strict vanilla allowlist |
 | P3 | Occlusion culling | Potential gain in dense bases | High | Prefer a standalone trial; compatibility holes are likely |
 

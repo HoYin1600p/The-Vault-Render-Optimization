@@ -16,6 +16,21 @@ public final class VaultRenderOptimizationMixinPlugin implements IMixinConfigPlu
             "ClientEntityCollisionMixin",
             "ClientLivingEntityCollisionMixin"
     );
+    private static final Set<String> BAD_OPTIMIZATIONS_EQUIVALENT_MIXINS = Set.of(
+            "BlockEntityRenderDispatcherMixin",
+            "BlockEntityTypeRendererCacheMixin",
+            "DebugRendererMixin",
+            "EntityRenderDispatcherMixin",
+            "EntityTypeRendererCacheMixin",
+            "GameTestDebugRendererMixin",
+            "ParticleEngineMixin",
+            "ToastComponentMixin",
+            "TutorialMixin"
+    );
+    private static final Set<String> PARTICLE_LIGHT_CACHE_MOD_IDS = Set.of(
+            "particle_core",
+            "flerovium"
+    );
     private static final Map<String, String> OPTIONAL_MIXIN_MODS = Map.ofEntries(
             Map.entry("AltarConduitClientCrashGuardMixin", "vaultintegrations"),
             Map.entry("ClientAbilityDataMixin", "the_vault"),
@@ -48,6 +63,15 @@ public final class VaultRenderOptimizationMixinPlugin implements IMixinConfigPlu
 
         if (COLLISION_MIXINS.contains(simpleName)) {
             return !isModLoaded(COLLISION_FIX_MOD_ID);
+        }
+
+        if (BAD_OPTIMIZATIONS_EQUIVALENT_MIXINS.contains(simpleName) && isModLoaded("badoptimizations")) {
+            return false;
+        }
+
+        if (simpleName.equals("ParticleLightCacheMixin")
+                && PARTICLE_LIGHT_CACHE_MOD_IDS.stream().anyMatch(this::isModLoaded)) {
+            return false;
         }
 
         String requiredMod = OPTIONAL_MIXIN_MODS.get(simpleName);
