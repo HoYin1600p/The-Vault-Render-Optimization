@@ -114,6 +114,10 @@ tasks.named('processResources', ProcessResources).configure {
 tasks.named('jar', Jar).configure {
     archiveFileName = "${mod_id}.${mod_version}.jar"
 
+    from(rootProject.file('THIRD_PARTY_NOTICES.md')) {
+        into 'META-INF'
+    }
+
     manifest {
         attributes([
                 "Specification-Title"     : mod_id,

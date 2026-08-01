@@ -47,6 +47,18 @@ The Vault's open-map key binding is active only while a client vault is active. 
 
 Known stale client state is repaired where recovery is deterministic. Vault Integrations altar conduits initialize a missing placement position before ticking. Powah cable registration replaces a stale cable at the same position and continues its normal adjacent-network refresh instead of terminating the client after the replacement has already happened. Both guards are client-only and leave server behavior unchanged.
 
+### Client Entity Collision Checks
+
+Client-side suffocation checks and living-entity push calculations are skipped. The server remains authoritative for collisions and movement, while crowded mob and item-processing areas avoid repeating collision work that cannot change the server result.
+
+This behavior is adapted from the CC0-licensed Entity Collision FPS Fix mod. If `entitycollisionfpsfix` is still installed, these mixins disable themselves automatically and leave the standalone mod in control. See `THIRD_PARTY_NOTICES.md` for source and license details.
+
+### Unloaded World Cleanup
+
+When a world or dimension unloads, retained Create Addition energy-network and Powah cable-network entries for that exact world are removed. This prevents old integrated-server and client-level objects from remaining reachable across dimension changes, world reconnects, and long play sessions.
+
+Create and Flywheel are not patched here because the installed versions already invalidate their world-attached caches during the Forge world-unload event.
+
 ## Build
 
 ```powershell
@@ -55,7 +67,7 @@ Known stale client state is repaired where recovery is deterministic. Vault Inte
 
 Output:
 
-`build/libs/vault_render_optimization.0.2.jar`
+`build/libs/vault_render_optimization.0.3-dev.jar`
 
 By default the build looks for The Vault and Embeddium in the Prism Launcher bootstrap instance under the current Windows user profile. If either jar lives somewhere else, pass overrides:
 
