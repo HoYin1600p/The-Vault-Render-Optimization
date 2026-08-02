@@ -224,6 +224,15 @@ Build and run the complete installed-pack compatibility matrix:
 The reobfuscated release jar is copied to `libs/`. The build does not bundle
 Vault Hunters or any optional compatibility mod.
 
+Activate the repository's public identity pre-push protection once in each new
+working copy:
+
+```powershell
+.\scripts\install-public-identity-hook.ps1
+```
+
+The same scan runs in CI and must pass before any public push or upload.
+
 ## Credits and license
 
 VRO was developed by [HoYin1600p](https://github.com/HoYin1600p). The

@@ -51,6 +51,8 @@ Source state: tag the reviewed release commit as `v0.3.0`
 
 ## Final moderation check
 
+- `scripts/verify-public-identity.ps1` passes immediately before the push and
+  upload.
 - The project description states concrete functionality and client-only scope.
 - The runnable jar, source repository, AGPL license, credits, and exact adapted
   sources are public.

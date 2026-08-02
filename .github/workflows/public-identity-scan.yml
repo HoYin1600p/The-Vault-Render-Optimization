@@ -1,0 +1,21 @@
+name: Public identity scan
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  verify-public-identity:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out complete history
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Scan source, history, metadata, and jars
+        shell: pwsh
+        run: ./scripts/verify-public-identity.ps1

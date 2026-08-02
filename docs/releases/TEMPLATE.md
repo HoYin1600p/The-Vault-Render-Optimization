@@ -53,6 +53,7 @@ List every new overlap gate and required restart behavior.
 
 ## Verification performed
 
+- Public identity scan:
 - Build and compatibility matrix:
 - Compare Mode campaign:
 - Visual and resource reload:

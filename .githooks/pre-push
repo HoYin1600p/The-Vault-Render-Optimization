@@ -1,0 +1,15 @@
+#!/bin/sh
+
+repo_root=$(git rev-parse --show-toplevel) || exit 1
+scanner="$repo_root/scripts/verify-public-identity.ps1"
+
+if command -v pwsh >/dev/null 2>&1; then
+    exec pwsh -NoLogo -NoProfile -File "$scanner"
+fi
+
+if command -v powershell.exe >/dev/null 2>&1; then
+    exec powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -File "$scanner"
+fi
+
+echo "Public identity verification could not run because PowerShell was not found." >&2
+exit 1
