@@ -1,5 +1,8 @@
 # The Vault Render Optimization X.Y.Z - Release title
 
+<!-- GitHub release bodies do not resolve links relative to this directory.
+Use absolute GitHub URLs pinned to the release tag for every repository file. -->
+
 Release date: Month DD, YYYY
 
 One-paragraph user-visible summary.
