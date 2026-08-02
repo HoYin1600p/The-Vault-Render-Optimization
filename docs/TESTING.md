@@ -1,0 +1,50 @@
+# Testing and benchmarking
+
+## Quick comparison
+
+1. Enter a stable location with the workload to test.
+2. Keep render distance, shaders, weather, time, camera path, and other mod
+   settings unchanged.
+3. Run `/vro compare off` for the optimized condition.
+4. Allow the scene to settle, then record several runs.
+5. Run `/vro compare on` for the baseline condition.
+6. Repeat the same route and workload.
+7. Alternate conditions rather than measuring every enabled run first.
+
+Compare Mode applies immediately. Restarting between conditions is not
+required for VRO's runtime rendering paths, but a restart is useful when testing
+startup-time ownership or optional-mod presence.
+
+## Recommended controlled benchmark
+
+- Use the same client, world, player position, route, and game mode.
+- Fix time to noon with `doDaylightCycle=false`.
+- Clear weather and disable weather cycling for the test period.
+- Keep the client focused.
+- Use the same 32-chunk render distance and uncapped frame rate.
+- Keep VSync disabled.
+- Keep shaders and Distant Horizons in the same state for every paired run.
+- Preload the route before recording so chunk generation is not measured.
+- Perform at least two unmeasured warm-up routes.
+- Record at least five runs per condition in a balanced order.
+- Measure average FPS, 1% lows, 0.1% lows, p99/p999 frame times, long-frame
+  counts, CPU time, and garbage collection where available.
+
+Average FPS alone can hide short stalls. VRO should be judged primarily by
+paired frame-time distributions and long-frame counts.
+
+## Acceptance checks
+
+An optimization build is not release-ready until it has exercised:
+
+- particle-heavy mob deaths and item processing;
+- dense entities and block entities;
+- Vault gear HUD, armor, tools, abilities, and damage numbers;
+- animated text, inventories, maps, and resource reloads;
+- disconnect/reconnect, death/respawn, and dimension changes;
+- world unload and a multi-hour session;
+- shaders and Distant Horizons in a separate compatibility client;
+- window resizing, fullscreen changes, and repeated shader toggles.
+
+Default optimizations must not suppress visible content or change lighting,
+animation timing, transparency, model state, loot, movement, or server rules.

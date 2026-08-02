@@ -40,6 +40,21 @@ persistent model/material/recipe/fuel/JEI caches, asynchronous JEI search and
 validation, registry/CTM/voxel-shape work, and launch/login/world-transfer
 optimizations. VRO should not reproduce those systems.
 
+## Existing shipped provenance
+
+This research ledger predates the public-release attribution audit. Two
+mechanisms are retained adaptations rather than independent research:
+
+- the learned client ability-list cache is adapted from Unobtanium commit
+  `7bf6a6585014e07b9fca622482ce40e83b73d8e8` under AGPL-3.0-or-later;
+- the client wall-check and entity-push mixins are adapted from Entity
+  Collision FPS Fix revision `cc16e1843f592084e6ebea64d2c7399e5189fa09`
+  under CC0-1.0.
+
+The exact authorship, adaptation, and distribution obligations are recorded in
+`CREDITS.md` and `THIRD_PARTY_NOTICES.md`. VRO is released under
+AGPL-3.0-or-later.
+
 ## Implementation Rules
 
 1. Preserve gameplay and visible output by default. Optional visual compromises
@@ -366,6 +381,7 @@ research input; it does not imply code was copied.
 | Particle Core | `1151fe6aca4e1c3b62459de3e3a99ec32af2ac99` | MIT | Primary particle reference |
 | StutterFix | `05eb1855e3812687c130b8e11515ef923543d954` | MIT | Global scheduling change rejected |
 | ThreadTweak | `d418794b049f29b128c877b2cf030346b6df4ac5` | MIT | Global scheduling change rejected |
+| Unobtanium | `7bf6a6585014e07b9fca622482ce40e83b73d8e8` | AGPL-3.0-or-later | Learned-ability cache adaptation; separate world-retention design reference |
 | Video Tape | `4b330488fb9510fe9ff8e7b02aee8b8016a1e56e` | MIT-0 | Framebuffer cleanup rejected |
 
 Before implementing from any entry, refresh its upstream repository, record the

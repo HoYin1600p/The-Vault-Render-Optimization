@@ -148,6 +148,10 @@ tasks.named('jar', Jar).configure {
         into 'META-INF'
     }
 
+    from(rootProject.file('LICENSE')) {
+        into 'META-INF'
+    }
+
     manifest {
         attributes([
                 "Specification-Title"     : mod_id,

@@ -1,127 +1,243 @@
 # The Vault Render Optimization
 
-Small client-side Forge 1.18.2 optimization mod for Vault Hunters.
+[![Minecraft](https://img.shields.io/badge/Minecraft-1.18.2-62b47a)](https://www.minecraft.net/)
+[![Forge](https://img.shields.io/badge/Forge-40.3.11%2B-e04e39)](https://files.minecraftforge.net/net/minecraftforge/forge/index_1.18.2.html)
+[![Environment](https://img.shields.io/badge/Environment-Client-4b8bbe)](#requirements-and-support)
+[![License](https://img.shields.io/badge/License-AGPL--3.0--or--later-blue.svg)](LICENSE)
+[![Release](https://img.shields.io/badge/Release-0.3.0-7b68ee)](docs/releases/0.3.0.md)
 
-Vault Hunters Third Edition is the shipping baseline. The same jar is also compiled against the custom VaultCrafters Bootstrap, Asgard-SMP, and Wolds Vaults instances as compatibility targets; mods found only in those private instances are not assumed to be part of the shipped pack. The Vault, Vault Integrations, Powah, Create Addition, and Entity Collision FPS Fix integrations are selected only when the corresponding mod is present. There are no hard mod dependencies beyond Minecraft and Forge.
+The Vault Render Optimization (VRO) is a client-side Minecraft Forge 1.18.2
+mod that reduces repeated rendering and client simulation work in Vault
+Hunters. It targets frame-time consistency in busy bases, Vault HUD and gear
+rendering, particle-heavy scenes, and long sessions with repeated world or
+dimension changes.
 
-Prospective optimization sources, licenses, overlap checks, and validation requirements are tracked in [`docs/PERFORMANCE_BACKPORT_RESEARCH.md`](docs/PERFORMANCE_BACKPORT_RESEARCH.md).
+VRO does not remove visible effects, lower animation rates, change loot, or
+modify server gameplay. The remote server does not need the mod.
 
-## Current Optimizations
+## Highlights
 
-This client-side mod targets render and chunk rebuild hotspots seen in Spark/JFR profiles from a Vault Hunters 1.18.2 client.
+- Caches expensive Vault gear, armor, tool-model, ability HUD, and event
+  lookups that would otherwise repeat during rendering.
+- Avoids client-only entity collision work in crowded mob-processing areas.
+- Reuses safe particle-light and renderer lookups and skips renderer setup when
+  there is nothing to draw.
+- Releases stale Create Addition and Powah world references after unloads.
+- Repairs two known client-only stale-state crashes without changing the
+  server.
+- Resolves the Vault map and Xaero's World Map `M`-key conflict.
+- Provides immediate in-game Compare Mode for repeatable enabled/disabled
+  benchmarks.
+- Automatically yields overlapping work to Entity Collision FPS Fix,
+  BadOptimizations, Particle Core, and Flerovium when present.
 
-### Vault Gear HUD Cache
+## What VRO improves
 
-Targets:
+### Vault gear and HUD rendering
 
-`ItemHudModule.renderModule -> ItemStack.getMaxDamage -> VaultArmorItem.getMaxDamage -> VaultGearData.read(ItemStack)`
+VRO keeps the results of expensive Vault gear reads close to the item being
+rendered and refreshes them when the gear data changes or the one-second safety
+window expires. This covers:
 
-Vault armor max durability is cached per `ItemStack`. The cache refreshes when either:
+- armor durability used by HUD and inventory overlays;
+- whether identified Vault armor can take damage;
+- armor texture and model selection;
+- identified Vault tool model selection;
+- the learned ability list used by Vault HUD elements;
+- damage-number formatting without allocating a new formatter per number.
 
-- the stack's `vaultGearData` long array changes, or
-- the cached value is more than one second old.
+Unidentified tools retain Vault's animated preview behavior. Gear caches use
+weak item references and are cleared when Compare Mode changes.
 
-This keeps HUD/render paths from fully deserializing Vault gear data every frame while still responding quickly to actual gear NBT changes.
+### Vault render event dispatch
 
-Armor damageability follows the newer Asgard Vault jar behavior by querying Vault's own `GearDataCache` for the gear state instead of deserializing full gear data directly from `VaultArmorItem.isDamageable`.
+Vault's high-frequency client event dispatcher normally rebuilds and copies
+its priority listener tree every time certain render events fire. VRO retains
+an immutable ordered snapshot for biome colors, dimension effects, ambient
+light, and end-of-level rendering, and invalidates it whenever listeners are
+registered or released. Other Vault events remain untouched.
 
-Armor texture paths are cached alongside durability, and armor model rendering uses Vault's built-in gear-model cache and per-entity armor-layer cache. This avoids repeatedly parsing gear data and rebuilding the same armor layer for every rendered frame.
+This work is especially relevant to chunk rebuild tint and lighting calls.
 
-### Vault Tool Model Cache
+### Crowded entity areas
 
-Resolved model locations for identified Vault tools are cached per `ItemStack`. Unidentified tools continue through Vault's original animated preview path.
+The server is authoritative for movement, pushing, and suffocation. VRO skips
+the duplicate client-side wall checks and living-entity push calculation. This
+reduces CPU work around dense mob farms, spawners, and rapid kill systems.
 
-### Ability HUD Cache
+The feature disables itself when Entity Collision FPS Fix is installed.
 
-The learned-ability list used by Vault HUD and overlay rendering is retained until the client receives an ability-tree update. This avoids walking the complete ability tree in several render paths.
+### Generic render fast paths
 
-### Damage Number Allocation Fix
+VRO also applies conservative optimizations outside Vault-specific code:
 
-Floored damage numbers reuse Vault's existing render-thread formatter instead of constructing a new `DecimalFormat` for every visible damage number on every frame.
+- reuse a particle's block-light value while it remains in the same block and
+  client tick;
+- skip particle renderer setup when every retained queue is empty;
+- skip toast rendering when no toast is queued, visible, or transitioning;
+- skip the completed tutorial's empty tick when no timed tutorial toast exists;
+- skip debug rendering when no supported debug overlay is active;
+- cache non-player entity and block-entity renderer lookups, rebuilding them
+  after resource reloads.
 
-### Vault Client Render Event Dispatch Cache
+These paths are independently configurable and do not intentionally change
+visible output. Shader-sensitive lightmap and sky-color caching were rejected.
 
-Selected high-frequency Vault client render event dispatchers are also optimized with cached, priority-ordered listener snapshots. This avoids rebuilding and copying the listener tree for every `BiomeColorsEvent`, `DimensionEffectEvent`, `AmbientLightEvent`, and `RenderLevelLastEvent` invocation during chunk rebuild block/fluid tint, lighting, and end-of-level render hooks. Other Vault events keep their original dispatch behavior.
+### Long-session cleanup and crash recovery
 
-### World Map Key Compatibility
+On world unload, VRO removes the exact unloaded world from Create Addition's
+energy-network map and Powah's cable-network map. This prevents old client or
+integrated-server levels from remaining reachable through repeated dimension
+changes and reconnects.
 
-The Vault's open-map key binding is active only while a client vault is active. This prevents its default `M` binding from consuming the same Forge key click used by Xaero's World Map in overworld dimensions, while preserving the Vault map inside vaults.
+VRO also repairs two deterministic stale client states:
 
-### Client Crash Guards
+- Vault Integrations altar conduits receive their missing placement position
+  before the client tick continues;
+- Powah replaces an obsolete cable entry at the same position and continues
+  its normal adjacent-network refresh.
 
-Known stale client state is repaired where recovery is deterministic. Vault Integrations altar conduits initialize a missing placement position before ticking. Powah cable registration replaces a stale cable at the same position and continues its normal adjacent-network refresh instead of terminating the client after the replacement has already happened. Both guards are client-only and leave server behavior unchanged.
+These guards are client-only and remain active in Compare Mode.
 
-### Client Entity Collision Checks
+### World-map key compatibility
 
-Client-side suffocation checks and living-entity push calculations are skipped. The server remains authoritative for collisions and movement, while crowded mob and item-processing areas avoid repeating collision work that cannot change the server result.
+The Vault's map key binding is active only while a client Vault is active. This
+allows Xaero's World Map to receive `M` in the overworld while preserving the
+Vault map inside Vault dimensions.
 
-This behavior is adapted from the CC0-licensed Entity Collision FPS Fix mod. If `entitycollisionfpsfix` is still installed, these mixins disable themselves automatically and leave the standalone mod in control. See `THIRD_PARTY_NOTICES.md` for source and license details.
+## Measured performance
 
-### Unloaded World Cleanup
+A deterministic 40-trial campaign tested five enabled and five disabled runs
+in each of four Vault Hunters clients. Every paired test used the same client,
+world, route, render distance, time, weather, focus, shader state, and warm-up.
 
-When a world or dimension unloads, retained Create Addition energy-network and Powah cable-network entries for that exact world are removed. This prevents old integrated-server and client-level objects from remaining reachable across dimension changes, world reconnects, and long play sessions.
+Across the four clients, the unweighted mean improvements were:
 
-Create and Flywheel are not patched here because the installed versions already invalidate their world-attached caches during the Forge world-unload event.
+| Metric | VRO improvement |
+| --- | ---: |
+| Average FPS | 5.35% |
+| 1% low FPS | 30.66% |
+| 0.1% low FPS | 35.07% |
+| p99 frame time | 13.94% |
+| Average client CPU time | 4.49% |
 
-### Generic Client Render Fast Paths
+VRO reduced frames longer than 16.7 ms in every tested client. Average-FPS
+results varied by pack, so the strongest supported claim is better frame-time
+consistency rather than a guaranteed percentage on every machine.
 
-The mod also includes conservative, independently configurable client optimizations that do not intentionally change visible output:
+See [Performance validation](docs/PERFORMANCE_VALIDATION.md) for the complete
+pack-level summary and test controls.
 
-- Particle block-light results are reused while the particle remains in the same block during the same client tick. Subclasses with custom/full-bright lighting remain untouched.
-- Particle renderer OpenGL setup is skipped when every retained render queue is empty. Forge already performs particle frustum culling in 1.18.2, so VRO does not add a redundant culling pass.
-- Toast rendering is skipped before the first toast and whenever the last queued/visible toast has finished.
-- The completed tutorial's empty tick is skipped when no timed tutorial toast is active.
-- Debug rendering is skipped when neither chunk borders nor game-test markers are visible.
-- Non-player entity and block-entity renderer lookups are cached on their type objects. Both caches are cleared and rebuilt after every resource reload.
+## Requirements and support
 
-These features are enabled by default in `config/vault_render_optimization-client.toml` and can be disabled individually. The equivalent empty-work and renderer-cache mixins disable themselves when BadOptimizations is installed. The particle-light cache disables itself when Particle Core or Flerovium is installed.
+| Component | Supported baseline |
+| --- | --- |
+| Minecraft | `1.18.2` |
+| Forge | `40.3.11+` in the Forge 40.x line |
+| Java bytecode | Java 17 |
+| Environment | Client |
+| Vault Hunters official | `3.21.6.6884` |
+| Vault Hunters Remastered | `20.0.3-remastered` |
+| Wolds Vaults | Pack `0.32.2` / Vault `3.21.5.6573` |
+| Custom compatibility target | Vault `3.21.62` |
 
-The implementation was independently written for Forge 1.18.2 after studying the MIT-licensed Particle Core and BadOptimizations projects. Exact research revisions and attribution are recorded in `THIRD_PARTY_NOTICES.md` and [`docs/PERFORMANCE_BACKPORT_RESEARCH.md`](docs/PERFORMANCE_BACKPORT_RESEARCH.md).
+Vault Hunters is an optional integration rather than a hard loading
+dependency. Generic optimizations remain available when Vault is absent.
+Supported versions are tested compatibility baselines, not permission to mix
+different pack files together.
 
-## In-Game Comparison
+## Installation
 
-VRO provides a client-side comparison command that works without server permission:
+1. Stop Minecraft.
+2. Remove or disable every older VRO jar.
+3. Place `vault_render_optimization.0.3.0.jar` in the instance's `mods`
+   directory.
+4. Keep only one active VRO jar.
+5. Remove Entity Collision FPS Fix only if you want VRO to own that same
+   feature. Keeping it installed is safe because VRO yields automatically.
+
+No server installation is required. See [Installation](docs/INSTALLATION.md)
+for upgrades, removal, optional-mod coexistence, and issue isolation.
+
+## Commands
 
 | Command | Result |
 | --- | --- |
 | `/vro` | Reports the current comparison state. |
-| `/vro compare on` | Saves and immediately disables all VRO performance optimizations. |
-| `/vro compare off` | Saves and immediately enables configured VRO performance optimizations. |
-| `/vro compare status` | Reports whether comparison mode is active. |
+| `/vro compare on` | Saves and immediately disables VRO performance optimizations. |
+| `/vro compare off` | Saves and immediately enables configured VRO optimizations. |
+| `/vro compare status` | Reports whether Compare Mode is active. |
 
-Comparison mode leaves client crash guards, unloaded-world cleanup, and the Vault/Xaero map-key compatibility fix active. Those are correctness and stability behavior rather than performance optimizations. The setting persists in `config/vault_render_optimization-client.toml`, so use the same state for every run in a benchmark set.
+Compare Mode deliberately leaves crash guards, unloaded-world cleanup, and
+map-key compatibility active. Those are correctness features, not benchmarked
+performance changes. Commands are client-side and require no server permission.
 
-## Build
+## Configuration
 
-```powershell
-.\gradlew.bat clean build
-```
+VRO writes `config/vault_render_optimization-client.toml`. Its generic render
+fast paths are enabled by default and can be disabled individually. Compare
+Mode is also saved there.
 
-Output:
+The complete option and coexistence reference is in
+[Configuration and commands](docs/CONFIGURATION.md).
 
-`build/libs/vault_render_optimization.0.3-dev.jar`
+## Compatibility and safety
 
-By default the build looks for The Vault in the supported Prism Launcher instances under the current Windows user profile. If the jar lives somewhere else, pass an override:
+- Optional integrations load only when their target mod is present.
+- Equivalent mixins yield to Entity Collision FPS Fix, BadOptimizations,
+  Particle Core, and Flerovium.
+- Player renderer lookup behavior is not replaced.
+- Renderer caches are discarded on resource reload.
+- Particle subclasses with custom or full-bright lighting keep their own path.
+- No asynchronous rendering or particle ticking is introduced.
+- No framebuffers, shaders, chunk meshes, network packets, or server collision
+  decisions are modified.
 
-```powershell
-.\gradlew.bat clean build -Pvault_mod_jar="C:\path\to\the_vault.jar"
-```
+## Documentation
 
-The normal build discovers the active The Vault jar in the known Prism instances and uses Vault Hunters Third Edition as its shipping target. Embeddium is not a compile-time or runtime dependency.
+| Document | Purpose |
+| --- | --- |
+| [Installation](docs/INSTALLATION.md) | Install, upgrade, coexistence, removal, and reporting |
+| [Configuration](docs/CONFIGURATION.md) | Every option, default, command, and immediate behavior |
+| [Testing](docs/TESTING.md) | Compare Mode and repeatable benchmark procedure |
+| [Performance validation](docs/PERFORMANCE_VALIDATION.md) | Four-client measured results and limitations |
+| [Release notes 0.3.0](docs/releases/0.3.0.md) | Initial public release details |
+| [Changelog](CHANGELOG.md) | Version-to-version changes |
+| [Credits](CREDITS.md) | Adapted code, design research, and compatibility attribution |
+| [Third-party notices](THIRD_PARTY_NOTICES.md) | Exact shipped provenance and licenses |
+| [Source provenance audit](docs/SOURCE_PROVENANCE_AUDIT.md) | Feature-by-feature copied, adapted, and original classification |
+| [Research ledger](docs/PERFORMANCE_BACKPORT_RESEARCH.md) | Considered, rejected, and future candidates |
 
-Before retaining a release or test jar, run the complete compatibility matrix:
+## Building
+
+Requirements:
+
+- JDK 17
+- one supported local Vault Hunters jar for compile-only API verification
+
+Build and run the complete installed-pack compatibility matrix:
 
 ```powershell
 .\scripts\build-pack-compatibility.ps1
 ```
 
-This compiles the complete source against each installed The Vault jar, performs a final build against the primary target, and copies the resulting universal jar into `libs`.
+The reobfuscated release jar is copied to `libs/`. The build does not bundle
+Vault Hunters or any optional compatibility mod.
 
-Validated pack targets:
+## Credits and license
 
-| Prism instance | The Vault jar |
-| --- | --- |
-| VaultCrafters Bootstrap | `the_vault-1.18.2-20.0.3-remastered.jar` |
-| Asgard-SMP | `the_vault-1.18.2-3.21.62.jar` |
-| Wolds Vaults | `the_vault-1.18.2-3.21.5.6573.jar` |
-| Vault Hunters Third Edition | `the_vault-1.18.2-3.21.6.6884.jar` |
+VRO was developed by [HoYin1600p](https://github.com/HoYin1600p). The
+learned-ability cache is adapted from Unobtanium work by `radimous`, and the
+client collision behavior is adapted from CorgiTaco's CC0 Entity Collision FPS
+Fix. Particle Core, BadOptimizations, and other projects informed independent
+research and compatibility boundaries.
+
+Read [CREDITS.md](CREDITS.md) and [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)
+for exact revisions and relationships.
+
+VRO is licensed under the [GNU Affero General Public License v3.0 or later](LICENSE).
+No third-party mod jar, Vault Hunters source, or decompiled class is bundled.
+
+Minecraft is a trademark of Microsoft. Vault Hunters belongs to its respective
+authors. This independent project is not affiliated with Mojang, Microsoft,
+Forge, Iskallia, or the credited projects.
