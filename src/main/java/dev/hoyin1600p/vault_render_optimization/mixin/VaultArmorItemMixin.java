@@ -1,6 +1,7 @@
 package dev.hoyin1600p.vault_render_optimization.mixin;
 
 import dev.hoyin1600p.vault_render_optimization.cache.VaultGearRenderCache;
+import dev.hoyin1600p.vault_render_optimization.config.ClientOptimizationConfig;
 import iskallia.vault.item.gear.VaultArmorItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.entity.Entity;
@@ -14,12 +15,16 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public abstract class VaultArmorItemMixin {
     @Inject(method = "getMaxDamage", at = @At("HEAD"), cancellable = true)
     private void vault_render_optimization$getMaxDamage(ItemStack stack, CallbackInfoReturnable<Integer> cir) {
-        cir.setReturnValue(VaultGearRenderCache.getArmorMaxDamage(stack));
+        if (ClientOptimizationConfig.optimizationsEnabled()) {
+            cir.setReturnValue(VaultGearRenderCache.getArmorMaxDamage(stack));
+        }
     }
 
     @Inject(method = "isDamageable", at = @At("HEAD"), cancellable = true)
     private void vault_render_optimization$isDamageable(ItemStack stack, CallbackInfoReturnable<Boolean> cir) {
-        cir.setReturnValue(VaultGearRenderCache.isArmorDamageable(stack));
+        if (ClientOptimizationConfig.optimizationsEnabled()) {
+            cir.setReturnValue(VaultGearRenderCache.isArmorDamageable(stack));
+        }
     }
 
     @Inject(method = "getArmorTexture", at = @At("HEAD"), cancellable = true)
@@ -30,6 +35,8 @@ public abstract class VaultArmorItemMixin {
             String type,
             CallbackInfoReturnable<String> cir
     ) {
-        cir.setReturnValue(VaultGearRenderCache.getArmorTexture(stack, slot, type));
+        if (ClientOptimizationConfig.optimizationsEnabled()) {
+            cir.setReturnValue(VaultGearRenderCache.getArmorTexture(stack, slot, type));
+        }
     }
 }

@@ -1,5 +1,6 @@
 package dev.hoyin1600p.vault_render_optimization.mixin;
 
+import dev.hoyin1600p.vault_render_optimization.config.ClientOptimizationConfig;
 import iskallia.vault.dynamodel.model.armor.ArmorPieceModel;
 import iskallia.vault.gear.data.GearDataCache;
 import iskallia.vault.gear.renderer.VaultArmorRenderProperties;
@@ -24,6 +25,9 @@ public abstract class VaultArmorRenderPropertiesMixin {
             HumanoidModel<?> fallbackModel,
             CallbackInfoReturnable<HumanoidModel<?>> cir
     ) {
+        if (!ClientOptimizationConfig.optimizationsEnabled()) {
+            return;
+        }
         ResourceLocation modelId = GearDataCache.of(stack).getGearModel().orElse(null);
         if (modelId == null) {
             cir.setReturnValue(null);

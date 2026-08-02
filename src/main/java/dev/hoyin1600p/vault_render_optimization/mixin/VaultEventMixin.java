@@ -1,5 +1,6 @@
 package dev.hoyin1600p.vault_render_optimization.mixin;
 
+import dev.hoyin1600p.vault_render_optimization.config.ClientOptimizationConfig;
 import iskallia.vault.core.event.Event;
 import iskallia.vault.core.event.client.AmbientLightEvent;
 import iskallia.vault.core.event.client.BiomeColorsEvent;
@@ -59,6 +60,9 @@ public abstract class VaultEventMixin {
 
     @Unique
     private boolean vault_render_optimization$usesCachedSnapshot() {
+        if (!ClientOptimizationConfig.optimizationsEnabled()) {
+            return false;
+        }
         Object event = this;
         return event instanceof BiomeColorsEvent
                 || event instanceof DimensionEffectEvent

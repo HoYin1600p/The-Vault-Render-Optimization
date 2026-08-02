@@ -78,6 +78,19 @@ These features are enabled by default in `config/vault_render_optimization-clien
 
 The implementation was independently written for Forge 1.18.2 after studying the MIT-licensed Particle Core and BadOptimizations projects. Exact research revisions and attribution are recorded in `THIRD_PARTY_NOTICES.md` and [`docs/PERFORMANCE_BACKPORT_RESEARCH.md`](docs/PERFORMANCE_BACKPORT_RESEARCH.md).
 
+## In-Game Comparison
+
+VRO provides a client-side comparison command that works without server permission:
+
+| Command | Result |
+| --- | --- |
+| `/vro` | Reports the current comparison state. |
+| `/vro compare on` | Saves and immediately disables all VRO performance optimizations. |
+| `/vro compare off` | Saves and immediately enables configured VRO performance optimizations. |
+| `/vro compare status` | Reports whether comparison mode is active. |
+
+Comparison mode leaves client crash guards, unloaded-world cleanup, and the Vault/Xaero map-key compatibility fix active. Those are correctness and stability behavior rather than performance optimizations. The setting persists in `config/vault_render_optimization-client.toml`, so use the same state for every run in a benchmark set.
+
 ## Build
 
 ```powershell

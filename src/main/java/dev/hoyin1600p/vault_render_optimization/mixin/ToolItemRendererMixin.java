@@ -2,6 +2,7 @@ package dev.hoyin1600p.vault_render_optimization.mixin;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import dev.hoyin1600p.vault_render_optimization.cache.VaultToolRenderCache;
+import dev.hoyin1600p.vault_render_optimization.config.ClientOptimizationConfig;
 import iskallia.vault.item.render.ToolItemRenderer;
 import iskallia.vault.item.render.core.SpecialItemRenderer;
 import net.minecraft.client.renderer.MultiBufferSource;
@@ -24,6 +25,9 @@ public abstract class ToolItemRendererMixin extends SpecialItemRenderer {
             int packedOverlay,
             CallbackInfo ci
     ) {
+        if (!ClientOptimizationConfig.optimizationsEnabled()) {
+            return;
+        }
         VaultToolRenderCache.ToolModels models = VaultToolRenderCache.getStaticModels(stack);
         if (models == null) {
             return;

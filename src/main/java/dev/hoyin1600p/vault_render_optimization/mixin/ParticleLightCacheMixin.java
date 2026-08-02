@@ -38,7 +38,8 @@ public abstract class ParticleLightCacheMixin {
 
     @Inject(method = "getLightColor", at = @At("HEAD"), cancellable = true)
     private void vro$cacheLightColor(float partialTick, CallbackInfoReturnable<Integer> cir) {
-        if (!ClientOptimizationConfig.particleLightCache) {
+        if (!ClientOptimizationConfig.optimizationsEnabled()
+                || !ClientOptimizationConfig.particleLightCache) {
             return;
         }
 

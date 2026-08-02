@@ -27,6 +27,12 @@ public final class VaultToolRenderCache {
     private VaultToolRenderCache() {
     }
 
+    public static void clear() {
+        synchronized (TOOL_CACHE) {
+            TOOL_CACHE.clear();
+        }
+    }
+
     public static ToolModels getStaticModels(ItemStack stack) {
         long now = System.nanoTime();
         long[] gearData = readGearDataKey(stack);

@@ -26,7 +26,8 @@ public abstract class BlockEntityRenderDispatcherMixin {
     @SuppressWarnings({"unchecked", "rawtypes"})
     private <E extends BlockEntity> void vro$getCachedRenderer(E blockEntity,
                                                                CallbackInfoReturnable<BlockEntityRenderer<E>> cir) {
-        if (!ClientOptimizationConfig.blockEntityRendererCache) {
+        if (!ClientOptimizationConfig.optimizationsEnabled()
+                || !ClientOptimizationConfig.blockEntityRendererCache) {
             return;
         }
 
@@ -47,7 +48,8 @@ public abstract class BlockEntityRenderDispatcherMixin {
         for (BlockEntityType<?> blockEntityType : Registry.BLOCK_ENTITY_TYPE) {
             ((CachedBlockEntityRendererHolder) (Object) blockEntityType).vro$setBlockEntityRenderer(null);
         }
-        if (ClientOptimizationConfig.blockEntityRendererCache) {
+        if (ClientOptimizationConfig.optimizationsEnabled()
+                && ClientOptimizationConfig.blockEntityRendererCache) {
             this.renderers.forEach((type, renderer) ->
                     ((CachedBlockEntityRendererHolder) (Object) type).vro$setBlockEntityRenderer(renderer));
         }

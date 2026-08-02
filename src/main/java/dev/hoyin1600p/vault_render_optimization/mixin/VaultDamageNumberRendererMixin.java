@@ -1,5 +1,6 @@
 package dev.hoyin1600p.vault_render_optimization.mixin;
 
+import dev.hoyin1600p.vault_render_optimization.config.ClientOptimizationConfig;
 import iskallia.vault.entity.renderer.VaultDamageNumberRenderer;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -17,6 +18,6 @@ public abstract class VaultDamageNumberRendererMixin {
 
     @Redirect(method = "render", at = @At(value = "NEW", target = "java/text/DecimalFormat"))
     private DecimalFormat vault_render_optimization$reuseDamageFormatter(String pattern) {
-        return df;
+        return ClientOptimizationConfig.optimizationsEnabled() ? df : new DecimalFormat(pattern);
     }
 }

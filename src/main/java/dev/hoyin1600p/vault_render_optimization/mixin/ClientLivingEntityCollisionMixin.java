@@ -1,5 +1,6 @@
 package dev.hoyin1600p.vault_render_optimization.mixin;
 
+import dev.hoyin1600p.vault_render_optimization.config.ClientOptimizationConfig;
 import net.minecraft.world.entity.LivingEntity;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -12,7 +13,7 @@ public abstract class ClientLivingEntityCollisionMixin {
     @Inject(method = "isInWall", at = @At("HEAD"), cancellable = true)
     private void vaultRenderOptimization$skipClientWallCheck(CallbackInfoReturnable<Boolean> cir) {
         LivingEntity entity = (LivingEntity) (Object) this;
-        if (entity.level.isClientSide) {
+        if (ClientOptimizationConfig.optimizationsEnabled() && entity.level.isClientSide) {
             cir.setReturnValue(false);
         }
     }
@@ -20,7 +21,7 @@ public abstract class ClientLivingEntityCollisionMixin {
     @Inject(method = "pushEntities", at = @At("HEAD"), cancellable = true)
     private void vaultRenderOptimization$skipClientEntityPushes(CallbackInfo ci) {
         LivingEntity entity = (LivingEntity) (Object) this;
-        if (entity.level.isClientSide) {
+        if (ClientOptimizationConfig.optimizationsEnabled() && entity.level.isClientSide) {
             ci.cancel();
         }
     }

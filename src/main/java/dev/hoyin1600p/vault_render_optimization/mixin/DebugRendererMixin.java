@@ -26,7 +26,8 @@ public abstract class DebugRendererMixin {
     @Inject(method = "render", at = @At("HEAD"), cancellable = true)
     private void vro$skipEmptyRender(PoseStack poseStack, MultiBufferSource.BufferSource buffers,
                                      double cameraX, double cameraY, double cameraZ, CallbackInfo ci) {
-        if (!ClientOptimizationConfig.emptyDebugRenderSkip) {
+        if (!ClientOptimizationConfig.optimizationsEnabled()
+                || !ClientOptimizationConfig.emptyDebugRenderSkip) {
             return;
         }
 

@@ -27,7 +27,9 @@ public abstract class EntityRenderDispatcherMixin {
     @SuppressWarnings({"unchecked", "rawtypes"})
     private <T extends Entity> void vro$getCachedRenderer(T entity,
                                                           CallbackInfoReturnable<EntityRenderer<? super T>> cir) {
-        if (!ClientOptimizationConfig.entityRendererCache || entity instanceof AbstractClientPlayer) {
+        if (!ClientOptimizationConfig.optimizationsEnabled()
+                || !ClientOptimizationConfig.entityRendererCache
+                || entity instanceof AbstractClientPlayer) {
             return;
         }
 
@@ -47,7 +49,8 @@ public abstract class EntityRenderDispatcherMixin {
         for (EntityType<?> entityType : Registry.ENTITY_TYPE) {
             ((CachedEntityRendererHolder) (Object) entityType).vro$setEntityRenderer(null);
         }
-        if (ClientOptimizationConfig.entityRendererCache) {
+        if (ClientOptimizationConfig.optimizationsEnabled()
+                && ClientOptimizationConfig.entityRendererCache) {
             this.renderers.forEach((type, renderer) ->
                     ((CachedEntityRendererHolder) (Object) type).vro$setEntityRenderer(renderer));
         }

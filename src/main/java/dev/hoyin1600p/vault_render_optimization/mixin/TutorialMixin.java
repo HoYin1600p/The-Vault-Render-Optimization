@@ -25,7 +25,8 @@ public abstract class TutorialMixin {
 
     @Inject(method = "tick", at = @At("HEAD"), cancellable = true)
     private void vro$skipCompletedTutorial(CallbackInfo ci) {
-        if (ClientOptimizationConfig.inactiveTutorialSkip
+        if (ClientOptimizationConfig.optimizationsEnabled()
+                && ClientOptimizationConfig.inactiveTutorialSkip
                 && this.minecraft.options.tutorialStep == TutorialSteps.NONE
                 && this.timedToasts.isEmpty()) {
             ci.cancel();

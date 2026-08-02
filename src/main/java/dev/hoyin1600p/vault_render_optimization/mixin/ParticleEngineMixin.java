@@ -35,7 +35,8 @@ public abstract class ParticleEngineMixin {
     private void vro$skipEmptyRender(PoseStack poseStack, MultiBufferSource.BufferSource buffers,
                                      LightTexture lightTexture, Camera camera, float partialTick,
                                      @Nullable Frustum frustum, CallbackInfo ci) {
-        if (!ClientOptimizationConfig.emptyParticleRenderSkip) {
+        if (!ClientOptimizationConfig.optimizationsEnabled()
+                || !ClientOptimizationConfig.emptyParticleRenderSkip) {
             return;
         }
 

@@ -1,5 +1,6 @@
 package dev.hoyin1600p.vault_render_optimization.mixin;
 
+import dev.hoyin1600p.vault_render_optimization.config.ClientOptimizationConfig;
 import iskallia.vault.client.data.ClientAbilityData;
 import iskallia.vault.network.message.AbilityKnownOnesMessage;
 import iskallia.vault.skill.base.TieredSkill;
@@ -19,6 +20,9 @@ public abstract class ClientAbilityDataMixin {
 
     @Inject(method = "getLearnedAbilities", at = @At("HEAD"), cancellable = true)
     private static void vault_render_optimization$reuseLearnedAbilities(CallbackInfoReturnable<List<TieredSkill>> cir) {
+        if (!ClientOptimizationConfig.optimizationsEnabled()) {
+            return;
+        }
         List<TieredSkill> cached = vault_render_optimization$learnedAbilities;
         if (cached != null) {
             cir.setReturnValue(cached);
@@ -27,7 +31,8 @@ public abstract class ClientAbilityDataMixin {
 
     @Inject(method = "getLearnedAbilities", at = @At("RETURN"))
     private static void vault_render_optimization$rememberLearnedAbilities(CallbackInfoReturnable<List<TieredSkill>> cir) {
-        if (vault_render_optimization$learnedAbilities == null) {
+        if (ClientOptimizationConfig.optimizationsEnabled()
+                && vault_render_optimization$learnedAbilities == null) {
             vault_render_optimization$learnedAbilities = cir.getReturnValue();
         }
     }

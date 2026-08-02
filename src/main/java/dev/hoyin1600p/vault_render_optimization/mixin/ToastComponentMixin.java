@@ -26,14 +26,17 @@ public abstract class ToastComponentMixin {
 
     @Inject(method = "render", at = @At("HEAD"), cancellable = true)
     private void vro$skipEmptyRender(PoseStack poseStack, CallbackInfo ci) {
-        if (ClientOptimizationConfig.emptyToastRenderSkip && !this.vro$hasToastWork) {
+        if (ClientOptimizationConfig.optimizationsEnabled()
+                && ClientOptimizationConfig.emptyToastRenderSkip
+                && !this.vro$hasToastWork) {
             ci.cancel();
         }
     }
 
     @Inject(method = "render", at = @At("TAIL"))
     private void vro$updateRenderActivity(PoseStack poseStack, CallbackInfo ci) {
-        if (!ClientOptimizationConfig.emptyToastRenderSkip
+        if (!ClientOptimizationConfig.optimizationsEnabled()
+                || !ClientOptimizationConfig.emptyToastRenderSkip
                 || !this.queued.isEmpty()
                 || !ToastVisibilityProbe.hasNoVisibleToasts((ToastComponent) (Object) this)) {
             return;
