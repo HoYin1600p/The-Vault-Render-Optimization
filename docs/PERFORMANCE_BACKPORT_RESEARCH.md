@@ -97,6 +97,7 @@ remain unimplemented.
 | P2 | Compact simple-model face lists | Lower retained model memory, commonly up to about 20 MB | Low | Post-4.2.2 FerriteCore feature; implement independently and retain its MIT notice |
 | P2 | Block-state `faceSturdy` array deduplication | Modest retained block-state memory reduction | Low to medium | Post-4.2.2 FerriteCore feature; verify an independent mixin alongside FerriteCore 4.2.2 |
 | P2 | Independent vertical/horizontal section-distance culling | Less chunk-section traversal and drawing at high render distances | Medium | Implement independently; vertical enabled by default, horizontal disabled by default |
+| P2 | Optional corrected dynamic-light engine | Replaces Dynamic Lights Reforged with bounded nearby-source lookups and cleaner lifecycle handling | Medium to high | Implement independently, disabled by default, and yield to the standalone mod |
 | P3 | Static block-entity model batching | Large gain in chest/bed-heavy areas | High | Dedicated project with a strict vanilla allowlist |
 | P3 | Occlusion culling | Potential gain in dense bases | High | Prefer a standalone trial; compatibility holes are likely |
 
@@ -274,6 +275,64 @@ Horizons transition boundaries. Acceptance requires no missing terrain, no
 camera-angle-dependent popping, and no stale sections after dimension changes
 or shader reloads.
 
+## P2: Optional Corrected Dynamic Lights
+
+### Design reference
+
+- Dynamic Lights Reforged 1.18:
+  https://github.com/txnimc/DynamicLightsReforged/tree/1.18
+
+The inspected Forge port and its inherited LambDynamicLights source are MIT
+licensed. VRO may legally adapt that version with attribution, but a fresh
+implementation is preferred so the subsystem can fit VRO's lifecycle,
+configuration, diagnostics, and comparison controls. Newer LambDynamicLights
+branches use a different restrictive license and are not implementation
+sources.
+
+The installed 1.18 implementation has several weaknesses:
+
+- every light lookup iterates every active dynamic light source, so work grows
+  with both the number of rendered light lookups and the total source count;
+- reduced-quality modes share one update timestamp across all entities, which
+  can let one source consume the update opportunity while other sources wait;
+- an entity path checks the block-entity lighting setting instead of the entity
+  lighting setting;
+- filtered cleanup stops after the first matching source, which can retain
+  stale sources when a category is disabled or a world changes;
+- the `OnlyUpdateOnPositionChange` setting is declared but not honored;
+- moving sources can request overlapping section rebuilds independently instead
+  of coalescing them before submission.
+
+The planned VRO subsystem must correct those issues:
+
+- index active sources into camera-independent spatial cells and inspect only
+  nearby cells when calculating dynamic light at a position;
+- maintain per-source update state or a fair central scheduler rather than one
+  shared timestamp;
+- use separate entity and block-entity controls and remove every matching source
+  when either category is disabled;
+- clear all sources, spatial cells, tracked sections, and pending rebuilds on
+  disconnect, level replacement, dimension change, and renderer teardown;
+- deduplicate section rebuild requests for each update cycle;
+- either implement position-only updates correctly or omit that setting;
+- preserve resource-driven item luminance, water-sensitive lights, held and
+  dropped items, burning entities, projectiles, TNT, and supported modded items;
+- expose update counts, active-source counts, nearby candidates, and rebuild
+  counts to VRO diagnostics and benchmark archives;
+- disable itself when mod ID `dynamiclightsreforged` is installed.
+
+This is functionality consolidation, not a guaranteed FPS improvement. The
+feature is disabled by default for the general VRO release because it changes
+lighting and moving lights inherently cause render work. A modpack replacing
+Dynamic Lights Reforged can enable it in that pack's VRO client configuration.
+Shader-active behavior must be separately configurable because shader packs may
+provide their own held-light implementation.
+
+Acceptance requires stable lighting with one source and crowded source scenes,
+no ghost lights after source removal or world changes, bounded lookup work as
+unrelated source counts rise, no repeated rebuild storm, correct shader on/off
+transitions, and immediate cleanup after disconnect and dimension changes.
+
 ## P3: Static Block-Entity Rendering
 
 ### Design sources
@@ -422,6 +481,7 @@ research input; it does not imply code was copied.
 | Better Beds | `0a9f7ea0a1cdb0b1924492da4489414cd627fb49` | MIT | Narrow static bed-model reference |
 | Cull Less Leaves Reforged | `c132993ad7968b43a4d49986d656a4d3ce087684` | LGPL-3.0 | Optional visual compromise only |
 | Culler | `da5e258ec3d6f966ffec4d4ffede76a9764a2377` | MIT | Distance-culling reference |
+| Dynamic Lights Reforged 1.18 | `d85b337f8f7af328d78e8d380f19fc9b95e93318` | MIT | Legacy behavior and provenance reference; corrected independent subsystem candidate |
 | Enhanced Block Entities | `b0b202a18a1acbddfc038e5403bde973bece7c98` | LGPL-3.0 | Static/hybrid block-entity reference |
 | Entity Culling | `2b5135a5b6003235b57cb16fa61b312fbc03cc66` | tr7zw Protective License | Standalone test only |
 | Exordium | `15f93fe30cc105d9e58c1d4a26eadc6cd27a9333` | LGPL-3.0 | HUD throttling rejected |
