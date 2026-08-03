@@ -1,6 +1,6 @@
 # Source provenance audit
 
-Audit date: August 2, 2026
+Audit date: August 3, 2026
 
 This audit answers whether VRO's released behavior was copied, adapted,
 independently implemented after research, or written from profiling and
@@ -8,21 +8,26 @@ compatibility work inside this project.
 
 ## Conclusion
 
-VRO is not wholly clean-room code. Two small groups are explicit adaptations:
+VRO is not wholly clean-room code. Three small groups are explicit adaptations:
 
 1. the learned-ability list cache adapts Unobtanium's AGPL implementation;
 2. the client collision mixins adapt Entity Collision FPS Fix's CC0
-   implementation.
+   implementation;
+3. simple-model face-list compaction and block-state `faceSturdy` array
+   canonicalization adapt later FerriteCore MIT implementations to the
+   Minecraft 1.18.2 data layouts not covered by FerriteCore 4.2.2.
 
-The Unobtanium adaptation is why VRO 0.3.0 is distributed under
+The Unobtanium adaptation is why VRO is distributed under
 AGPL-3.0-or-later. Attribution alone would not have been sufficient while the
 project remained marked All Rights Reserved.
 
 The generic particle and render fast paths were independently written after
 studying Particle Core and BadOptimizations. The world cleanup was independently
-written after Unobtanium identified the affected static maps. No complete
-third-party source file, mod jar, decompiled class, or Vault Hunters class is
-bundled in VRO.
+written after Unobtanium identified the affected static maps. Section-distance
+culling and dynamic lighting were independently implemented after studying
+Better Fps - Render Distance and Dynamic Lights Reforged respectively. No
+complete third-party source file, mod jar, decompiled class, or Vault Hunters
+class is bundled in VRO.
 
 ## Feature-by-feature origin
 
@@ -34,6 +39,7 @@ bundled in VRO.
 | Identified Vault tool-model cache | Original VRO implementation | Vault runtime APIs and observed repeated render path |
 | Learned ability-list cache | Adapted code | Unobtanium `7bf6a658`, contributor `radimous`, AGPL-3.0-or-later |
 | Damage-number formatter reuse | Original VRO implementation | Client allocation profile and Vault's existing formatter |
+| Elixir-orb number render-state isolation | Original VRO compatibility fix | In-game visual regression and installed Vault particle API |
 | Vault event-listener snapshot | Original VRO implementation | Initial VRO commit `bd9bd73`; invalidation refined in later VRO commits |
 | Biome listener cache in HoYin Unobtanium fork | Downstream from VRO | Unobtanium fork commit `00d1837` postdates VRO's implementation |
 | Client wall/push skips | Adapted code | Entity Collision FPS Fix `cc16e184`, CC0-1.0 |
@@ -41,8 +47,13 @@ bundled in VRO.
 | Particle-light cache | Independent design adaptation | Particle Core `1151fe6`, MIT |
 | Empty renderer/tick exits | Independent design adaptation | BadOptimizations `5de4a3a`, MIT |
 | Entity/block-entity renderer caches | Independent design adaptation | BadOptimizations `5de4a3a`, MIT |
+| Simple-model face-list compaction | Adapted code | FerriteCore `b63de54a`, MIT; adapted to coexist with FerriteCore 4.2.2 |
+| Block-state `faceSturdy` array interning | Adapted code | FerriteCore `18711423`, MIT; project-owned concurrent interner |
+| Vertical/horizontal terrain-section culling | Independent design adaptation | Better Fps - Render Distance `6ada7eeb`, all rights reserved; no source or formula copied |
+| Spatial dynamic-light engine | Independent design adaptation | Dynamic Lights Reforged `d85b337f`, MIT; independently written engine and lifecycle |
 | Vault Integrations crash guard | Original VRO compatibility fix | Client crash trace and installed runtime behavior |
 | Powah stale-cable crash guard | Original VRO compatibility fix | Client crash trace and installed runtime behavior |
+| Powah unload access bridge | Original VRO compatibility fix | Exit crash trace; narrow Forge class access transformer for the independent unload cleanup |
 | Vault/Xaero map key context | Original VRO compatibility fix | Reproduced Forge key-consumption conflict |
 | Compare Mode, configuration, coexistence plugin | Original VRO implementation | VRO benchmark and compatibility requirements |
 | Four-pack compatibility build | Original VRO build tooling | Locally installed supported Vault API baselines |
@@ -75,6 +86,28 @@ VRO's event snapshot existed in commit `bd9bd73` on June 15, 2026. The
 HoYin1600p Unobtanium fork added its biome-only snapshot in commit `00d1837` on
 July 13, 2026. That code flow was from VRO into the fork, not from Unobtanium
 into VRO.
+
+## FerriteCore adaptations
+
+FerriteCore 4.2.2 already owns the major Minecraft 1.18.2 block-state, shape,
+property, quad, and model caches. VRO adapts only two later reductions absent
+from that release: immutable compact simple-model face lists and canonical
+`faceSturdy` boolean arrays. The retained VRO classes are shaped around Forge
+1.18.2 and coexist with the installed 4.2.2 systems rather than replacing them.
+
+## Independently implemented design-derived systems
+
+Better Fps - Render Distance established the usefulness of separating terrain
+draw distance from chunk loading. VRO copied neither its source nor its distance
+formula; it uses project-owned camera-to-section bounds, separate vanilla and
+Embeddium/Rubidium hooks, independent horizontal and vertical controls, and
+different defaults.
+
+Dynamic Lights Reforged established the expected behavior surface for held and
+dropped item lights, resource definitions, water sensitivity, lightmap
+combination, and terrain invalidation. VRO's engine was independently written
+with spatial cells, per-source scheduling, deduplicated rebuilds, explicit
+cleanup, shader policy, diagnostics, and a coexistence gate.
 
 ## Research-only inspection
 

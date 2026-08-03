@@ -7,7 +7,15 @@ and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
-Development for `0.3.1`.
+### Added
+
+### Changed
+
+### Fixed
+
+## [0.3.2] - 2026-08-03
+
+`0.3.1` was an internal test candidate and was not published.
 
 ### Added
 
@@ -22,6 +30,8 @@ Development for `0.3.1`.
 - Isolated Vault elixir-orb number text from Minecraft's shared render buffer
   and restored particle render state afterward, preventing later particles from
   rendering black when elixir numbers are enabled.
+- Corrected access to Powah's world-keyed cable cache so the unload cleanup
+  remains active without causing an `IllegalAccessError` during client exit.
 
 ### Performance
 
@@ -86,5 +96,6 @@ Development for `0.3.1`.
 - Released the complete project under AGPL-3.0-or-later, with exact source
   revisions and third-party notices included.
 
-[Unreleased]: https://github.com/HoYin1600p/The-Vault-Render-Optimization/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/HoYin1600p/The-Vault-Render-Optimization/compare/v0.3.2...HEAD
+[0.3.2]: https://github.com/HoYin1600p/The-Vault-Render-Optimization/compare/v0.3.0...v0.3.2
 [0.3.0]: https://github.com/HoYin1600p/The-Vault-Render-Optimization/releases/tag/v0.3.0

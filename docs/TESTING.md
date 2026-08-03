@@ -40,11 +40,21 @@ An optimization build is not release-ready until it has exercised:
 - particle-heavy mob deaths and item processing;
 - dense entities and block entities;
 - Vault gear HUD, armor, tools, abilities, and damage numbers;
+- Vault elixir-orb number particles followed by other colored particles;
 - animated text, inventories, maps, and resource reloads;
+- model-heavy resource reloads with FerriteCore 4.2.2 present;
+- vertical section culling in tall rooms, mountains, caves, the Nether, and
+  spectator flight, plus opt-in horizontal culling at its distance boundary;
+- dynamic lights off by default, then enabled with held, dropped, entity, and
+  resource-defined block-entity sources, including source removal and movement;
 - disconnect/reconnect, death/respawn, and dimension changes;
-- world unload and a multi-hour session;
+- world unload, normal client exit with Powah present, and a multi-hour session;
 - shaders and Distant Horizons in a separate compatibility client;
 - window resizing, fullscreen changes, and repeated shader toggles.
+
+Terrain-culling tests must confirm that chunk loading and Distant Horizons
+storage remain unchanged. Dynamic-light shader tests must confirm the default
+pause policy and the explicit opt-in path separately.
 
 Default optimizations must not suppress visible content or change lighting,
 animation timing, transparency, model state, loot, movement, or server rules.

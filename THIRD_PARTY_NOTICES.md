@@ -141,5 +141,11 @@ Embeddium/Rubidium render stacks, and optional optimization mods. Their code and
 assets are not bundled. Locally installed Vault jars were inspected only to
 identify stable public method and field layouts across supported pack versions.
 
+VRO's Vault elixir-orb fix uses the installed particle class as a mixin target,
+supplies a project-owned text buffer, and restores standard Minecraft particle
+render state. Its Powah unload compatibility uses a Forge access transformer to
+widen only the package-private `CableNet` class; no Powah field is made public
+and no Powah source file is included.
+
 The complete research ledger, including rejected and unimplemented projects,
 is in `docs/PERFORMANCE_BACKPORT_RESEARCH.md`.

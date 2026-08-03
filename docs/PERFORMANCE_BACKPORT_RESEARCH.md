@@ -268,12 +268,12 @@ The planned VRO variation has these requirements:
 - settings can be disabled for immediate A/B comparisons without replacing a
   jar, although renderer reload may be required when a distance changes.
 
-The exact default vertical distance remains an implementation decision for the
-0.3.1 branch. It must be selected using tall Vault rooms, mountains, deep caves,
-the Nether, spectator flight, 32-chunk render distance, shaders, and Distant
-Horizons transition boundaries. Acceptance requires no missing terrain, no
-camera-angle-dependent popping, and no stale sections after dimension changes
-or shader reloads.
+VRO 0.3.2 implements this design with a default vertical distance of 12
+sections and horizontal culling disabled. Validation must continue to include
+tall Vault rooms, mountains, deep caves, the Nether, spectator flight,
+32-chunk render distance, shaders, and Distant Horizons transition boundaries.
+Acceptance requires no missing terrain, camera-angle-dependent popping, or
+stale sections after dimension changes or shader reloads.
 
 ## P2: Optional Corrected Dynamic Lights
 

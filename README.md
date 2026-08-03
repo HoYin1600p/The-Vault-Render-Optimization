@@ -4,7 +4,7 @@
 [![Forge](https://img.shields.io/badge/Forge-40.3.11%2B-e04e39)](https://files.minecraftforge.net/net/minecraftforge/forge/index_1.18.2.html)
 [![Environment](https://img.shields.io/badge/Environment-Client-4b8bbe)](#requirements-and-support)
 [![License](https://img.shields.io/badge/License-AGPL--3.0--or--later-blue.svg)](LICENSE)
-[![Release](https://img.shields.io/badge/Release-0.3.0-7b68ee)](docs/releases/0.3.0.md)
+[![Release](https://img.shields.io/badge/Release-0.3.2-7b68ee)](docs/releases/0.3.2.md)
 
 The Vault Render Optimization (VRO) is a client-side Minecraft Forge 1.18.2
 mod that reduces repeated rendering and client simulation work in Vault
@@ -22,6 +22,9 @@ modify server gameplay. The remote server does not need the mod.
 - Avoids client-only entity collision work in crowded mob-processing areas.
 - Reuses safe particle-light and renderer lookups and skips renderer setup when
   there is nothing to draw.
+- Reduces retained block-state and baked-model memory beyond FerriteCore 4.2.2.
+- Skips terrain sections beyond a configurable vertical render range without
+  changing chunk loading or Distant Horizons storage.
 - Releases stale Create Addition and Powah world references after unloads.
 - Repairs two known client-only stale-state crashes without changing the
   server.
@@ -31,7 +34,8 @@ modify server gameplay. The remote server does not need the mod.
 - Includes opt-in spatially indexed dynamic lighting for held and dropped
   items, luminous entities, and resource-defined block entities.
 - Automatically yields overlapping work to Entity Collision FPS Fix,
-  BadOptimizations, Particle Core, and Flerovium when present.
+  BadOptimizations, Particle Core, Flerovium, Better Fps - Render Distance,
+  and Dynamic Lights Reforged when present.
 
 ## What VRO improves
 
@@ -85,9 +89,20 @@ VRO also applies conservative optimizations outside Vault-specific code:
 These paths are independently configurable and do not intentionally change
 visible output. Shader-sensitive lightmap and sky-color caching were rejected.
 
+### Memory and terrain distance
+
+VRO compacts simple baked-model face lists and shares identical block-state
+`faceSturdy` arrays. These additions target data that FerriteCore 4.2.2 does
+not already compact.
+
+Vertical terrain-section culling is enabled by default at 12 sections above
+and below the camera. Horizontal culling is independently configurable and
+disabled by default. Both paths affect terrain drawing only, support vanilla
+and Embeddium/Rubidium renderers, and yield to Better Fps - Render Distance.
+
 ### Optional dynamic lights
 
-VRO 0.3.1 includes a fresh dynamic-light engine that is disabled by default.
+VRO 0.3.2 includes a fresh dynamic-light engine that is disabled by default.
 When enabled, luminous entities and items light nearby terrain without changing
 server light data. Sources are indexed by 16-block cells, carry independent
 update schedules, and submit one deduplicated set of terrain rebuilds per tick.
@@ -169,7 +184,7 @@ different pack files together.
 
 1. Stop Minecraft.
 2. Remove or disable every older VRO jar.
-3. Place `vault_render_optimization.0.3.0.jar` in the instance's `mods`
+3. Place `vault_render_optimization.0.3.2.jar` in the instance's `mods`
    directory.
 4. Keep only one active VRO jar.
 5. Remove Entity Collision FPS Fix only if you want VRO to own that same
@@ -213,7 +228,8 @@ The complete option and coexistence reference is in
 
 - Optional integrations load only when their target mod is present.
 - Equivalent mixins yield to Entity Collision FPS Fix, BadOptimizations,
-  Particle Core, Flerovium, and Better Fps - Render Distance.
+  Particle Core, Flerovium, Better Fps - Render Distance, and Dynamic Lights
+  Reforged.
 - Player renderer lookup behavior is not replaced.
 - Renderer caches are discarded on resource reload.
 - Particle subclasses with custom or full-bright lighting keep their own path.
@@ -229,7 +245,8 @@ The complete option and coexistence reference is in
 | [Configuration](docs/CONFIGURATION.md) | Every option, default, command, and immediate behavior |
 | [Testing](docs/TESTING.md) | Compare Mode and repeatable benchmark procedure |
 | [Performance validation](docs/PERFORMANCE_VALIDATION.md) | Four-client measured results and limitations |
-| [Release notes 0.3.0](docs/releases/0.3.0.md) | Initial public release details |
+| [Release notes 0.3.2](docs/releases/0.3.2.md) | Current release details and the 0.3.0-to-0.3.2 changes |
+| [Release notes 0.3.0](docs/releases/0.3.0.md) | Initial release history |
 | [Changelog](CHANGELOG.md) | Version-to-version changes |
 | [Credits](CREDITS.md) | Adapted code, design research, and compatibility attribution |
 | [Third-party notices](THIRD_PARTY_NOTICES.md) | Exact shipped provenance and licenses |
@@ -264,10 +281,12 @@ The same scan runs in CI and must pass before any public push or upload.
 ## Credits and license
 
 VRO was developed by [HoYin1600p](https://github.com/HoYin1600p). The
-learned-ability cache is adapted from Unobtanium work by `radimous`, and the
-client collision behavior is adapted from CorgiTaco's CC0 Entity Collision FPS
-Fix. Particle Core, BadOptimizations, and other projects informed independent
-research and compatibility boundaries.
+learned-ability cache is adapted from Unobtanium work by `radimous`, the client
+collision behavior is adapted from CorgiTaco's CC0 Entity Collision FPS Fix,
+and two post-4.2.2 memory reductions are adapted from FerriteCore. Particle
+Core, BadOptimizations, Better Fps - Render Distance, Dynamic Lights Reforged,
+and other projects informed independently written features and compatibility
+boundaries.
 
 Read [CREDITS.md](CREDITS.md) and [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)
 for exact revisions and relationships.

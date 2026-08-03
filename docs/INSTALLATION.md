@@ -14,7 +14,7 @@ render fast paths can load without it.
 1. Stop Minecraft completely.
 2. Open the instance's `mods` directory.
 3. Remove or disable every older VRO jar.
-4. Place `vault_render_optimization.0.3.0.jar` in the directory.
+4. Place `vault_render_optimization.0.3.2.jar` in the directory.
 5. Confirm that only one VRO jar ends in `.jar`.
 6. Launch the client. VRO creates
    `config/vault_render_optimization-client.toml` with release defaults.
@@ -23,7 +23,7 @@ The remote server does not need VRO. Do not install the sources jar as a mod.
 
 ## Upgrade
 
-Stop Minecraft before replacing the jar. VRO 0.3.0 requires no cache deletion
+Stop Minecraft before replacing the jar. VRO 0.3.2 requires no cache deletion
 or configuration reset. New configuration keys receive their documented
 defaults when absent.
 
@@ -37,6 +37,8 @@ VRO automatically avoids duplicate mixins when these mods are present:
 | BadOptimizations | Leaves equivalent empty-work and renderer lookup paths to it |
 | Particle Core | Leaves particle-light caching to it |
 | Flerovium | Leaves particle-light caching to it |
+| Better Fps - Render Distance | Leaves terrain-distance culling to it |
+| Dynamic Lights Reforged | Leaves all dynamic-light behavior to it |
 
 It is safe to retain those mods during migration. Removing a standalone mod
 allows VRO's equivalent path to activate on the next launch.
@@ -63,5 +65,6 @@ For an issue report, include:
 - whether Compare Mode changes the issue;
 - whether shaders, Distant Horizons, or a resource pack are active;
 - the names and versions of Entity Collision FPS Fix, BadOptimizations,
-  Particle Core, or Flerovium if installed;
+  Particle Core, Flerovium, Better Fps - Render Distance, or Dynamic Lights
+  Reforged if installed;
 - exact reproduction steps and screenshots or video for visual issues.

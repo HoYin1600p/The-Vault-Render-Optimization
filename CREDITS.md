@@ -117,14 +117,20 @@ decompiled output.
 
 The newer Asgard Vault behavior informed use of Vault's own `GearDataCache` for
 armor state. VRO's cache, invalidation, and mixin implementation were written
-inside this project.
+inside this project. The elixir-orb number fix was also developed from an
+in-game render regression and the installed Vault particle API; VRO uses an
+isolated text buffer and restores Minecraft's particle state without copying
+Vault source.
 
 ### Vault Integrations and Powah
 
 Client crash reports and installed runtime behavior identified deterministic
 stale states in altar conduit ticking and Powah cable replacement. VRO's guards
 repair those states on the physical client and leave server behavior unchanged.
-No source from either project is bundled.
+The Powah unload cleanup uses a narrow Forge access transformer only to make
+Powah's package-private `CableNet` class reachable by VRO's optional accessor;
+the cache field remains private and normal cable behavior is not replaced. No
+source from either project is bundled.
 
 ### Create Crafts & Additions
 
