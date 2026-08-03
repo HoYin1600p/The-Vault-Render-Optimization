@@ -85,11 +85,15 @@ adapted from CorgiTaco's CC0 Entity Collision FPS Fix. Particle Core and
 BadOptimizations informed independently written Forge 1.18.2 fast paths.
 
 - [Source code and issue tracker](https://github.com/HoYin1600p/The-Vault-Render-Optimization)
-- [Full release notes](https://github.com/HoYin1600p/The-Vault-Render-Optimization/blob/main/docs/releases/0.3.0.md)
+- [Full release notes](https://github.com/HoYin1600p/The-Vault-Render-Optimization/blob/v0.3.0/docs/releases/0.3.0.md)
 - [Complete credits](https://github.com/HoYin1600p/The-Vault-Render-Optimization/blob/main/CREDITS.md)
+- [Third-party notices](https://github.com/HoYin1600p/The-Vault-Render-Optimization/blob/main/THIRD_PARTY_NOTICES.md)
 - License: GNU Affero General Public License v3.0 or later
 
 No third-party mod jar, Vault Hunters source, or decompiled class is bundled.
 Minecraft is a trademark of Microsoft. Vault Hunters belongs to its respective
 authors. This independent project is not affiliated with Mojang, Microsoft,
 Forge, Iskallia, or the credited projects.
+
+The project icon is original AI-assisted branding and is not an in-game
+screenshot or a modified official Vault Hunters logo.

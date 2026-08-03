@@ -10,8 +10,12 @@
 | License | `GNU Affero General Public License v3.0 or later` |
 | Description format | `Markdown` |
 | Description | `DESCRIPTION.md` |
+| Project logo | `vro-icon.jpg` |
 | Source | `https://github.com/HoYin1600p/The-Vault-Render-Optimization` |
 | Issues | `https://github.com/HoYin1600p/The-Vault-Render-Optimization/issues` |
+
+The optimized JPEG logo is 512 by 512 pixels, is under 100 KB, and is original
+AI-assisted project artwork. It exceeds CurseForge's 400 by 400 pixel minimum.
 
 ## First public file
 
@@ -27,7 +31,7 @@
 | Changelog | `CHANGELOG-0.3.0.md` |
 
 Upload the runnable jar itself. Do not upload a sources jar or documentation
-bundle in place of the mod.
+bundle in place of the mod. The assembled support bundle is for author review.
 
 ## Relationship notes
 
@@ -57,6 +61,8 @@ Source state: tag the reviewed release commit as `v0.3.0`
 - The runnable jar, source repository, AGPL license, credits, and exact adapted
   sources are public.
 - The page does not claim a guaranteed FPS percentage.
+- The logo is an original square graphic, and the AI-assisted artwork
+  disclosure appears at the bottom of the description.
 - The file is marked `Release`, matching VH Accelerator's public release type.
 - The changelog is concise and the GitHub release notes retain full detail.
 - One active jar has been tested in a clean copy of the shipping baseline.

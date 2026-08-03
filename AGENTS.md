@@ -22,6 +22,8 @@
 - Source is authoritative. Never retain or publish a jar without committing the
   source and documentation that produced it.
 - Run `./scripts/build-pack-compatibility.ps1` before retaining a release jar.
+- Run `./scripts/assemble-curseforge-release.ps1 -Version X.Y.Z` before a
+  CurseForge upload and review every file in the local kit.
 - Keep `LICENSE`, `CREDITS.md`, and `THIRD_PARTY_NOTICES.md` current and embed
   the license and notices in the runnable jar.
 - Use `HoYin1600p` in public authorship and attribution fields.
