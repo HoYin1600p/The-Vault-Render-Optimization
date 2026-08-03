@@ -101,12 +101,31 @@ if (!vaultModJarFile.exists()) {
     throw new GradleException("The Vault mod jar was not found at ${vaultModJarFile}. Set -Pvault_mod_jar=path/to/the_vault.jar if your instance path differs.")
 }
 
+def discoveredRenderModJar = knownVaultInstances.collect { instance ->
+    def modsDirectory = new File(prismInstancesDirectory, "${instance.folder}/${instance.minecraft}/mods")
+    def candidates = modsDirectory.listFiles()?.findAll {
+        it.isFile()
+                && it.name ==~ /^(embeddium|rubidium)-[0-9].*\.jar$/
+    } ?: []
+    candidates ? candidates.first() : null
+}.find { it != null }
+def configuredRenderModJar = findProperty('render_mod_jar') ?: discoveredRenderModJar
+if (configuredRenderModJar == null) {
+    throw new GradleException('No Embeddium or Rubidium jar was discovered. Set -Prender_mod_jar=path/to/render-mod.jar.')
+}
+
+def renderModJarFile = file(configuredRenderModJar)
+if (!renderModJarFile.exists()) {
+    throw new GradleException("The renderer mod jar was not found at ${renderModJarFile}. Set -Prender_mod_jar if your instance path differs.")
+}
+
 dependencies {
     minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
 
     annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
 
     compileOnly files(vaultModJarFile)
+    compileOnly files(renderModJarFile)
 }
 
 tasks.register('printVaultCompatibilityTargets') {

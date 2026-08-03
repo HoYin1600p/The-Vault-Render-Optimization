@@ -25,8 +25,14 @@ Development for `0.3.1`.
   reduce retained model memory.
 - Canonicalized identical block-state `faceSturdy` arrays to reduce duplicate
   cache storage alongside FerriteCore 4.2.2.
+- Added independently configurable vertical and horizontal terrain-section
+  distance culling for vanilla and Embeddium/Rubidium renderers. Vertical
+  culling defaults on at 12 sections; horizontal culling defaults off.
 
 ### Compatibility
+
+- Section-distance culling yields to Better Fps - Render Distance when that mod
+  is installed and does not change chunk loading or Distant Horizons storage.
 
 ## [0.3.0] - 2026-08-02
 

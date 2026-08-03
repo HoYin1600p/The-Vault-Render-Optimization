@@ -18,22 +18,29 @@ $profiles = @(
 $targets = foreach ($profile in $profiles) {
     $modsDirectory = Join-Path $PrismInstancesDirectory "$($profile.Folder)\$($profile.Minecraft)\mods"
     $vaultJars = @(Get-ChildItem -LiteralPath $modsDirectory -File -Filter 'the_vault-*.jar')
+    $renderJars = @(Get-ChildItem -LiteralPath $modsDirectory -File | Where-Object {
+        $_.Name -match '^(embeddium|rubidium)-[0-9].*\.jar$'
+    })
 
     if ($vaultJars.Count -ne 1) {
         throw "Expected exactly one active The Vault jar for $($profile.Name), found $($vaultJars.Count) in $modsDirectory"
+    }
+    if ($renderJars.Count -ne 1) {
+        throw "Expected exactly one active Embeddium or Rubidium jar for $($profile.Name), found $($renderJars.Count) in $modsDirectory"
     }
 
     [PSCustomObject]@{
         Name = $profile.Name
         Jar = $vaultJars[0].FullName
+        RenderJar = $renderJars[0].FullName
     }
 }
 
 Push-Location $repositoryDirectory
 try {
     foreach ($target in $targets) {
-        Write-Host "Compiling against $($target.Name): $($target.Jar)"
-        & $gradleWrapper clean compileJava "-Pvault_mod_jar=$($target.Jar)" --console=plain
+        Write-Host "Compiling against $($target.Name): $($target.Jar), $($target.RenderJar)"
+        & $gradleWrapper clean compileJava "-Pvault_mod_jar=$($target.Jar)" "-Prender_mod_jar=$($target.RenderJar)" --console=plain
         if ($LASTEXITCODE -ne 0) {
             throw "Compatibility compilation failed for $($target.Name)"
         }
@@ -41,7 +48,7 @@ try {
 
     $primaryTarget = $targets | Where-Object Name -eq 'Vault Hunters Third Edition' | Select-Object -First 1
     Write-Host "Building universal jar against the primary target: $($primaryTarget.Jar)"
-    & $gradleWrapper clean build "-Pvault_mod_jar=$($primaryTarget.Jar)" --console=plain
+    & $gradleWrapper clean build "-Pvault_mod_jar=$($primaryTarget.Jar)" "-Prender_mod_jar=$($primaryTarget.RenderJar)" --console=plain
     if ($LASTEXITCODE -ne 0) {
         throw 'Final universal jar build failed'
     }

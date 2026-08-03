@@ -51,6 +51,21 @@ another thread.
 Both caches are cleared and rebuilt after resource reloads. Player renderer
 selection remains on Minecraft's established path.
 
+## Section-distance culling
+
+| Key | Default | Purpose |
+| --- | --- | --- |
+| `section_distance_culling.vertical_enabled` | `true` | Skips terrain sections beyond the vertical camera range |
+| `section_distance_culling.vertical_distance` | `12` | Vertical range in 16-block sections |
+| `section_distance_culling.horizontal_enabled` | `false` | Enables circular horizontal terrain culling |
+| `section_distance_culling.horizontal_distance` | `24` | Horizontal radius in 16-block sections |
+
+The limits use each section's nearest edge, are symmetric around the camera,
+and do not rotate with view direction. They affect terrain drawing only. Chunk
+loading, generation, simulation, server distance, and Distant Horizons storage
+are unchanged. VRO supplies separate vanilla and Embeddium/Rubidium paths and
+yields both when Better Fps - Render Distance is installed.
+
 ## Commands
 
 | Command | Result |
@@ -60,6 +75,13 @@ selection remains on Minecraft's established path.
 | `/vro compare status` | Shows Compare Mode state |
 | `/vro compare on` | Saves and immediately disables VRO performance paths |
 | `/vro compare off` | Saves and immediately enables configured performance paths |
+| `/vro culling` | Shows section-culling state and distances |
+| `/vro culling vertical on` | Enables vertical terrain culling immediately |
+| `/vro culling vertical off` | Disables vertical terrain culling immediately |
+| `/vro culling vertical <1-64>` | Saves the vertical distance immediately |
+| `/vro culling horizontal on` | Enables horizontal terrain culling immediately |
+| `/vro culling horizontal off` | Disables horizontal terrain culling immediately |
+| `/vro culling horizontal <1-64>` | Saves the horizontal distance immediately |
 
 These are client commands in multiplayer. They require no server permission
 and work even when the remote server does not have VRO.

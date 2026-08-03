@@ -167,6 +167,9 @@ for upgrades, removal, optional-mod coexistence, and issue isolation.
 | `/vro compare on` | Saves and immediately disables VRO performance optimizations. |
 | `/vro compare off` | Saves and immediately enables configured VRO optimizations. |
 | `/vro compare status` | Reports whether Compare Mode is active. |
+| `/vro culling` | Reports vertical and horizontal terrain-culling settings. |
+| `/vro culling vertical on\|off\|<distance>` | Changes vertical section culling immediately. |
+| `/vro culling horizontal on\|off\|<distance>` | Changes horizontal section culling immediately. |
 
 Compare Mode deliberately leaves crash guards, unloaded-world cleanup, and
 map-key compatibility active. Those are correctness features, not benchmarked
@@ -185,7 +188,7 @@ The complete option and coexistence reference is in
 
 - Optional integrations load only when their target mod is present.
 - Equivalent mixins yield to Entity Collision FPS Fix, BadOptimizations,
-  Particle Core, and Flerovium.
+  Particle Core, Flerovium, and Better Fps - Render Distance.
 - Player renderer lookup behavior is not replaced.
 - Renderer caches are discarded on resource reload.
 - Particle subclasses with custom or full-bright lighting keep their own path.

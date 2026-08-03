@@ -79,6 +79,18 @@ VRO's Forge 1.18.2 implementations use separate classes, configuration,
 resource-reload invalidation, and mod-coexistence gates. Shader-sensitive
 lightmap and sky-color caches were deliberately rejected.
 
+### Better Fps - Render Distance - someaddons
+
+- Source: [someaddons/betterfpsdistances](https://github.com/someaddons/betterfpsdistances)
+- Inspected revision: `6ada7eeb3f07c98f29bb15d955234f03766ca915`
+- License observed during research: all rights reserved
+
+The project established the general usefulness of separating terrain draw
+distance from loaded chunk distance. VRO's implementation was written
+independently and uses different bounds, configuration, mixins, renderer
+integration, and defaults. No source code or formulas from the reference mod
+are included.
+
 ## Compatibility and behavior sources
 
 ### Vault Hunters - Iskallia and contributors

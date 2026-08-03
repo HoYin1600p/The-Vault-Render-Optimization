@@ -88,6 +88,20 @@ VRO deliberately excludes BadOptimizations' shader-sensitive lightmap and sky
 color caching. Equivalent VRO mixins disable themselves when BadOptimizations
 is installed.
 
+### Better Fps - Render Distance
+
+- Project: Better Fps - Render Distance by someaddons
+- Source: https://github.com/someaddons/betterfpsdistances
+- Inspected revision: `6ada7eeb3f07c98f29bb15d955234f03766ca915`
+- License observed at inspection: all rights reserved
+- Design influence: make terrain rendering distance independently controllable
+  from chunk loading.
+
+No source, mixin structure, configuration code, or distance formula from Better
+Fps - Render Distance is included. VRO uses its own camera-to-section bounds,
+vanilla render context, Embeddium/Rubidium render-list filter, configuration,
+and coexistence gate.
+
 ### Unobtanium world-retention research
 
 Unobtanium's Create Addition and Powah memory-leak work identified these mods'
