@@ -96,6 +96,7 @@ remain unimplemented.
 | P2 | Entity and block-entity renderer lookup cache | Small gain in entity-heavy scenes | Medium | Implemented with reload invalidation |
 | P2 | Compact simple-model face lists | Lower retained model memory, commonly up to about 20 MB | Low | Post-4.2.2 FerriteCore feature; implement independently and retain its MIT notice |
 | P2 | Block-state `faceSturdy` array deduplication | Modest retained block-state memory reduction | Low to medium | Post-4.2.2 FerriteCore feature; verify an independent mixin alongside FerriteCore 4.2.2 |
+| P2 | Independent vertical/horizontal section-distance culling | Less chunk-section traversal and drawing at high render distances | Medium | Implement independently; vertical enabled by default, horizontal disabled by default |
 | P3 | Static block-entity model batching | Large gain in chest/bed-heavy areas | High | Dedicated project with a strict vanilla allowlist |
 | P3 | Occlusion culling | Potential gain in dense bases | High | Prefer a standalone trial; compatibility holes are likely |
 
@@ -233,6 +234,45 @@ Map atlas work and non-UI buffer upload are safer initial candidates than HUD
 batching, screen batching, sign buffering, or framebuffer lifecycle changes.
 VRO must disable an equivalent feature when either ImmediatelyFast variant is
 installed.
+
+## P2: Independent Section-Distance Culling
+
+### Design reference
+
+- Better Fps - Render Distance: https://github.com/someaddons/betterfpsdistances
+
+The Forge 1.18.2 project is all rights reserved. VRO must not copy its source,
+mixin structure, configuration code, or formulas. The permissible input is the
+general rendering goal: avoid traversing and drawing chunk sections that are
+outside a separately configured camera-centered horizontal or vertical range.
+The VRO implementation must be written independently against Minecraft and the
+installed renderer APIs.
+
+The planned VRO variation has these requirements:
+
+- vertical and horizontal behavior have independent enable switches and
+  independently configurable distances;
+- vertical section-distance culling is enabled by default;
+- horizontal corner/distance culling is disabled by default so VRO preserves
+  the configured horizontal render distance unless the user opts in;
+- the calculation is symmetric around the active camera and does not rotate or
+  change shape with player yaw;
+- it affects rendering only. It does not change server view distance, client
+  chunk retention, chunk generation, simulation distance, or Distant Horizons
+  storage;
+- vanilla rendering and the supported Embeddium/Rubidium path receive separate,
+  narrowly targeted implementations;
+- VRO yields this entire feature when mod ID `betterfpsdist` is installed;
+- entity render distance is not changed as part of the default feature;
+- settings can be disabled for immediate A/B comparisons without replacing a
+  jar, although renderer reload may be required when a distance changes.
+
+The exact default vertical distance remains an implementation decision for the
+0.3.1 branch. It must be selected using tall Vault rooms, mountains, deep caves,
+the Nether, spectator flight, 32-chunk render distance, shaders, and Distant
+Horizons transition boundaries. Acceptance requires no missing terrain, no
+camera-angle-dependent popping, and no stale sections after dimension changes
+or shader reloads.
 
 ## P3: Static Block-Entity Rendering
 
@@ -377,6 +417,7 @@ research input; it does not imply code was copied.
 | --- | --- | --- | --- |
 | AsyncParticles | `87636d03147a5f8ceaa35540f8ac6ce63acdbb61` | LGPL-3.0 | Modern branch; deferred multithreading reference |
 | BadOptimizations | `5de4a3ad4299909178d8995dc0bc80626be48d44` | MIT | Primary zero-work and cache reference |
+| Better Fps - Render Distance 1.18.2 | `6ada7eeb3f07c98f29bb15d955234f03766ca915` | All rights reserved | Behavioral reference only; independent implementation required |
 | Better Block Entities | `cb2937e94ec9399f0f9f54905aff81b9ae5c1797` | LGPL-3.0+ | Modern block-entity reference |
 | Better Beds | `0a9f7ea0a1cdb0b1924492da4489414cd627fb49` | MIT | Narrow static bed-model reference |
 | Cull Less Leaves Reforged | `c132993ad7968b43a4d49986d656a4d3ce087684` | LGPL-3.0 | Optional visual compromise only |
