@@ -51,6 +51,21 @@ another thread.
 Both caches are cleared and rebuilt after resource reloads. Player renderer
 selection remains on Minecraft's established path.
 
+## Section-distance culling
+
+| Key | Default | Purpose |
+| --- | --- | --- |
+| `section_distance_culling.vertical_enabled` | `true` | Skips terrain sections beyond the vertical camera range |
+| `section_distance_culling.vertical_distance` | `12` | Vertical range in 16-block sections |
+| `section_distance_culling.horizontal_enabled` | `false` | Enables circular horizontal terrain culling |
+| `section_distance_culling.horizontal_distance` | `24` | Horizontal radius in 16-block sections |
+
+The limits use each section's nearest edge, are symmetric around the camera,
+and do not rotate with view direction. They affect terrain drawing only. Chunk
+loading, generation, simulation, server distance, and Distant Horizons storage
+are unchanged. VRO supplies separate vanilla and Embeddium/Rubidium paths and
+yields both when Better Fps - Render Distance is installed.
+
 ## Commands
 
 | Command | Result |
@@ -60,9 +75,40 @@ selection remains on Minecraft's established path.
 | `/vro compare status` | Shows Compare Mode state |
 | `/vro compare on` | Saves and immediately disables VRO performance paths |
 | `/vro compare off` | Saves and immediately enables configured performance paths |
+| `/vro culling` | Shows section-culling state and distances |
+| `/vro culling vertical on` | Enables vertical terrain culling immediately |
+| `/vro culling vertical off` | Disables vertical terrain culling immediately |
+| `/vro culling vertical <1-64>` | Saves the vertical distance immediately |
+| `/vro culling horizontal on` | Enables horizontal terrain culling immediately |
+| `/vro culling horizontal off` | Disables horizontal terrain culling immediately |
+| `/vro culling horizontal <1-64>` | Saves the horizontal distance immediately |
+| `/vro lights` | Shows configuration, active state, source counts, rebuilds, and loaded definitions |
+| `/vro lights on` | Enables VRO dynamic lights immediately |
+| `/vro lights off` | Disables VRO dynamic lights and clears retained source state |
+| `/vro lights entities on\|off` | Controls all entity-based light sources |
+| `/vro lights block_entities on\|off` | Controls resource-defined block entity sources |
+| `/vro lights shaders on\|off` | Controls operation while Oculus shaders are active |
+| `/vro lights interval <1-20>` | Saves the independent per-source update interval |
 
 These are client commands in multiplayer. They require no server permission
 and work even when the remote server does not have VRO.
+
+## Dynamic lights
+
+| Key | Default | Purpose |
+| --- | --- | --- |
+| `dynamic_lights.enabled` | `false` | Enables VRO's client-only dynamic-light engine |
+| `dynamic_lights.entities` | `true` | Allows held/dropped items, burning entities, TNT, and supported entities/projectiles to emit light |
+| `dynamic_lights.block_entities` | `true` | Allows resource-defined block entity types to emit light |
+| `dynamic_lights.enable_with_shaders` | `false` | Keeps VRO lights active while an Oculus shader pack is active |
+| `dynamic_lights.update_interval_ticks` | `1` | Per-source update interval from 1 to 20 client ticks |
+
+The master switch is intentionally off by default. Dynamic light is visual
+only and does not change server light levels, mob spawning, crops, or chunk
+storage. Compare Mode pauses it. Dynamic Lights Reforged owns the feature when
+that mod is installed, regardless of these settings.
+
+See [Dynamic lights](DYNAMIC_LIGHTS.md) for source definitions and diagnostics.
 
 ## Optional-mod ownership
 

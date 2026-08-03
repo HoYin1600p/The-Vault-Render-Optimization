@@ -49,7 +49,7 @@ Fill this after the final clean compatibility build:
 
 ```text
 vault_render_optimization.0.3.0.jar
-SHA-256: 7EE4F265C9670F0923E95ED4F20010D982AF198580C84DDF3CB2B537B6033AF0
+SHA-256: 9D040D690DB3CB2A960155AA6FF3C8D151C47984324DD1E5D4B0FD74C8638B92
 Source state: tag the reviewed release commit as `v0.3.0`
 ```
 

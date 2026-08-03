@@ -31,9 +31,32 @@ public final class VaultRenderOptimizationMixinPlugin implements IMixinConfigPlu
             "particle_core",
             "flerovium"
     );
+    private static final Set<String> SECTION_CULLING_MIXINS = Set.of(
+            "LevelRendererSectionCullingMixin",
+            "RenderChunkSectionCullingMixin",
+            "SodiumRenderSectionAccessor",
+            "SodiumRenderSectionManagerCullingMixin"
+    );
+    private static final Set<String> SODIUM_SECTION_CULLING_MIXINS = Set.of(
+            "SodiumRenderSectionAccessor",
+            "SodiumRenderSectionManagerCullingMixin"
+    );
+    private static final Set<String> SODIUM_RENDER_MOD_IDS = Set.of(
+            "embeddium",
+            "rubidium",
+            "sodium"
+    );
+    private static final Set<String> DYNAMIC_LIGHT_MIXINS = Set.of(
+            "EntityDynamicLightMixin",
+            "EntityRendererDynamicLightMixin",
+            "LevelDynamicLightMixin",
+            "LevelRendererDynamicLightMixin",
+            "MinecraftDynamicLightMixin"
+    );
     private static final Map<String, String> OPTIONAL_MIXIN_MODS = Map.ofEntries(
             Map.entry("AltarConduitClientCrashGuardMixin", "vaultintegrations"),
             Map.entry("ClientAbilityDataMixin", "the_vault"),
+            Map.entry("ElixirOrbParticleMixin", "the_vault"),
             Map.entry("CreateAdditionEnergyNetworkManagerAccessor", "createaddition"),
             Map.entry("PowahCableNetAccessor", "powah"),
             Map.entry("PowahCableNetClientCrashGuardMixin", "powah"),
@@ -71,6 +94,19 @@ public final class VaultRenderOptimizationMixinPlugin implements IMixinConfigPlu
 
         if (simpleName.equals("ParticleLightCacheMixin")
                 && PARTICLE_LIGHT_CACHE_MOD_IDS.stream().anyMatch(this::isModLoaded)) {
+            return false;
+        }
+
+        if (SECTION_CULLING_MIXINS.contains(simpleName)) {
+            if (isModLoaded("betterfpsdist")) {
+                return false;
+            }
+            if (SODIUM_SECTION_CULLING_MIXINS.contains(simpleName)) {
+                return SODIUM_RENDER_MOD_IDS.stream().anyMatch(this::isModLoaded);
+            }
+        }
+
+        if (DYNAMIC_LIGHT_MIXINS.contains(simpleName) && isModLoaded("dynamiclightsreforged")) {
             return false;
         }
 

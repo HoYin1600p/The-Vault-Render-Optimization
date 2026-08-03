@@ -18,6 +18,15 @@ public final class ClientOptimizationConfig {
     private static final ForgeConfigSpec.BooleanValue EMPTY_DEBUG_RENDER_SKIP;
     private static final ForgeConfigSpec.BooleanValue ENTITY_RENDERER_CACHE;
     private static final ForgeConfigSpec.BooleanValue BLOCK_ENTITY_RENDERER_CACHE;
+    private static final ForgeConfigSpec.BooleanValue VERTICAL_SECTION_CULLING;
+    private static final ForgeConfigSpec.IntValue VERTICAL_SECTION_DISTANCE;
+    private static final ForgeConfigSpec.BooleanValue HORIZONTAL_SECTION_CULLING;
+    private static final ForgeConfigSpec.IntValue HORIZONTAL_SECTION_DISTANCE;
+    private static final ForgeConfigSpec.BooleanValue DYNAMIC_LIGHTS;
+    private static final ForgeConfigSpec.BooleanValue DYNAMIC_LIGHT_ENTITIES;
+    private static final ForgeConfigSpec.BooleanValue DYNAMIC_LIGHT_BLOCK_ENTITIES;
+    private static final ForgeConfigSpec.BooleanValue DYNAMIC_LIGHTS_WITH_SHADERS;
+    private static final ForgeConfigSpec.IntValue DYNAMIC_LIGHT_UPDATE_INTERVAL;
 
     private static volatile boolean compareMode;
 
@@ -28,6 +37,15 @@ public final class ClientOptimizationConfig {
     public static volatile boolean emptyDebugRenderSkip = true;
     public static volatile boolean entityRendererCache = true;
     public static volatile boolean blockEntityRendererCache = true;
+    public static volatile boolean verticalSectionCulling = true;
+    public static volatile int verticalSectionDistance = 12;
+    public static volatile boolean horizontalSectionCulling = false;
+    public static volatile int horizontalSectionDistance = 24;
+    public static volatile boolean dynamicLights = false;
+    public static volatile boolean dynamicLightEntities = true;
+    public static volatile boolean dynamicLightBlockEntities = true;
+    public static volatile boolean dynamicLightsWithShaders = false;
+    public static volatile int dynamicLightUpdateInterval = 1;
 
     static {
         ForgeConfigSpec.Builder builder = new ForgeConfigSpec.Builder();
@@ -70,6 +88,48 @@ public final class ClientOptimizationConfig {
                 .comment("Cache block entity renderers on their BlockEntityType and refresh on resource reload.")
                 .define("block_entity_renderer_cache", true);
         builder.pop();
+
+        builder.push("section_distance_culling");
+        VERTICAL_SECTION_CULLING = builder
+                .comment(
+                        "Skip terrain sections outside the vertical distance while rendering.",
+                        "This does not unload chunks or alter Distant Horizons storage."
+                )
+                .define("vertical_enabled", true);
+        VERTICAL_SECTION_DISTANCE = builder
+                .comment("Vertical terrain distance in 16-block sections above and below the camera.")
+                .defineInRange("vertical_distance", 12, 1, 64);
+        HORIZONTAL_SECTION_CULLING = builder
+                .comment(
+                        "Skip terrain sections outside a circular horizontal distance.",
+                        "Disabled by default to preserve the configured vanilla render distance."
+                )
+                .define("horizontal_enabled", false);
+        HORIZONTAL_SECTION_DISTANCE = builder
+                .comment("Horizontal terrain radius in 16-block sections when enabled.")
+                .defineInRange("horizontal_distance", 24, 1, 64);
+        builder.pop();
+
+        builder.push("dynamic_lights");
+        DYNAMIC_LIGHTS = builder
+                .comment(
+                        "Enable VRO's client-side dynamic-light engine.",
+                        "Disabled by default and ignored when Dynamic Lights Reforged is installed."
+                )
+                .define("enabled", false);
+        DYNAMIC_LIGHT_ENTITIES = builder
+                .comment("Allow entities, held items, dropped items, fire, TNT, and supported projectiles to emit light.")
+                .define("entities", true);
+        DYNAMIC_LIGHT_BLOCK_ENTITIES = builder
+                .comment("Allow resource-defined block entity types to emit dynamic light.")
+                .define("block_entities", true);
+        DYNAMIC_LIGHTS_WITH_SHADERS = builder
+                .comment("Keep VRO dynamic lights active while an Oculus shader pack is enabled.")
+                .define("enable_with_shaders", false);
+        DYNAMIC_LIGHT_UPDATE_INTERVAL = builder
+                .comment("Per-source update interval in client ticks. Each source keeps an independent schedule.")
+                .defineInRange("update_interval_ticks", 1, 1, 20);
+        builder.pop();
         SPEC = builder.build();
     }
 
@@ -96,6 +156,60 @@ public final class ClientOptimizationConfig {
         );
     }
 
+    public static void setVerticalSectionCulling(boolean enabled) {
+        VERTICAL_SECTION_CULLING.set(enabled);
+        VERTICAL_SECTION_CULLING.save();
+        verticalSectionCulling = enabled;
+    }
+
+    public static void setHorizontalSectionCulling(boolean enabled) {
+        HORIZONTAL_SECTION_CULLING.set(enabled);
+        HORIZONTAL_SECTION_CULLING.save();
+        horizontalSectionCulling = enabled;
+    }
+
+    public static void setVerticalSectionDistance(int distance) {
+        VERTICAL_SECTION_DISTANCE.set(distance);
+        VERTICAL_SECTION_DISTANCE.save();
+        verticalSectionDistance = distance;
+    }
+
+    public static void setHorizontalSectionDistance(int distance) {
+        HORIZONTAL_SECTION_DISTANCE.set(distance);
+        HORIZONTAL_SECTION_DISTANCE.save();
+        horizontalSectionDistance = distance;
+    }
+
+    public static void setDynamicLights(boolean enabled) {
+        DYNAMIC_LIGHTS.set(enabled);
+        DYNAMIC_LIGHTS.save();
+        dynamicLights = enabled;
+    }
+
+    public static void setDynamicLightEntities(boolean enabled) {
+        DYNAMIC_LIGHT_ENTITIES.set(enabled);
+        DYNAMIC_LIGHT_ENTITIES.save();
+        dynamicLightEntities = enabled;
+    }
+
+    public static void setDynamicLightBlockEntities(boolean enabled) {
+        DYNAMIC_LIGHT_BLOCK_ENTITIES.set(enabled);
+        DYNAMIC_LIGHT_BLOCK_ENTITIES.save();
+        dynamicLightBlockEntities = enabled;
+    }
+
+    public static void setDynamicLightsWithShaders(boolean enabled) {
+        DYNAMIC_LIGHTS_WITH_SHADERS.set(enabled);
+        DYNAMIC_LIGHTS_WITH_SHADERS.save();
+        dynamicLightsWithShaders = enabled;
+    }
+
+    public static void setDynamicLightUpdateInterval(int ticks) {
+        DYNAMIC_LIGHT_UPDATE_INTERVAL.set(ticks);
+        DYNAMIC_LIGHT_UPDATE_INTERVAL.save();
+        dynamicLightUpdateInterval = ticks;
+    }
+
     public static void onLoading(ModConfigEvent.Loading event) {
         bake(event.getConfig());
     }
@@ -117,5 +231,14 @@ public final class ClientOptimizationConfig {
         emptyDebugRenderSkip = EMPTY_DEBUG_RENDER_SKIP.get();
         entityRendererCache = ENTITY_RENDERER_CACHE.get();
         blockEntityRendererCache = BLOCK_ENTITY_RENDERER_CACHE.get();
+        verticalSectionCulling = VERTICAL_SECTION_CULLING.get();
+        verticalSectionDistance = VERTICAL_SECTION_DISTANCE.get();
+        horizontalSectionCulling = HORIZONTAL_SECTION_CULLING.get();
+        horizontalSectionDistance = HORIZONTAL_SECTION_DISTANCE.get();
+        dynamicLights = DYNAMIC_LIGHTS.get();
+        dynamicLightEntities = DYNAMIC_LIGHT_ENTITIES.get();
+        dynamicLightBlockEntities = DYNAMIC_LIGHT_BLOCK_ENTITIES.get();
+        dynamicLightsWithShaders = DYNAMIC_LIGHTS_WITH_SHADERS.get();
+        dynamicLightUpdateInterval = DYNAMIC_LIGHT_UPDATE_INTERVAL.get();
     }
 }

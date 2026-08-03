@@ -1,0 +1,1 @@
+Improves Vault Hunters frame consistency and memory use with render caching, terrain culling, dynamic-light controls, and client stability fixes.

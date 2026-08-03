@@ -19,10 +19,17 @@ The remote server does not need the mod.
 - Client CPU work around crowded mob farms and rapid kill systems.
 - Repeated particle-light and entity/block-entity renderer lookups.
 - Empty particle, toast, tutorial, and debug renderer work.
+- Retained simple-model and block-state cache memory beyond FerriteCore 4.2.2.
+- Terrain sections outside a configurable vertical camera range.
 - Long-session world cleanup for Create Addition and Powah.
 
 VRO also includes client-only recovery for two known stale-state crashes and
-resolves the Vault/Xaero world-map `M`-key conflict.
+resolves the Vault/Xaero world-map `M`-key conflict. It isolates Vault elixir
+number rendering so it cannot corrupt later particle colors.
+
+An optional spatial dynamic-light engine supports held and dropped items,
+luminous entities, and resource-defined block entities. It is disabled by
+default and can be controlled entirely in game.
 
 ## Measured results
 
@@ -51,13 +58,14 @@ Vault Hunters is an optional integration rather than a hard loading
 dependency. Generic render fast paths remain available when Vault is absent.
 
 VRO automatically yields overlapping work when Entity Collision FPS Fix,
-BadOptimizations, Particle Core, or Flerovium is installed.
+BadOptimizations, Particle Core, Flerovium, Better Fps - Render Distance, or
+Dynamic Lights Reforged is installed.
 
 ## Installation
 
 1. Stop Minecraft.
 2. Remove or disable older VRO jars.
-3. Place `vault_render_optimization.0.3.0.jar` in the instance's `mods` folder.
+3. Place `vault_render_optimization.0.3.2.jar` in the instance's `mods` folder.
 4. Keep only one active VRO jar.
 
 No server installation, world migration, or cache deletion is required.
@@ -72,6 +80,8 @@ VRO includes a persistent client-side comparison command:
 | `/vro compare on` | Immediately disable performance optimizations |
 | `/vro compare off` | Immediately enable configured optimizations |
 | `/vro compare status` | Show Compare Mode state |
+| `/vro culling` | Show or change vertical and horizontal terrain culling |
+| `/vro lights` | Show or change the optional dynamic-light engine |
 
 Crash guards, unloaded-world cleanup, and map-key compatibility remain active
 because they are correctness fixes rather than performance changes.
@@ -80,12 +90,14 @@ because they are correctness fixes rather than performance changes.
 
 VRO was developed by
 [HoYin1600p](https://github.com/HoYin1600p). Its learned-ability cache is
-adapted from Unobtanium work by `radimous`, and its client collision behavior is
-adapted from CorgiTaco's CC0 Entity Collision FPS Fix. Particle Core and
-BadOptimizations informed independently written Forge 1.18.2 fast paths.
+adapted from Unobtanium work by `radimous`, its client collision behavior is
+adapted from CorgiTaco's CC0 Entity Collision FPS Fix, and two memory reductions
+are adapted from later FerriteCore work. Particle Core, BadOptimizations,
+Better Fps - Render Distance, and Dynamic Lights Reforged informed independent
+Forge 1.18.2 implementations and compatibility boundaries.
 
 - [Source code and issue tracker](https://github.com/HoYin1600p/The-Vault-Render-Optimization)
-- [Full release notes](https://github.com/HoYin1600p/The-Vault-Render-Optimization/blob/v0.3.0/docs/releases/0.3.0.md)
+- [Full release notes](https://github.com/HoYin1600p/The-Vault-Render-Optimization/blob/v0.3.2/docs/releases/0.3.2.md)
 - [Complete credits](https://github.com/HoYin1600p/The-Vault-Render-Optimization/blob/main/CREDITS.md)
 - [Third-party notices](https://github.com/HoYin1600p/The-Vault-Render-Optimization/blob/main/THIRD_PARTY_NOTICES.md)
 - License: GNU Affero General Public License v3.0 or later

@@ -40,6 +40,20 @@ VRO's client collision mixins are adapted from CorgiTaco's archived
 - Adaptation: VRO adds its Compare Mode gate and automatically yields when the
   standalone `entitycollisionfpsfix` mod is installed.
 
+### FerriteCore post-4.2.2 memory reductions
+
+VRO's simple-model face-list compaction and block-state `faceSturdy` array
+canonicalization are adapted for Minecraft 1.18.2 from later FerriteCore work.
+
+- Project: FerriteCore by malte0811 and contributors
+- Source: https://github.com/malte0811/FerriteCore
+- Model-side reference commit: `b63de54a7c40135ba3910608a7f32c263ee29c4f`
+- `faceSturdy` reference commit: `187114231d9dd4ed1f843cd78ad00f2f7f503190`
+- License: MIT
+- Adaptation: VRO uses project-owned compactors and a thread-safe array
+  interner, while preserving compatibility with the installed FerriteCore
+  4.2.2 systems that own the remaining block-state and model caches.
+
 ## Independently implemented from design research
 
 No source files or implementation blocks from the projects in this section
@@ -74,6 +88,35 @@ VRO deliberately excludes BadOptimizations' shader-sensitive lightmap and sky
 color caching. Equivalent VRO mixins disable themselves when BadOptimizations
 is installed.
 
+### Better Fps - Render Distance
+
+- Project: Better Fps - Render Distance by someaddons
+- Source: https://github.com/someaddons/betterfpsdistances
+- Inspected revision: `6ada7eeb3f07c98f29bb15d955234f03766ca915`
+- License observed at inspection: all rights reserved
+- Design influence: make terrain rendering distance independently controllable
+  from chunk loading.
+
+No source, mixin structure, configuration code, or distance formula from Better
+Fps - Render Distance is included. VRO uses its own camera-to-section bounds,
+vanilla render context, Embeddium/Rubidium render-list filter, configuration,
+and coexistence gate.
+
+### Dynamic Lights Reforged
+
+- Project: Dynamic Lights Reforged, based on LambDynamicLights by LambdAurora
+- Source: https://github.com/TeamDeusVult/Dynamic-Lights-Reforged
+- Inspected revision: `d85b337f8f7af328d78e8d380f19fc9b95e93318`
+- License observed at inspection: MIT
+- Design influence: expected dynamic-light sources, resource-defined item
+  luminance, water sensitivity, lightmap combination, and terrain invalidation.
+
+VRO does not include a Dynamic Lights Reforged source file. Its engine was
+implemented independently using 16-block spatial cells, independent per-source
+scheduling, deduplicated end-of-tick section rebuilds, explicit world cleanup,
+Oculus-aware policy, diagnostics, and a startup coexistence gate. VRO does not
+apply its dynamic-light mixins when `dynamiclightsreforged` is installed.
+
 ### Unobtanium world-retention research
 
 Unobtanium's Create Addition and Powah memory-leak work identified these mods'
@@ -97,6 +140,12 @@ Vault Integrations, Powah, Create Crafts & Additions, Xaero's World Map,
 Embeddium/Rubidium render stacks, and optional optimization mods. Their code and
 assets are not bundled. Locally installed Vault jars were inspected only to
 identify stable public method and field layouts across supported pack versions.
+
+VRO's Vault elixir-orb fix uses the installed particle class as a mixin target,
+supplies a project-owned text buffer, and restores standard Minecraft particle
+render state. Its Powah unload compatibility uses a Forge access transformer to
+widen only the package-private `CableNet` class; no Powah field is made public
+and no Powah source file is included.
 
 The complete research ledger, including rejected and unimplemented projects,
 is in `docs/PERFORMANCE_BACKPORT_RESEARCH.md`.

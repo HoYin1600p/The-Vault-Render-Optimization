@@ -1,5 +1,5 @@
 param(
-    [string]$Version = '0.3.0',
+    [string]$Version = '0.3.2',
     [switch]$Force
 )
 
@@ -13,6 +13,7 @@ $zipPath = Join-Path $releaseRoot "$bundleName-CurseForge-Upload-Kit.zip"
 
 $sources = [ordered]@{
     'FILE-CHANGELOG.md' = Join-Path $repositoryDirectory "docs/curseforge/CHANGELOG-$Version.md"
+    'PROJECT-SUMMARY.txt' = Join-Path $repositoryDirectory 'docs/curseforge/SUMMARY.txt'
     'PROJECT-DESCRIPTION.md' = Join-Path $repositoryDirectory 'docs/curseforge/DESCRIPTION.md'
     'UPLOAD-CHECKLIST.md' = Join-Path $repositoryDirectory "docs/curseforge/UPLOAD-$Version.md"
     'LICENSE.txt' = Join-Path $repositoryDirectory 'LICENSE'
@@ -94,6 +95,14 @@ if ($sourceHash -ne $bundleHash) {
 $uploadSheet = Get-Content -LiteralPath (Join-Path $bundleDirectory 'UPLOAD-CHECKLIST.md') -Raw
 if (-not $uploadSheet.Contains($sourceHash)) {
     throw 'The upload sheet does not contain the assembled JAR checksum.'
+}
+
+$projectSummary = (Get-Content -LiteralPath (Join-Path $bundleDirectory 'PROJECT-SUMMARY.txt') -Raw).Trim()
+if ([string]::IsNullOrWhiteSpace($projectSummary) -or $projectSummary.Contains("`n") -or $projectSummary.Contains("`r")) {
+    throw 'The CurseForge project summary must be one non-empty line.'
+}
+if (-not $uploadSheet.Contains($projectSummary)) {
+    throw 'The upload sheet does not contain the packaged project summary.'
 }
 
 $logo = Get-Item -LiteralPath (Join-Path $bundleDirectory 'vro-icon.jpg')

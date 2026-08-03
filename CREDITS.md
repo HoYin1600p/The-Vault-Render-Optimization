@@ -43,6 +43,18 @@ VRO adapts the standalone mod's client-only wall-check and entity-push mixins.
 VRO adds Compare Mode integration and automatic coexistence: when
 `entitycollisionfpsfix` is installed, VRO does not apply its equivalent mixins.
 
+### FerriteCore - malte0811, KJP12, and contributors
+
+- Source: [malte0811/FerriteCore](https://github.com/malte0811/FerriteCore)
+- Model-side reference: `b63de54a7c40135ba3910608a7f32c263ee29c4f`
+- `faceSturdy` reference: `187114231d9dd4ed1f843cd78ad00f2f7f503190`
+- License: MIT
+
+VRO adapts the two memory reductions added after FerriteCore 4.2.2: compact
+simple-model face lists and canonical block-state `faceSturdy` arrays. VRO does
+not replace FerriteCore's existing 1.18.2 shape, property, quad, or model
+caches; the additions are deliberately limited to data 4.2.2 does not own.
+
 ## Independently implemented design influences
 
 ### Particle Core - fzzyhmstrs
@@ -67,6 +79,32 @@ VRO's Forge 1.18.2 implementations use separate classes, configuration,
 resource-reload invalidation, and mod-coexistence gates. Shader-sensitive
 lightmap and sky-color caches were deliberately rejected.
 
+### Better Fps - Render Distance - someaddons
+
+- Source: [someaddons/betterfpsdistances](https://github.com/someaddons/betterfpsdistances)
+- Inspected revision: `6ada7eeb3f07c98f29bb15d955234f03766ca915`
+- License observed during research: all rights reserved
+
+The project established the general usefulness of separating terrain draw
+distance from loaded chunk distance. VRO's implementation was written
+independently and uses different bounds, configuration, mixins, renderer
+integration, and defaults. No source code or formulas from the reference mod
+are included.
+
+### Dynamic Lights Reforged - LambdAurora and Forge port contributors
+
+- Source: [Dynamic Lights Reforged](https://github.com/TeamDeusVult/Dynamic-Lights-Reforged)
+- Inspected revision: `d85b337f8f7af328d78e8d380f19fc9b95e93318`
+- License observed during research: MIT
+
+The project informed the expected 1.18.2 feature surface: visual lightmap
+combination, held and dropped item sources, water-sensitive definitions, and
+terrain rebuild invalidation. VRO's implementation was written independently
+with project-owned source state, 16-block spatial indexing, per-source tick
+scheduling, coalesced section rebuilds, Forge resource loading, shader policy,
+diagnostics, cleanup, and coexistence gates. No Dynamic Lights Reforged source
+file is included.
+
 ## Compatibility and behavior sources
 
 ### Vault Hunters - Iskallia and contributors
@@ -79,14 +117,20 @@ decompiled output.
 
 The newer Asgard Vault behavior informed use of Vault's own `GearDataCache` for
 armor state. VRO's cache, invalidation, and mixin implementation were written
-inside this project.
+inside this project. The elixir-orb number fix was also developed from an
+in-game render regression and the installed Vault particle API; VRO uses an
+isolated text buffer and restores Minecraft's particle state without copying
+Vault source.
 
 ### Vault Integrations and Powah
 
 Client crash reports and installed runtime behavior identified deterministic
 stale states in altar conduit ticking and Powah cable replacement. VRO's guards
 repair those states on the physical client and leave server behavior unchanged.
-No source from either project is bundled.
+The Powah unload cleanup uses a narrow Forge access transformer only to make
+Powah's package-private `CableNet` class reachable by VRO's optional accessor;
+the cache field remains private and normal cable behavior is not replaced. No
+source from either project is bundled.
 
 ### Create Crafts & Additions
 

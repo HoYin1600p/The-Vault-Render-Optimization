@@ -13,9 +13,43 @@ and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ### Fixed
 
+## [0.3.2] - 2026-08-03
+
+`0.3.1` was an internal test candidate and was not published.
+
+### Added
+
+- Added an optional client-side dynamic-light engine with separate entity,
+  block-entity, shader, and update-interval controls. It is disabled by
+  default and includes in-game diagnostics.
+
+### Changed
+
+### Fixed
+
+- Isolated Vault elixir-orb number text from Minecraft's shared render buffer
+  and restored particle render state afterward, preventing later particles from
+  rendering black when elixir numbers are enabled.
+- Corrected access to Powah's world-keyed cable cache so the unload cleanup
+  remains active without causing an `IllegalAccessError` during client exit.
+
 ### Performance
 
+- Compacted simple baked-model face lists and shared the all-empty side map to
+  reduce retained model memory.
+- Canonicalized identical block-state `faceSturdy` arrays to reduce duplicate
+  cache storage alongside FerriteCore 4.2.2.
+- Added independently configurable vertical and horizontal terrain-section
+  distance culling for vanilla and Embeddium/Rubidium renderers. Vertical
+  culling defaults on at 12 sections; horizontal culling defaults off.
+
 ### Compatibility
+
+- Section-distance culling yields to Better Fps - Render Distance when that mod
+  is installed and does not change chunk loading or Distant Horizons storage.
+- VRO dynamic lights yield completely to Dynamic Lights Reforged when it is
+  installed. Shader-pack participation is separately configurable and defaults
+  off.
 
 ## [0.3.0] - 2026-08-02
 
@@ -62,5 +96,6 @@ and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 - Released the complete project under AGPL-3.0-or-later, with exact source
   revisions and third-party notices included.
 
-[Unreleased]: https://github.com/HoYin1600p/The-Vault-Render-Optimization/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/HoYin1600p/The-Vault-Render-Optimization/compare/v0.3.2...HEAD
+[0.3.2]: https://github.com/HoYin1600p/The-Vault-Render-Optimization/compare/v0.3.0...v0.3.2
 [0.3.0]: https://github.com/HoYin1600p/The-Vault-Render-Optimization/releases/tag/v0.3.0
