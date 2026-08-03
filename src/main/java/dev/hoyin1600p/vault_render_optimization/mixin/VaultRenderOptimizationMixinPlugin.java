@@ -34,6 +34,7 @@ public final class VaultRenderOptimizationMixinPlugin implements IMixinConfigPlu
     private static final Map<String, String> OPTIONAL_MIXIN_MODS = Map.ofEntries(
             Map.entry("AltarConduitClientCrashGuardMixin", "vaultintegrations"),
             Map.entry("ClientAbilityDataMixin", "the_vault"),
+            Map.entry("ElixirOrbParticleMixin", "the_vault"),
             Map.entry("CreateAdditionEnergyNetworkManagerAccessor", "createaddition"),
             Map.entry("PowahCableNetAccessor", "powah"),
             Map.entry("PowahCableNetClientCrashGuardMixin", "powah"),

@@ -13,6 +13,10 @@ and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ### Fixed
 
+- Isolated Vault elixir-orb number text from Minecraft's shared render buffer
+  and restored particle render state afterward, preventing later particles from
+  rendering black when elixir numbers are enabled.
+
 ### Performance
 
 ### Compatibility
