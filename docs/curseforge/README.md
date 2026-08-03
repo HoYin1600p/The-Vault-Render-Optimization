@@ -4,6 +4,7 @@ This directory contains the source-of-truth text and artwork for The Vault Rende
 Optimization CurseForge listing.
 
 - `vro-icon.jpg`: square upload-ready project icon
+- `SUMMARY.txt`: one-line project summary shown in CurseForge search and browse results
 - `DESCRIPTION.md`: concise project-page Markdown
 - `CHANGELOG-0.3.0.md`: concise first-release file changelog
 - `UPLOAD-0.3.0.md`: project fields and upload checklist

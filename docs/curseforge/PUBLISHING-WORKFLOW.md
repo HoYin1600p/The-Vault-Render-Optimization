@@ -6,6 +6,7 @@ updates to CurseForge.
 ## Project
 
 - Project ID: record after CurseForge creates the project
+- Project summary: paste the complete contents of `PROJECT-SUMMARY.txt` from the assembled kit
 - Upload only the normal release JAR from `libs/`.
 - Never upload a sources JAR, development JAR, upload kit, or ZIP as the main
   project file.
@@ -22,7 +23,8 @@ Before opening CurseForge:
 4. Confirm the normal JAR name, embedded mod version, and SHA-256 checksum.
 5. Run `scripts/assemble-curseforge-release.ps1 -Version X.Y.Z` and review the
    resulting local kit under `release/curseforge/`.
-6. Keep the CurseForge changelog concise and user-visible. Do not substitute
+6. Confirm the CurseForge project Summary exactly matches `PROJECT-SUMMARY.txt`.
+7. Keep the CurseForge changelog concise and user-visible. Do not substitute
    the full GitHub release notes.
 
 ## Supported file metadata

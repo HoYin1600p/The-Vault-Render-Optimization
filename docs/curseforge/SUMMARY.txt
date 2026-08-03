@@ -1,0 +1,1 @@
+Improves Vault Hunters client frame consistency by reducing repeated gear, HUD, collision, particle, and renderer work.
