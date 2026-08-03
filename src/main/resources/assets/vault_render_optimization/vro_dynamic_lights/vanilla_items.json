@@ -1,0 +1,19 @@
+{
+  "entries": [
+    { "item": "minecraft:lava_bucket", "luminance": 15 },
+    { "item": "minecraft:blaze_rod", "luminance": 10 },
+    { "item": "minecraft:blaze_powder", "luminance": 10 },
+    { "item": "minecraft:glowstone_dust", "luminance": 10 },
+    { "item": "minecraft:fire_charge", "luminance": 10, "water_sensitive": true },
+    { "item": "minecraft:glow_berries", "luminance": 8 },
+    { "item": "minecraft:glow_ink_sac", "luminance": 8 },
+    { "item": "minecraft:nether_star", "luminance": 10 },
+    { "item": "minecraft:prismarine_crystals", "luminance": 8 },
+    { "item": "minecraft:spectral_arrow", "luminance": 8 },
+    { "item": "minecraft:torch", "luminance": 14, "water_sensitive": true },
+    { "item": "minecraft:soul_torch", "luminance": 10, "water_sensitive": true },
+    { "item": "minecraft:redstone_torch", "luminance": 7, "water_sensitive": true },
+    { "item": "minecraft:lantern", "luminance": 15 },
+    { "item": "minecraft:soul_lantern", "luminance": 10 }
+  ]
+}

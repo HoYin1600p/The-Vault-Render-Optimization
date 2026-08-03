@@ -28,6 +28,8 @@ modify server gameplay. The remote server does not need the mod.
 - Resolves the Vault map and Xaero's World Map `M`-key conflict.
 - Provides immediate in-game Compare Mode for repeatable enabled/disabled
   benchmarks.
+- Includes opt-in spatially indexed dynamic lighting for held and dropped
+  items, luminous entities, and resource-defined block entities.
 - Automatically yields overlapping work to Entity Collision FPS Fix,
   BadOptimizations, Particle Core, and Flerovium when present.
 
@@ -82,6 +84,23 @@ VRO also applies conservative optimizations outside Vault-specific code:
 
 These paths are independently configurable and do not intentionally change
 visible output. Shader-sensitive lightmap and sky-color caching were rejected.
+
+### Optional dynamic lights
+
+VRO 0.3.1 includes a fresh dynamic-light engine that is disabled by default.
+When enabled, luminous entities and items light nearby terrain without changing
+server light data. Sources are indexed by 16-block cells, carry independent
+update schedules, and submit one deduplicated set of terrain rebuilds per tick.
+
+Vanilla luminous block items work automatically. Additional item and block
+entity definitions can be supplied by resource packs under
+`assets/<namespace>/vro_dynamic_lights/*.json`. Entity sources and block entity
+sources can be controlled separately. Dynamic lights pause while Oculus shaders
+are active unless shader participation is explicitly enabled.
+
+VRO leaves this entire subsystem inactive when Dynamic Lights Reforged is
+installed. See [Dynamic lights](docs/DYNAMIC_LIGHTS.md) for the resource format,
+commands, diagnostics, and behavior boundaries.
 
 ### Long-session cleanup and crash recovery
 
@@ -170,6 +189,12 @@ for upgrades, removal, optional-mod coexistence, and issue isolation.
 | `/vro culling` | Reports vertical and horizontal terrain-culling settings. |
 | `/vro culling vertical on\|off\|<distance>` | Changes vertical section culling immediately. |
 | `/vro culling horizontal on\|off\|<distance>` | Changes horizontal section culling immediately. |
+| `/vro lights` | Reports dynamic-light configuration and live engine counters. |
+| `/vro lights on\|off` | Enables or disables VRO dynamic lights immediately. |
+| `/vro lights entities on\|off` | Controls entity light sources. |
+| `/vro lights block_entities on\|off` | Controls resource-defined block entity sources. |
+| `/vro lights shaders on\|off` | Controls whether VRO lights remain active with shaders. |
+| `/vro lights interval <1-20>` | Changes the independent per-source update interval. |
 
 Compare Mode deliberately leaves crash guards, unloaded-world cleanup, and
 map-key compatibility active. Those are correctness features, not benchmarked

@@ -2,6 +2,7 @@ package dev.hoyin1600p.vault_render_optimization.client;
 
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
+import dev.hoyin1600p.vault_render_optimization.client.lighting.DynamicLightEngine;
 import dev.hoyin1600p.vault_render_optimization.config.ClientOptimizationConfig;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
@@ -47,6 +48,34 @@ public final class VaultRenderOptimizationCommand {
                                                 .executes(context -> setHorizontalDistance(
                                                         context.getSource(),
                                                         IntegerArgumentType.getInteger(context, "distance"))))))
+                        .then(Commands.literal("lights")
+                                .executes(context -> reportLights(context.getSource()))
+                                .then(Commands.literal("on")
+                                        .executes(context -> setLights(context.getSource(), true)))
+                                .then(Commands.literal("off")
+                                        .executes(context -> setLights(context.getSource(), false)))
+                                .then(Commands.literal("status")
+                                        .executes(context -> reportLights(context.getSource())))
+                                .then(Commands.literal("entities")
+                                        .then(Commands.literal("on")
+                                                .executes(context -> setLightEntities(context.getSource(), true)))
+                                        .then(Commands.literal("off")
+                                                .executes(context -> setLightEntities(context.getSource(), false))))
+                                .then(Commands.literal("block_entities")
+                                        .then(Commands.literal("on")
+                                                .executes(context -> setLightBlockEntities(context.getSource(), true)))
+                                        .then(Commands.literal("off")
+                                                .executes(context -> setLightBlockEntities(context.getSource(), false))))
+                                .then(Commands.literal("shaders")
+                                        .then(Commands.literal("on")
+                                                .executes(context -> setLightsWithShaders(context.getSource(), true)))
+                                        .then(Commands.literal("off")
+                                                .executes(context -> setLightsWithShaders(context.getSource(), false))))
+                                .then(Commands.literal("interval")
+                                        .then(Commands.argument("ticks", IntegerArgumentType.integer(1, 20))
+                                                .executes(context -> setLightInterval(
+                                                        context.getSource(),
+                                                        IntegerArgumentType.getInteger(context, "ticks"))))))
         );
     }
 
@@ -118,5 +147,55 @@ public final class VaultRenderOptimizationCommand {
 
     private static String state(boolean enabled) {
         return enabled ? "ON" : "OFF";
+    }
+
+    private static int setLights(CommandSourceStack source, boolean enabled) {
+        ClientOptimizationConfig.setDynamicLights(enabled);
+        if (!enabled) {
+            DynamicLightEngine.clear();
+        }
+        return reportLights(source);
+    }
+
+    private static int setLightEntities(CommandSourceStack source, boolean enabled) {
+        ClientOptimizationConfig.setDynamicLightEntities(enabled);
+        return reportLights(source);
+    }
+
+    private static int setLightBlockEntities(CommandSourceStack source, boolean enabled) {
+        ClientOptimizationConfig.setDynamicLightBlockEntities(enabled);
+        return reportLights(source);
+    }
+
+    private static int setLightsWithShaders(CommandSourceStack source, boolean enabled) {
+        ClientOptimizationConfig.setDynamicLightsWithShaders(enabled);
+        return reportLights(source);
+    }
+
+    private static int setLightInterval(CommandSourceStack source, int ticks) {
+        ClientOptimizationConfig.setDynamicLightUpdateInterval(ticks);
+        return reportLights(source);
+    }
+
+    private static int reportLights(CommandSourceStack source) {
+        DynamicLightEngine.Status status = DynamicLightEngine.status();
+        source.sendSuccess(
+                new TextComponent(
+                        "[VRO] Dynamic lights: configured " + state(status.configured())
+                                + ", active " + state(status.active())
+                                + ", entities " + state(ClientOptimizationConfig.dynamicLightEntities)
+                                + ", block entities " + state(ClientOptimizationConfig.dynamicLightBlockEntities)
+                                + ", with shaders " + state(ClientOptimizationConfig.dynamicLightsWithShaders)
+                                + ", interval " + ClientOptimizationConfig.dynamicLightUpdateInterval
+                                + " tick(s); sources " + status.sources()
+                                + ", cells " + status.cells()
+                                + ", last rebuilds " + status.rebuilds()
+                                + ", definitions " + status.itemDefinitions()
+                                + "/" + status.blockEntityDefinitions()
+                                + (status.shaderBlocked() ? ". Currently paused by active shaders." : ".")
+                ),
+                false
+        );
+        return status.active() ? 1 : 0;
     }
 }

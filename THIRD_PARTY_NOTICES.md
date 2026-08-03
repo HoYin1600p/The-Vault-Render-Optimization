@@ -102,6 +102,21 @@ Fps - Render Distance is included. VRO uses its own camera-to-section bounds,
 vanilla render context, Embeddium/Rubidium render-list filter, configuration,
 and coexistence gate.
 
+### Dynamic Lights Reforged
+
+- Project: Dynamic Lights Reforged, based on LambDynamicLights by LambdAurora
+- Source: https://github.com/TeamDeusVult/Dynamic-Lights-Reforged
+- Inspected revision: `d85b337f8f7af328d78e8d380f19fc9b95e93318`
+- License observed at inspection: MIT
+- Design influence: expected dynamic-light sources, resource-defined item
+  luminance, water sensitivity, lightmap combination, and terrain invalidation.
+
+VRO does not include a Dynamic Lights Reforged source file. Its engine was
+implemented independently using 16-block spatial cells, independent per-source
+scheduling, deduplicated end-of-tick section rebuilds, explicit world cleanup,
+Oculus-aware policy, diagnostics, and a startup coexistence gate. VRO does not
+apply its dynamic-light mixins when `dynamiclightsreforged` is installed.
+
 ### Unobtanium world-retention research
 
 Unobtanium's Create Addition and Powah memory-leak work identified these mods'

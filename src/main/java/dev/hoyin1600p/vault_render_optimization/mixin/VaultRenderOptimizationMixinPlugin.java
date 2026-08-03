@@ -46,6 +46,13 @@ public final class VaultRenderOptimizationMixinPlugin implements IMixinConfigPlu
             "rubidium",
             "sodium"
     );
+    private static final Set<String> DYNAMIC_LIGHT_MIXINS = Set.of(
+            "EntityDynamicLightMixin",
+            "EntityRendererDynamicLightMixin",
+            "LevelDynamicLightMixin",
+            "LevelRendererDynamicLightMixin",
+            "MinecraftDynamicLightMixin"
+    );
     private static final Map<String, String> OPTIONAL_MIXIN_MODS = Map.ofEntries(
             Map.entry("AltarConduitClientCrashGuardMixin", "vaultintegrations"),
             Map.entry("ClientAbilityDataMixin", "the_vault"),
@@ -97,6 +104,10 @@ public final class VaultRenderOptimizationMixinPlugin implements IMixinConfigPlu
             if (SODIUM_SECTION_CULLING_MIXINS.contains(simpleName)) {
                 return SODIUM_RENDER_MOD_IDS.stream().anyMatch(this::isModLoaded);
             }
+        }
+
+        if (DYNAMIC_LIGHT_MIXINS.contains(simpleName) && isModLoaded("dynamiclightsreforged")) {
+            return false;
         }
 
         String requiredMod = OPTIONAL_MIXIN_MODS.get(simpleName);

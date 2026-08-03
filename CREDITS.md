@@ -91,6 +91,20 @@ independently and uses different bounds, configuration, mixins, renderer
 integration, and defaults. No source code or formulas from the reference mod
 are included.
 
+### Dynamic Lights Reforged - LambdAurora and Forge port contributors
+
+- Source: [Dynamic Lights Reforged](https://github.com/TeamDeusVult/Dynamic-Lights-Reforged)
+- Inspected revision: `d85b337f8f7af328d78e8d380f19fc9b95e93318`
+- License observed during research: MIT
+
+The project informed the expected 1.18.2 feature surface: visual lightmap
+combination, held and dropped item sources, water-sensitive definitions, and
+terrain rebuild invalidation. VRO's implementation was written independently
+with project-owned source state, 16-block spatial indexing, per-source tick
+scheduling, coalesced section rebuilds, Forge resource loading, shader policy,
+diagnostics, cleanup, and coexistence gates. No Dynamic Lights Reforged source
+file is included.
+
 ## Compatibility and behavior sources
 
 ### Vault Hunters - Iskallia and contributors

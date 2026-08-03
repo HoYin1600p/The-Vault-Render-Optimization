@@ -11,6 +11,10 @@ Development for `0.3.1`.
 
 ### Added
 
+- Added an optional client-side dynamic-light engine with separate entity,
+  block-entity, shader, and update-interval controls. It is disabled by
+  default and includes in-game diagnostics.
+
 ### Changed
 
 ### Fixed
@@ -33,6 +37,9 @@ Development for `0.3.1`.
 
 - Section-distance culling yields to Better Fps - Render Distance when that mod
   is installed and does not change chunk loading or Distant Horizons storage.
+- VRO dynamic lights yield completely to Dynamic Lights Reforged when it is
+  installed. Shader-pack participation is separately configurable and defaults
+  off.
 
 ## [0.3.0] - 2026-08-02
 

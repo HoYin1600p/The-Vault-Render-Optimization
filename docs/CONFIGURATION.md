@@ -82,9 +82,33 @@ yields both when Better Fps - Render Distance is installed.
 | `/vro culling horizontal on` | Enables horizontal terrain culling immediately |
 | `/vro culling horizontal off` | Disables horizontal terrain culling immediately |
 | `/vro culling horizontal <1-64>` | Saves the horizontal distance immediately |
+| `/vro lights` | Shows configuration, active state, source counts, rebuilds, and loaded definitions |
+| `/vro lights on` | Enables VRO dynamic lights immediately |
+| `/vro lights off` | Disables VRO dynamic lights and clears retained source state |
+| `/vro lights entities on\|off` | Controls all entity-based light sources |
+| `/vro lights block_entities on\|off` | Controls resource-defined block entity sources |
+| `/vro lights shaders on\|off` | Controls operation while Oculus shaders are active |
+| `/vro lights interval <1-20>` | Saves the independent per-source update interval |
 
 These are client commands in multiplayer. They require no server permission
 and work even when the remote server does not have VRO.
+
+## Dynamic lights
+
+| Key | Default | Purpose |
+| --- | --- | --- |
+| `dynamic_lights.enabled` | `false` | Enables VRO's client-only dynamic-light engine |
+| `dynamic_lights.entities` | `true` | Allows held/dropped items, burning entities, TNT, and supported entities/projectiles to emit light |
+| `dynamic_lights.block_entities` | `true` | Allows resource-defined block entity types to emit light |
+| `dynamic_lights.enable_with_shaders` | `false` | Keeps VRO lights active while an Oculus shader pack is active |
+| `dynamic_lights.update_interval_ticks` | `1` | Per-source update interval from 1 to 20 client ticks |
+
+The master switch is intentionally off by default. Dynamic light is visual
+only and does not change server light levels, mob spawning, crops, or chunk
+storage. Compare Mode pauses it. Dynamic Lights Reforged owns the feature when
+that mod is installed, regardless of these settings.
+
+See [Dynamic lights](DYNAMIC_LIGHTS.md) for source definitions and diagnostics.
 
 ## Optional-mod ownership
 
