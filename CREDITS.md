@@ -43,6 +43,18 @@ VRO adapts the standalone mod's client-only wall-check and entity-push mixins.
 VRO adds Compare Mode integration and automatic coexistence: when
 `entitycollisionfpsfix` is installed, VRO does not apply its equivalent mixins.
 
+### FerriteCore - malte0811, KJP12, and contributors
+
+- Source: [malte0811/FerriteCore](https://github.com/malte0811/FerriteCore)
+- Model-side reference: `b63de54a7c40135ba3910608a7f32c263ee29c4f`
+- `faceSturdy` reference: `187114231d9dd4ed1f843cd78ad00f2f7f503190`
+- License: MIT
+
+VRO adapts the two memory reductions added after FerriteCore 4.2.2: compact
+simple-model face lists and canonical block-state `faceSturdy` arrays. VRO does
+not replace FerriteCore's existing 1.18.2 shape, property, quad, or model
+caches; the additions are deliberately limited to data 4.2.2 does not own.
+
 ## Independently implemented design influences
 
 ### Particle Core - fzzyhmstrs

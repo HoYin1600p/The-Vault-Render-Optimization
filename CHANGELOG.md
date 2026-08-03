@@ -21,6 +21,11 @@ Development for `0.3.1`.
 
 ### Performance
 
+- Compacted simple baked-model face lists and shared the all-empty side map to
+  reduce retained model memory.
+- Canonicalized identical block-state `faceSturdy` arrays to reduce duplicate
+  cache storage alongside FerriteCore 4.2.2.
+
 ### Compatibility
 
 ## [0.3.0] - 2026-08-02

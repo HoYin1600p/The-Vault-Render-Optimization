@@ -40,6 +40,20 @@ VRO's client collision mixins are adapted from CorgiTaco's archived
 - Adaptation: VRO adds its Compare Mode gate and automatically yields when the
   standalone `entitycollisionfpsfix` mod is installed.
 
+### FerriteCore post-4.2.2 memory reductions
+
+VRO's simple-model face-list compaction and block-state `faceSturdy` array
+canonicalization are adapted for Minecraft 1.18.2 from later FerriteCore work.
+
+- Project: FerriteCore by malte0811 and contributors
+- Source: https://github.com/malte0811/FerriteCore
+- Model-side reference commit: `b63de54a7c40135ba3910608a7f32c263ee29c4f`
+- `faceSturdy` reference commit: `187114231d9dd4ed1f843cd78ad00f2f7f503190`
+- License: MIT
+- Adaptation: VRO uses project-owned compactors and a thread-safe array
+  interner, while preserving compatibility with the installed FerriteCore
+  4.2.2 systems that own the remaining block-state and model caches.
+
 ## Independently implemented from design research
 
 No source files or implementation blocks from the projects in this section
