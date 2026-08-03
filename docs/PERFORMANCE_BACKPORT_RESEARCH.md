@@ -2,6 +2,8 @@
 
 Research date: 2026-08-01
 
+Follow-up audit: 2026-08-02
+
 This document records performance projects and implementation ideas that may be
 useful to a Forge 1.18.2 Vault Hunters client. It is a design and provenance
 ledger, not permission to copy source code. No candidate described here has
@@ -92,6 +94,8 @@ remain unimplemented.
 | P1 | Jasione standalone test | Lower allocation and GC pressure without visual changes | Medium | A/B test its public 1.18.2 Forge build before considering integration |
 | P2 | ImmediatelyFast/Reforged A/B test | Potentially substantial GUI, text, entity, and upload gains | Medium to high | Test standalone first; only isolate proven mechanisms later |
 | P2 | Entity and block-entity renderer lookup cache | Small gain in entity-heavy scenes | Medium | Implemented with reload invalidation |
+| P2 | Compact simple-model face lists | Lower retained model memory, commonly up to about 20 MB | Low | Post-4.2.2 FerriteCore feature; implement independently and retain its MIT notice |
+| P2 | Block-state `faceSturdy` array deduplication | Modest retained block-state memory reduction | Low to medium | Post-4.2.2 FerriteCore feature; verify an independent mixin alongside FerriteCore 4.2.2 |
 | P3 | Static block-entity model batching | Large gain in chest/bed-heavy areas | High | Dedicated project with a strict vanilla allowlist |
 | P3 | Occlusion culling | Potential gain in dense bases | High | Prefer a standalone trial; compatibility holes are likely |
 
@@ -279,10 +283,28 @@ ideas only and are not recommended for the shipping configuration.
 
 ### FerriteCore
 
-The shipping instance already has FerriteCore 4.2.2, the final relevant 1.18.2
-line. Major newer features such as data-component compaction depend on modern
-Minecraft systems that do not exist in 1.18.2. No low-risk FerriteCore backport
-was identified.
+The shipping instance already has FerriteCore 4.2.2, the official 1.18.2 line.
+VRO must not duplicate its neighbor maps, property maps, multipart predicate and
+model deduplication, model-resource-location handling, block-state shape cache,
+baked-quad deduplication, or threading detector. FerriteCore remains the owner
+of those foundational systems.
+
+Two independent features were added upstream after 4.2.2 and remain viable for
+VRO:
+
+- commit `b63de54a7c40135ba3910608a7f32c263ee29c4f` converts the face lists in
+  simple baked models to immutable, right-sized lists and shares a canonical
+  all-empty side map. Upstream describes the usual saving as no more than about
+  20 MB. This is client-only, does not change rendering, and should coexist with
+  FerriteCore 4.2.2;
+- commit `187114231d9dd4ed1f843cd78ad00f2f7f503190` canonicalizes identical
+  `faceSturdy` boolean arrays in block-state caches. A VRO implementation must
+  be independent of FerriteCore internals and explicitly tested with 4.2.2.
+
+Both commits are MIT licensed and require attribution if adapted. Later fixes
+to FerriteCore's existing quad cache and fast-map implementation are not VRO
+candidates: they modify systems still owned by the installed 4.2.2 jar. Modern
+data-component compaction depends on Minecraft systems absent from 1.18.2.
 
 ### ModernFix
 
@@ -363,6 +385,8 @@ research input; it does not imply code was copied.
 | Entity Culling | `2b5135a5b6003235b57cb16fa61b312fbc03cc66` | tr7zw Protective License | Standalone test only |
 | Exordium | `15f93fe30cc105d9e58c1d4a26eadc6cd27a9333` | LGPL-3.0 | HUD throttling rejected |
 | FerriteCore | `0cef1f2add1f1329aa6e690e8e292acd625c5c6d` | MIT | Modern branch comparison |
+| FerriteCore model-side compaction | `b63de54a7c40135ba3910608a7f32c263ee29c4f` | MIT | Post-4.2.2 independent VRO candidate |
+| FerriteCore `faceSturdy` deduplication | `187114231d9dd4ed1f843cd78ad00f2f7f503190` | MIT | Post-4.2.2 independent VRO candidate |
 | Flerovium | `69aa397e12b2863672d90b31ca7773f3d7e1fbba` | LGPL-3.0 | Modern Forge renderer reference |
 | Gnetum | `8eb41b5c9399c3bf1864803a96571853674fb475` | LGPL-3.0 | HUD throttling rejected |
 | GPUBooster | `5ed54b4936dac15f1e9f0208037173d241fa428f` | GPL-3.0 | OpenGL lifecycle work deferred |
