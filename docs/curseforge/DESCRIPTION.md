@@ -65,7 +65,7 @@ Dynamic Lights Reforged is installed.
 
 1. Stop Minecraft.
 2. Remove or disable older VRO jars.
-3. Place `vault_render_optimization.0.3.3.jar` in the instance's `mods` folder.
+3. Place the downloaded VRO jar in the instance's `mods` folder.
 4. Keep only one active VRO jar.
 
 No server installation, world migration, or cache deletion is required.
