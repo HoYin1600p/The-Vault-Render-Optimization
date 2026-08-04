@@ -73,7 +73,8 @@ def prismInstancesDirectory = new File(System.getProperty('user.home'), 'AppData
 def knownVaultInstances = [
         [name: 'VaultCrafters Bootstrap', folder: 'vaultcrafters-bootstrap-1.0.0', minecraft: '.minecraft'],
         [name: 'Asgard-SMP', folder: 'Asgard-SMP', minecraft: 'minecraft'],
-        [name: 'Wolds Vaults', folder: 'Wolds-Vaults-0.32.2', minecraft: 'minecraft'],
+        [name: 'Wolds Vaults 0.32.2', folder: 'Wolds-Vaults-0.32.2', minecraft: 'minecraft'],
+        [name: 'Wolds Vaults 0.33.0', folder: 'Wolds-Vaults-0.33.0', minecraft: 'minecraft'],
         [name: 'Vault Hunters Third Edition', folder: 'Vault Hunters Third Edition', minecraft: 'minecraft'],
 ]
 

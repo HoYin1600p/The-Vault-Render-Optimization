@@ -11,7 +11,8 @@ $propertiesPath = Join-Path $repositoryDirectory 'gradle.properties'
 $profiles = @(
     @{ Name = 'VaultCrafters Bootstrap'; Folder = 'vaultcrafters-bootstrap-1.0.0'; Minecraft = '.minecraft' },
     @{ Name = 'Asgard-SMP'; Folder = 'Asgard-SMP'; Minecraft = 'minecraft' },
-    @{ Name = 'Wolds Vaults'; Folder = 'Wolds-Vaults-0.32.2'; Minecraft = 'minecraft' },
+    @{ Name = 'Wolds Vaults 0.32.2'; Folder = 'Wolds-Vaults-0.32.2'; Minecraft = 'minecraft' },
+    @{ Name = 'Wolds Vaults 0.33.0'; Folder = 'Wolds-Vaults-0.33.0'; Minecraft = 'minecraft' },
     @{ Name = 'Vault Hunters Third Edition'; Folder = 'Vault Hunters Third Edition'; Minecraft = 'minecraft' }
 )
 
