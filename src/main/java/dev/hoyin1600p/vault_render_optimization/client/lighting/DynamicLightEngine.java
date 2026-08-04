@@ -62,12 +62,16 @@ public final class DynamicLightEngine {
     }
 
     public static void observeBlockEntity(ClientLevel level, BlockEntity blockEntity) {
-        if (!active() || !ClientOptimizationConfig.dynamicLightBlockEntities) {
+        if (!shouldObserveBlockEntities()) {
             return;
         }
         BlockPos pos = blockEntity.getBlockPos();
         int luminance = DynamicLightResourceLoader.INSTANCE.blockEntityLuminance(blockEntity);
         observe(blockEntity, level, pos.getX() + 0.5D, pos.getY() + 0.5D, pos.getZ() + 0.5D, luminance);
+    }
+
+    public static boolean shouldObserveBlockEntities() {
+        return active() && ClientOptimizationConfig.dynamicLightBlockEntities;
     }
 
     private static void observe(

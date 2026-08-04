@@ -29,10 +29,12 @@ public abstract class LevelDynamicLightMixin {
     @Inject(method = "tickBlockEntities", at = @At("TAIL"))
     private void vro$observeDynamicBlockEntities(CallbackInfo ci) {
         Level self = (Level) (Object) this;
-        if (!(self instanceof ClientLevel clientLevel)) {
+        if (!(self instanceof ClientLevel clientLevel) || !DynamicLightEngine.shouldObserveBlockEntities()) {
             return;
         }
-        for (TickingBlockEntity ticker : this.blockEntityTickers) {
+        Object[] tickers = this.blockEntityTickers.toArray();
+        for (Object entry : tickers) {
+            TickingBlockEntity ticker = (TickingBlockEntity) entry;
             if (ticker.isRemoved()) {
                 continue;
             }

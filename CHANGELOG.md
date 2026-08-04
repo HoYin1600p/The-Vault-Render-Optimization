@@ -13,6 +13,10 @@ and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ### Fixed
 
+- Prevented the optional dynamic-light block-entity observer from scanning
+  Minecraft's live ticker list while the feature is disabled, and use a stable
+  snapshot when enabled to avoid render-thread concurrent-modification crashes.
+
 ## [0.3.2] - 2026-08-03
 
 `0.3.1` was an internal test candidate and was not published.
