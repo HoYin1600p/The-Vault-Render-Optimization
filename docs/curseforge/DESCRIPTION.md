@@ -65,7 +65,7 @@ Dynamic Lights Reforged is installed.
 
 1. Stop Minecraft.
 2. Remove or disable older VRO jars.
-3. Place `vault_render_optimization.0.3.2.jar` in the instance's `mods` folder.
+3. Place `vault_render_optimization.0.3.3.jar` in the instance's `mods` folder.
 4. Keep only one active VRO jar.
 
 No server installation, world migration, or cache deletion is required.
@@ -97,7 +97,7 @@ Better Fps - Render Distance, and Dynamic Lights Reforged informed independent
 Forge 1.18.2 implementations and compatibility boundaries.
 
 - [Source code and issue tracker](https://github.com/HoYin1600p/The-Vault-Render-Optimization)
-- [Full release notes](https://github.com/HoYin1600p/The-Vault-Render-Optimization/blob/v0.3.2/docs/releases/0.3.2.md)
+- [Full release notes](https://github.com/HoYin1600p/The-Vault-Render-Optimization/blob/v0.3.3/docs/releases/0.3.3.md)
 - [Complete credits](https://github.com/HoYin1600p/The-Vault-Render-Optimization/blob/main/CREDITS.md)
 - [Third-party notices](https://github.com/HoYin1600p/The-Vault-Render-Optimization/blob/main/THIRD_PARTY_NOTICES.md)
 - License: GNU Affero General Public License v3.0 or later

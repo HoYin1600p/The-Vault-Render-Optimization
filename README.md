@@ -4,7 +4,7 @@
 [![Forge](https://img.shields.io/badge/Forge-40.3.11%2B-e04e39)](https://files.minecraftforge.net/net/minecraftforge/forge/index_1.18.2.html)
 [![Environment](https://img.shields.io/badge/Environment-Client-4b8bbe)](#requirements-and-support)
 [![License](https://img.shields.io/badge/License-AGPL--3.0--or--later-blue.svg)](LICENSE)
-[![Release](https://img.shields.io/badge/Release-0.3.2-7b68ee)](docs/releases/0.3.2.md)
+[![Release](https://img.shields.io/badge/Release-0.3.3-7b68ee)](docs/releases/0.3.3.md)
 
 The Vault Render Optimization (VRO) is a client-side Minecraft Forge 1.18.2
 mod that reduces repeated rendering and client simulation work in Vault
@@ -102,7 +102,7 @@ and Embeddium/Rubidium renderers, and yield to Better Fps - Render Distance.
 
 ### Optional dynamic lights
 
-VRO 0.3.2 includes a fresh dynamic-light engine that is disabled by default.
+VRO includes an optional dynamic-light engine that is disabled by default.
 When enabled, luminous entities and items light nearby terrain without changing
 server light data. Sources are indexed by 16-block cells, carry independent
 update schedules, and submit one deduplicated set of terrain rebuilds per tick.
@@ -184,7 +184,7 @@ different pack files together.
 
 1. Stop Minecraft.
 2. Remove or disable every older VRO jar.
-3. Place `vault_render_optimization.0.3.2.jar` in the instance's `mods`
+3. Place `vault_render_optimization.0.3.3.jar` in the instance's `mods`
    directory.
 4. Keep only one active VRO jar.
 5. Remove Entity Collision FPS Fix only if you want VRO to own that same
@@ -245,7 +245,8 @@ The complete option and coexistence reference is in
 | [Configuration](docs/CONFIGURATION.md) | Every option, default, command, and immediate behavior |
 | [Testing](docs/TESTING.md) | Compare Mode and repeatable benchmark procedure |
 | [Performance validation](docs/PERFORMANCE_VALIDATION.md) | Four-client measured results and limitations |
-| [Release notes 0.3.2](docs/releases/0.3.2.md) | Current release details and the 0.3.0-to-0.3.2 changes |
+| [Release notes 0.3.3](docs/releases/0.3.3.md) | Current patch release and dynamic-light crash correction |
+| [Release notes 0.3.2](docs/releases/0.3.2.md) | Expanded 0.3.2 release details |
 | [Release notes 0.3.0](docs/releases/0.3.0.md) | Initial release history |
 | [Changelog](CHANGELOG.md) | Version-to-version changes |
 | [Credits](CREDITS.md) | Adapted code, design research, and compatibility attribution |

@@ -6,8 +6,8 @@ Optimization CurseForge listing.
 - `vro-icon.jpg`: square upload-ready project icon
 - `SUMMARY.txt`: one-line project summary shown in CurseForge search and browse results
 - `DESCRIPTION.md`: concise project-page Markdown
-- `CHANGELOG-0.3.2.md`: concise current-release file changelog
-- `UPLOAD-0.3.2.md`: current project fields and upload checklist
+- `CHANGELOG-0.3.3.md`: concise current-release file changelog
+- `UPLOAD-0.3.3.md`: current project fields and upload checklist
 - `PUBLISHING-WORKFLOW.md`: repeatable browser publication procedure
 
 Locally assembled upload bundles belong under `release/curseforge/` and should
@@ -17,5 +17,5 @@ bundle.
 Assemble or refresh the local review kit with:
 
 ```powershell
-.\scripts\assemble-curseforge-release.ps1 -Version 0.3.2
+.\scripts\assemble-curseforge-release.ps1 -Version 0.3.3
 ```

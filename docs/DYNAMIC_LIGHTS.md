@@ -1,6 +1,6 @@
 # Dynamic lights
 
-VRO 0.3.2 contains an optional client-only dynamic-light engine. It is disabled
+VRO contains an optional client-only dynamic-light engine. It is disabled
 by default. Enable it with `/vro lights on` or
 `dynamic_lights.enabled = true` in the client configuration.
 
