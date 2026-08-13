@@ -129,7 +129,9 @@ VRO also repairs two deterministic stale client states:
 - Vault Integrations altar conduits receive their missing placement position
   before the client tick continues;
 - Powah replaces an obsolete cable entry at the same position and continues
-  its normal adjacent-network refresh.
+  its normal adjacent-network refresh. Delayed unloads remove a cable only
+  when that exact cable is still current, preserving newer replacements and
+  allowing the surrounding chunk update to finish.
 
 These guards are client-only and remain active in Compare Mode.
 

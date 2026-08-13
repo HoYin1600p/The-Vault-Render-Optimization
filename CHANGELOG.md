@@ -13,6 +13,10 @@ and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ### Fixed
 
+- Prevented a delayed obsolete Powah cable unload from removing a newer cable
+  at the same position and aborting the client chunk-and-light packet that was
+  replacing the surrounding chunk.
+
 ## [0.3.3] - 2026-08-03
 
 ### Fixed
