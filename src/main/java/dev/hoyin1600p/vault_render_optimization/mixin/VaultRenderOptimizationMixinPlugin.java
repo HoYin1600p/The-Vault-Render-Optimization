@@ -65,7 +65,9 @@ public final class VaultRenderOptimizationMixinPlugin implements IMixinConfigPlu
             Map.entry("VaultArmorRenderPropertiesMixin", "the_vault"),
             Map.entry("VaultDamageNumberRendererMixin", "the_vault"),
             Map.entry("VaultEventMixin", "the_vault"),
-            Map.entry("VaultMapKeybindMixin", "the_vault")
+            Map.entry("VaultMapKeybindMixin", "the_vault"),
+            Map.entry("XaeroLeveledRegionAccess", "xaeroworldmap"),
+            Map.entry("XaeroMapCacheWriteGuardMixin", "xaeroworldmap")
     );
 
     private LoadingModList loadingModList;

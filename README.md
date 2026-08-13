@@ -131,7 +131,10 @@ VRO also repairs two deterministic stale client states:
 - Powah replaces an obsolete cable entry at the same position and continues
   its normal adjacent-network refresh. Delayed unloads remove a cable only
   when that exact cable is still current, preserving newer replacements and
-  allowing the surrounding chunk update to finish.
+  allowing the surrounding chunk update to finish;
+- Xaero's World Map validates and writes prepared cache regions under the same
+  region lock. A queued save invalidated by newer map work is cleaned up and
+  skipped instead of crashing the client.
 
 These guards are client-only and remain active in Compare Mode.
 

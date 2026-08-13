@@ -40,7 +40,9 @@
     "VaultEventMixin",
     "VaultArmorItemMixin",
     "VaultDamageNumberRendererMixin",
-    "VaultMapKeybindMixin"
+    "VaultMapKeybindMixin",
+    "XaeroLeveledRegionAccess",
+    "XaeroMapCacheWriteGuardMixin"
   ],
   "injectors": {
     "defaultRequire": 1

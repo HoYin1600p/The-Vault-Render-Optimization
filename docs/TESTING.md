@@ -42,6 +42,8 @@ An optimization build is not release-ready until it has exercised:
 - Vault gear HUD, armor, tools, abilities, and damage numbers;
 - Vault elixir-orb number particles followed by other colored particles;
 - animated text, inventories, maps, and resource reloads;
+- sustained Xaero map discovery followed by teleports, dimension changes, and
+  vault transitions without stale cache-write crashes or lost future saves;
 - model-heavy resource reloads with FerriteCore 4.2.2 present;
 - vertical section culling in tall rooms, mountains, caves, the Nether, and
   spectator flight, plus opt-in horizontal culling at its distance boundary;

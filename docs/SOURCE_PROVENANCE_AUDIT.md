@@ -1,6 +1,6 @@
 # Source provenance audit
 
-Audit date: August 3, 2026
+Audit date: August 13, 2026
 
 This audit answers whether VRO's released behavior was copied, adapted,
 independently implemented after research, or written from profiling and
@@ -55,6 +55,7 @@ class is bundled in VRO.
 | Powah stale-cable crash guard | Original VRO compatibility fix | Client crash trace and installed runtime behavior |
 | Powah unload access bridge | Original VRO compatibility fix | Exit crash trace; narrow Forge class access transformer for the independent unload cleanup |
 | Vault/Xaero map key context | Original VRO compatibility fix | Reproduced Forge key-consumption conflict |
+| Xaero stale cache-write crash guard | Original VRO compatibility fix | Client crash trace and installed Xaero cache lifecycle behavior |
 | Compare Mode, configuration, coexistence plugin | Original VRO implementation | VRO benchmark and compatibility requirements |
 | Four-pack compatibility build | Original VRO build tooling | Locally installed supported Vault API baselines |
 

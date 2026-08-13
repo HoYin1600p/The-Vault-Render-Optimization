@@ -16,6 +16,9 @@ and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 - Prevented a delayed obsolete Powah cable unload from removing a newer cable
   at the same position and aborting the client chunk-and-light packet that was
   replacing the surrounding chunk.
+- Prevented Xaero's World Map from turning an invalidated queued cache write
+  into a fatal client crash. Cache preparation validation and writing now share
+  the region lock, while stale work uses Xaero's normal buffer cleanup path.
 
 ## [0.3.3] - 2026-08-03
 
