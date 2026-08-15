@@ -9,7 +9,18 @@ and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ### Added
 
+- Added `/vro create status` diagnostics for Flywheel backend state, loaded
+  contraption size, special renderers, actors, and per-frame culling counters.
+
 ### Changed
+
+- Large Create contraptions can now use cached 16-block render sections so
+  off-screen portions are frustum-culled without changing models or detail.
+- Create special block entities and movement actors are conservatively culled
+  inside contraptions, empty special-renderer buffer flushes are skipped, and
+  supported machinery uses tighter directional render bounds.
+- Changing Compare Mode now reloads Create's world renderers so each condition
+  owns freshly built contraption meshes.
 
 - Vault Loot Beams tooltip data is now populated only when a dropped item is
   actually evaluated for rendering instead of for every item entering the

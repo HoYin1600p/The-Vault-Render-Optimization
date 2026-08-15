@@ -362,6 +362,47 @@ no ghost lights after source removal or world changes, bounded lookup work as
 unrelated source counts rise, no repeated rebuild storm, correct shader on/off
 transitions, and immediate cleanup after disconnect and dimension changes.
 
+## Implemented dev candidate: Create contraption rendering
+
+The installed Create 0.5.1.i renderer builds one mesh per render layer for an
+entire contraption. Create first frustum-tests the contraption's combined AABB,
+but once that test passes the complete layer mesh is submitted. Five stationary
+contraptions containing roughly 1,600 to 1,800 blocks each can therefore retain
+substantial draw work even when only a small portion of each structure is in
+view. This remains relevant when the contraptions are not moving.
+
+The VRO dev candidate independently implements these conservative changes:
+
+1. report Flywheel backend state and loaded contraption geometry through
+   `/vro create status`;
+2. skip the shared buffer flush only when no special contraption block entity
+   was eligible to submit geometry;
+3. reuse primitive matrix transforms and a mutable light position while
+   rendering virtual block entities;
+4. frustum-test non-instanced special block entities and movement actors with
+   inflated local bounds;
+5. split contraptions above a configurable block threshold into cached local
+   16-block mesh sections and frustum-test each transformed section;
+6. replace unnecessarily spherical render bounds for selected Create machinery
+   with conservative directional bounds.
+
+The implementation uses Create's existing `WorldModelBuilder`, model data,
+virtual render world, render layers, lighting, textures, and Flywheel shader
+binding. It does not implement LOD, block substitution, distance hiding,
+reduced animation, asynchronous GL work, or server changes. Both Flywheel and
+fallback SuperByteBuffer paths retain explicit invalidation. Compare Mode
+reloads Create's world renderers to prevent cross-condition cache reuse.
+
+Research inputs were Create's installed 0.5.1.i bytecode, the official 1.18
+source at `b4ebd54c9cf9b1988189d192b3038dbce02af876`, modern Create renderer
+architecture, and the public behavioral claims of Create: Catalyst. No
+Create: Catalyst code was available or copied.
+
+This candidate requires visual and performance acceptance testing before a
+release merge. Its main tradeoff is higher one-time mesh construction and more
+draw objects in exchange for less recurring geometry submitted when a large
+contraption is only partly visible.
+
 ## P3: Static Block-Entity Rendering
 
 ### Design sources

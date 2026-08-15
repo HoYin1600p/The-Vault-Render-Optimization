@@ -133,9 +133,20 @@ def discoverOptionalModJar = { java.util.regex.Pattern filePattern ->
 def vaultLootBeamsJarFile = discoverOptionalModJar(~/^VaultLootBeams-.*\.jar$/)
 def iSpawnerJarFile = discoverOptionalModJar(~/^ispawner-.*\.jar$/)
 def architecturyJarFile = discoverOptionalModJar(~/^architectury-.*\.jar$/)
+def createJarFile = discoverOptionalModJar(~/^create-.*\.jar$/)
 
-if (vaultLootBeamsJarFile == null || iSpawnerJarFile == null || architecturyJarFile == null) {
-    throw new GradleException('Vault Loot Beams, iSpawner, and Architectury jars are required to compile their optional VRO integrations.')
+if (vaultLootBeamsJarFile == null || iSpawnerJarFile == null || architecturyJarFile == null || createJarFile == null) {
+    throw new GradleException('Vault Loot Beams, iSpawner, Architectury, and Create jars are required to compile their optional VRO integrations.')
+}
+
+def extractedFlywheelJar = layout.buildDirectory.file('generated-dependencies/flywheel-forge-1.18.2-0.6.11-107.jar')
+tasks.register('extractBundledFlywheel', Copy) {
+    from(zipTree(createJarFile)) {
+        include 'META-INF/jarjar/flywheel-forge-1.18.2-0.6.11-107.jar'
+        eachFile { details -> details.path = details.name }
+        includeEmptyDirs = false
+    }
+    into extractedFlywheelJar.get().asFile.parentFile
 }
 
 dependencies {
@@ -148,6 +159,8 @@ dependencies {
     compileOnly files(vaultLootBeamsJarFile)
     compileOnly files(iSpawnerJarFile)
     compileOnly files(architecturyJarFile)
+    compileOnly files(createJarFile)
+    compileOnly files(extractedFlywheelJar)
 }
 
 tasks.register('printVaultCompatibilityTargets') {
@@ -210,5 +223,6 @@ tasks.named('jar', Jar).configure {
 }
 
 tasks.withType(JavaCompile).configureEach {
+    dependsOn tasks.named('extractBundledFlywheel')
     options.encoding = 'UTF-8'
 }

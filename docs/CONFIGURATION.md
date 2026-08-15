@@ -20,7 +20,9 @@ Vault/Xaero map-key compatibility. Those behaviors are intentionally kept out
 of performance comparisons.
 
 Changing Compare Mode clears Vault gear and tool caches so the next frame does
-not reuse data created under the previous state.
+not reuse data created under the previous state. When Create is installed, it
+also reloads Create's world renderers so a sectioned or monolithic contraption
+mesh is rebuilt for the newly selected condition.
 
 ## Render fast paths
 
@@ -89,6 +91,8 @@ yields both when Better Fps - Render Distance is installed.
 | `/vro lights block_entities on\|off` | Controls resource-defined block entity sources |
 | `/vro lights shaders on\|off` | Controls operation while Oculus shaders are active |
 | `/vro lights interval <1-20>` | Saves the independent per-source update interval |
+| `/vro create` | Shows Create/Flywheel and loaded-contraption diagnostics |
+| `/vro create status` | Shows the same Create diagnostics explicitly |
 
 These are client commands in multiplayer. They require no server permission
 and work even when the remote server does not have VRO.
@@ -109,6 +113,28 @@ storage. Compare Mode pauses it. Dynamic Lights Reforged owns the feature when
 that mod is installed, regardless of these settings.
 
 See [Dynamic lights](DYNAMIC_LIGHTS.md) for source definitions and diagnostics.
+
+## Create rendering
+
+| Key | Default | Purpose |
+| --- | --- | --- |
+| `create_rendering.skip_empty_contraption_buffer_flush` | `true` | Skips Create's shared-buffer flush when a contraption has no special block entities to submit |
+| `create_rendering.contraption_block_entity_culling` | `true` | Frustum-culls non-instanced special block entities inside contraptions |
+| `create_rendering.contraption_actor_culling` | `true` | Frustum-culls movement actors inside contraptions |
+| `create_rendering.sectioned_contraption_meshes` | `true` | Splits large contraption geometry into local 16-block sections for frustum culling |
+| `create_rendering.sectioned_mesh_block_threshold` | `512` | Minimum rendered-block count for sectioned contraption meshes |
+| `create_rendering.smart_machinery_render_bounds` | `true` | Uses tighter directional bounds for supported Create machinery |
+
+Sectioned meshes preserve Create's original block models, textures, lighting,
+render layers, and shader program. The feature is not LOD: it does not reduce
+detail, substitute generic blocks, or hide geometry based on distance. A large
+contraption may take slightly longer to build its render data once because it
+creates multiple cached mesh sections; the intended gain is lower recurring
+draw work when only part of the structure is on screen.
+
+The smart-bounds path covers belts, mechanical arms, deployers, portable
+storage interfaces, and mechanical rollers in Create 0.5.1.i. All Create paths
+are optional and are omitted automatically when Create is absent.
 
 ## Optional-mod ownership
 

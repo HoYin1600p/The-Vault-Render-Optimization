@@ -26,6 +26,8 @@ modify server gameplay. The remote server does not need the mod.
 - Skips terrain sections beyond a configurable vertical render range without
   changing chunk loading or Distant Horizons storage.
 - Releases stale Create Addition and Powah world references after unloads.
+- Frustum-culls large Create contraptions in 16-block mesh sections and avoids
+  off-screen special renderer work without reducing model detail.
 - Defers unused Vault Loot Beams tooltip work and clears its per-entity cache
   when a world unloads.
 - Removes iSpawner's per-frame stream/list allocations and allows ordinary
@@ -151,6 +153,26 @@ VRO also repairs two deterministic stale client states:
 
 These guards are client-only and remain active in Compare Mode.
 
+### Create contraption rendering
+
+Create 0.5.1.i normally submits a glued contraption as one large mesh. If any
+part of that contraption is visible, the complete mesh remains eligible to
+draw. VRO divides contraptions containing at least 512 rendered blocks into
+local 16-block sections and frustum-tests those sections independently. It
+uses Create's existing models, textures, lighting, render layers, and Flywheel
+shader path; no blocks are simplified or replaced with lower-detail models.
+
+VRO also frustum-tests non-instanced special block entities and movement actors
+inside a contraption, skips an empty shared-buffer flush, and narrows oversized
+render bounds for supported stationary Create machinery. Compare Mode reloads
+Create's world renderers so an enabled/disabled comparison does not reuse a
+mesh built for the other condition.
+
+Use `/vro create status` to report Flywheel's backend, loaded contraption and
+block counts, and the previous frame's section, actor, and block-entity culling
+counters. Flywheel instancing remains Create's preferred backend; VRO does not
+replace it.
+
 ### World-map key compatibility
 
 The Vault's map key binding is active only while a client Vault is active. This
@@ -228,6 +250,7 @@ for upgrades, removal, optional-mod coexistence, and issue isolation.
 | `/vro lights block_entities on\|off` | Controls resource-defined block entity sources. |
 | `/vro lights shaders on\|off` | Controls whether VRO lights remain active with shaders. |
 | `/vro lights interval <1-20>` | Changes the independent per-source update interval. |
+| `/vro create status` | Reports Create/Flywheel state and contraption-culling counters. |
 
 Compare Mode deliberately leaves crash guards, unloaded-world cleanup, and
 map-key compatibility active. Those are correctness features, not benchmarked
@@ -252,8 +275,9 @@ The complete option and coexistence reference is in
 - Renderer caches are discarded on resource reload.
 - Particle subclasses with custom or full-bright lighting keep their own path.
 - No asynchronous rendering or particle ticking is introduced.
-- No framebuffers, shaders, chunk meshes, network packets, or server collision
-  decisions are modified.
+- No framebuffers, shaders, terrain chunk meshes, network packets, or server
+  collision decisions are modified. Create contraption meshes alone may be
+  divided into equivalent render sections.
 
 ## Documentation
 

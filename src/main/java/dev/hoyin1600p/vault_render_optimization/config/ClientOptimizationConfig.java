@@ -4,6 +4,7 @@ import dev.hoyin1600p.vault_render_optimization.VaultRenderOptimization;
 import dev.hoyin1600p.vault_render_optimization.cache.VaultGearRenderCache;
 import dev.hoyin1600p.vault_render_optimization.cache.VaultToolRenderCache;
 import net.minecraftforge.common.ForgeConfigSpec;
+import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.config.ModConfig;
 import net.minecraftforge.fml.event.config.ModConfigEvent;
 
@@ -27,6 +28,12 @@ public final class ClientOptimizationConfig {
     private static final ForgeConfigSpec.BooleanValue DYNAMIC_LIGHT_BLOCK_ENTITIES;
     private static final ForgeConfigSpec.BooleanValue DYNAMIC_LIGHTS_WITH_SHADERS;
     private static final ForgeConfigSpec.IntValue DYNAMIC_LIGHT_UPDATE_INTERVAL;
+    private static final ForgeConfigSpec.BooleanValue CREATE_EMPTY_BUFFER_FLUSH_SKIP;
+    private static final ForgeConfigSpec.BooleanValue CREATE_BLOCK_ENTITY_CULLING;
+    private static final ForgeConfigSpec.BooleanValue CREATE_ACTOR_CULLING;
+    private static final ForgeConfigSpec.BooleanValue CREATE_SECTIONED_CONTRAPTION_MESHES;
+    private static final ForgeConfigSpec.IntValue CREATE_SECTIONED_MESH_THRESHOLD;
+    private static final ForgeConfigSpec.BooleanValue CREATE_SMART_RENDER_BOUNDS;
 
     private static volatile boolean compareMode;
 
@@ -46,6 +53,12 @@ public final class ClientOptimizationConfig {
     public static volatile boolean dynamicLightBlockEntities = true;
     public static volatile boolean dynamicLightsWithShaders = false;
     public static volatile int dynamicLightUpdateInterval = 1;
+    public static volatile boolean createEmptyBufferFlushSkip = true;
+    public static volatile boolean createBlockEntityCulling = true;
+    public static volatile boolean createActorCulling = true;
+    public static volatile boolean createSectionedContraptionMeshes = true;
+    public static volatile int createSectionedMeshThreshold = 512;
+    public static volatile boolean createSmartRenderBounds = true;
 
     static {
         ForgeConfigSpec.Builder builder = new ForgeConfigSpec.Builder();
@@ -130,6 +143,30 @@ public final class ClientOptimizationConfig {
                 .comment("Per-source update interval in client ticks. Each source keeps an independent schedule.")
                 .defineInRange("update_interval_ticks", 1, 1, 20);
         builder.pop();
+
+        builder.push("create_rendering");
+        CREATE_EMPTY_BUFFER_FLUSH_SKIP = builder
+                .comment("Avoid flushing Minecraft's shared render buffers for Create contraptions that rendered no special block entities.")
+                .define("skip_empty_contraption_buffer_flush", true);
+        CREATE_BLOCK_ENTITY_CULLING = builder
+                .comment("Frustum-cull special block entities inside visible Create contraptions.")
+                .define("contraption_block_entity_culling", true);
+        CREATE_ACTOR_CULLING = builder
+                .comment("Frustum-cull movement actors inside visible Create contraptions.")
+                .define("contraption_actor_culling", true);
+        CREATE_SECTIONED_CONTRAPTION_MESHES = builder
+                .comment(
+                        "Split large Create contraption meshes into local 16-block sections for frustum culling.",
+                        "This is geometric culling only; it does not reduce detail or render distance."
+                )
+                .define("sectioned_contraption_meshes", true);
+        CREATE_SECTIONED_MESH_THRESHOLD = builder
+                .comment("Minimum rendered block count before a contraption uses sectioned meshes.")
+                .defineInRange("sectioned_mesh_block_threshold", 512, 128, 16384);
+        CREATE_SMART_RENDER_BOUNDS = builder
+                .comment("Use directional cached render bounds for supported Create machinery.")
+                .define("smart_machinery_render_bounds", true);
+        builder.pop();
         SPEC = builder.build();
     }
 
@@ -150,10 +187,26 @@ public final class ClientOptimizationConfig {
         compareMode = enabled;
         VaultGearRenderCache.clear();
         VaultToolRenderCache.clear();
+        reloadCreateRenderers();
         VaultRenderOptimization.LOGGER.info(
                 "Compare Mode {} and saved",
                 enabled ? "enabled" : "disabled"
         );
+    }
+
+    private static void reloadCreateRenderers() {
+        if (!ModList.get().isLoaded("create")) {
+            return;
+        }
+        try {
+            Class<?> backend = Class.forName("com.jozufozu.flywheel.backend.Backend");
+            backend.getMethod("reloadWorldRenderers").invoke(null);
+        } catch (ReflectiveOperationException | LinkageError exception) {
+            VaultRenderOptimization.LOGGER.warn(
+                    "Could not refresh Create renderers after changing Compare Mode",
+                    exception
+            );
+        }
     }
 
     public static void setVerticalSectionCulling(boolean enabled) {
@@ -240,5 +293,11 @@ public final class ClientOptimizationConfig {
         dynamicLightBlockEntities = DYNAMIC_LIGHT_BLOCK_ENTITIES.get();
         dynamicLightsWithShaders = DYNAMIC_LIGHTS_WITH_SHADERS.get();
         dynamicLightUpdateInterval = DYNAMIC_LIGHT_UPDATE_INTERVAL.get();
+        createEmptyBufferFlushSkip = CREATE_EMPTY_BUFFER_FLUSH_SKIP.get();
+        createBlockEntityCulling = CREATE_BLOCK_ENTITY_CULLING.get();
+        createActorCulling = CREATE_ACTOR_CULLING.get();
+        createSectionedContraptionMeshes = CREATE_SECTIONED_CONTRAPTION_MESHES.get();
+        createSectionedMeshThreshold = CREATE_SECTIONED_MESH_THRESHOLD.get();
+        createSmartRenderBounds = CREATE_SMART_RENDER_BOUNDS.get();
     }
 }
