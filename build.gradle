@@ -121,6 +121,23 @@ if (!renderModJarFile.exists()) {
     throw new GradleException("The renderer mod jar was not found at ${renderModJarFile}. Set -Prender_mod_jar if your instance path differs.")
 }
 
+def discoverOptionalModJar = { java.util.regex.Pattern filePattern ->
+    knownVaultInstances.collect { instance ->
+        def modsDirectory = new File(prismInstancesDirectory, "${instance.folder}/${instance.minecraft}/mods")
+        modsDirectory.listFiles()?.find {
+            it.isFile() && filePattern.matcher(it.name).matches()
+        }
+    }.find { it != null }
+}
+
+def vaultLootBeamsJarFile = discoverOptionalModJar(~/^VaultLootBeams-.*\.jar$/)
+def iSpawnerJarFile = discoverOptionalModJar(~/^ispawner-.*\.jar$/)
+def architecturyJarFile = discoverOptionalModJar(~/^architectury-.*\.jar$/)
+
+if (vaultLootBeamsJarFile == null || iSpawnerJarFile == null || architecturyJarFile == null) {
+    throw new GradleException('Vault Loot Beams, iSpawner, and Architectury jars are required to compile their optional VRO integrations.')
+}
+
 dependencies {
     minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
 
@@ -128,6 +145,9 @@ dependencies {
 
     compileOnly files(vaultModJarFile)
     compileOnly files(renderModJarFile)
+    compileOnly files(vaultLootBeamsJarFile)
+    compileOnly files(iSpawnerJarFile)
+    compileOnly files(architecturyJarFile)
 }
 
 tasks.register('printVaultCompatibilityTargets') {

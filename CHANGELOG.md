@@ -11,7 +11,19 @@ and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ### Changed
 
+- Vault Loot Beams tooltip data is now populated only when a dropped item is
+  actually evaluated for rendering instead of for every item entering the
+  client world.
+- iSpawner display-item selection no longer creates a stream and temporary
+  list every render, and ordinary spawner displays may use normal frustum
+  culling without reducing their configured render distance.
+
 ### Fixed
+
+- Prevented Minecraft's shared `ItemStack.EMPTY` singleton from retaining the
+  last empty dropped-item entity assigned during synchronized data updates.
+- Cleared retained Vault Loot Beams tooltip entries when a client world
+  unloads.
 
 - Prevented a delayed obsolete Powah cable unload from removing a newer cable
   at the same position and aborting the client chunk-and-light packet that was

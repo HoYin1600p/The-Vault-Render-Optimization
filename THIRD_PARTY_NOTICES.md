@@ -133,6 +133,30 @@ VRO does not copy those mixins. It independently listens for Forge world-unload
 events and removes only the exact unloaded world from the existing maps instead
 of replacing collection types or cancelling network behavior.
 
+### Unobtanium dropped-item and optional-renderer research
+
+Later Unobtanium fixes identified three additional client costs:
+
+- Minecraft's shared `ItemStack.EMPTY` retaining an item entity;
+- Vault Loot Beams eagerly generating tooltip data for every dropped item;
+- iSpawner allocating a stream and list while choosing its displayed item.
+
+- Project: Unobtanium by iwolfking and contributors
+- Relevant contributor: radimous
+- Source: https://github.com/iwolfking/unobtanium
+- Empty-stack reference commit:
+  `a72a6699ff36ace7237aa9e1458da84736adc0e3`
+- Optional-renderer research commit:
+  `f491eb48c4f6f0e0d13fb6c94b29cb3b56add04d`
+- License: GNU Affero General Public License v3.0 or later
+
+No code from those implementations is included. VRO independently redirects
+only the empty-stack assignment, defers only Vault Loot Beams' eager cache
+call while preserving its normal lazy query, clears retained tooltip entries
+on world unload, and performs two direct iSpawner inventory passes. VRO keeps
+iSpawner's original display interval, copied stack, and view distance. These
+mixins yield when Unobtanium is installed.
+
 ## Compatibility behavior inspected
 
 VRO interoperates with Minecraft Forge, SpongePowered Mixin, Vault Hunters,

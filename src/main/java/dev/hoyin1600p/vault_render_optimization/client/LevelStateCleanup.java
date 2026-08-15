@@ -4,6 +4,7 @@ import dev.hoyin1600p.vault_render_optimization.VaultRenderOptimization;
 import dev.hoyin1600p.vault_render_optimization.client.lighting.DynamicLightEngine;
 import dev.hoyin1600p.vault_render_optimization.mixin.CreateAdditionEnergyNetworkManagerAccessor;
 import dev.hoyin1600p.vault_render_optimization.mixin.PowahCableNetAccessor;
+import dev.hoyin1600p.vault_render_optimization.mixin.VaultLootBeamsCacheAccessor;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.eventbus.api.EventPriority;
@@ -32,6 +33,16 @@ public final class LevelStateCleanup {
         if (ModList.get().isLoaded("powah")) {
             removeWorld(PowahCableNetAccessor.vaultRenderOptimization$getLoadedCables(), world,
                     "Powah cable networks");
+        }
+
+        if (ModList.get().isLoaded("vaultlootbeams") && !ModList.get().isLoaded("unobtainium")) {
+            Map<?, ?> tooltipCache = VaultLootBeamsCacheAccessor.vaultRenderOptimization$getTooltipCache();
+            if (tooltipCache != null && !tooltipCache.isEmpty()) {
+                int entries = tooltipCache.size();
+                tooltipCache.clear();
+                VaultRenderOptimization.LOGGER.debug(
+                        "Released {} Vault Loot Beams tooltip entries for an unloaded world", entries);
+            }
         }
     }
 

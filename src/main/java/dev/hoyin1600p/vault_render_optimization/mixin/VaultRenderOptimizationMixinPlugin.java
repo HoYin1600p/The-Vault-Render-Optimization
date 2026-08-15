@@ -53,10 +53,17 @@ public final class VaultRenderOptimizationMixinPlugin implements IMixinConfigPlu
             "LevelRendererDynamicLightMixin",
             "MinecraftDynamicLightMixin"
     );
+    private static final Set<String> UNOBTANIUM_EQUIVALENT_MIXINS = Set.of(
+            "EmptyItemStackEntityReferenceMixin",
+            "ISpawnerRendererMixin",
+            "VaultLootBeamsCacheAccessor",
+            "VaultLootBeamsLazyTooltipMixin"
+    );
     private static final Map<String, String> OPTIONAL_MIXIN_MODS = Map.ofEntries(
             Map.entry("AltarConduitClientCrashGuardMixin", "vaultintegrations"),
             Map.entry("ClientAbilityDataMixin", "the_vault"),
             Map.entry("ElixirOrbParticleMixin", "the_vault"),
+            Map.entry("ISpawnerRendererMixin", "ispawner"),
             Map.entry("CreateAdditionEnergyNetworkManagerAccessor", "createaddition"),
             Map.entry("PowahCableNetAccessor", "powah"),
             Map.entry("PowahCableNetClientCrashGuardMixin", "powah"),
@@ -66,6 +73,8 @@ public final class VaultRenderOptimizationMixinPlugin implements IMixinConfigPlu
             Map.entry("VaultDamageNumberRendererMixin", "the_vault"),
             Map.entry("VaultEventMixin", "the_vault"),
             Map.entry("VaultMapKeybindMixin", "the_vault"),
+            Map.entry("VaultLootBeamsCacheAccessor", "vaultlootbeams"),
+            Map.entry("VaultLootBeamsLazyTooltipMixin", "vaultlootbeams"),
             Map.entry("XaeroLeveledRegionAccess", "xaeroworldmap"),
             Map.entry("XaeroMapCacheWriteGuardMixin", "xaeroworldmap")
     );
@@ -109,6 +118,10 @@ public final class VaultRenderOptimizationMixinPlugin implements IMixinConfigPlu
         }
 
         if (DYNAMIC_LIGHT_MIXINS.contains(simpleName) && isModLoaded("dynamiclightsreforged")) {
+            return false;
+        }
+
+        if (UNOBTANIUM_EQUIVALENT_MIXINS.contains(simpleName) && isModLoaded("unobtainium")) {
             return false;
         }
 

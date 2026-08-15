@@ -26,6 +26,12 @@ modify server gameplay. The remote server does not need the mod.
 - Skips terrain sections beyond a configurable vertical render range without
   changing chunk loading or Distant Horizons storage.
 - Releases stale Create Addition and Powah world references after unloads.
+- Defers unused Vault Loot Beams tooltip work and clears its per-entity cache
+  when a world unloads.
+- Removes iSpawner's per-frame stream/list allocations and allows ordinary
+  off-screen spawner displays to be frustum culled.
+- Prevents Minecraft's shared empty item stack from retaining a dropped-item
+  entity.
 - Repairs two known client-only stale-state crashes without changing the
   server.
 - Resolves the Vault map and Xaero's World Map `M`-key conflict.
@@ -85,6 +91,9 @@ VRO also applies conservative optimizations outside Vault-specific code:
 - skip debug rendering when no supported debug overlay is active;
 - cache non-player entity and block-entity renderer lookups, rebuilding them
   after resource reloads.
+- select iSpawner display items without temporary streams or lists while
+  preserving its original rotation interval, copied stack, and view distance;
+- defer Vault Loot Beams tooltip creation until an item is actually queried.
 
 These paths are independently configurable and do not intentionally change
 visible output. Shader-sensitive lightmap and sky-color caching were rejected.
@@ -123,6 +132,10 @@ On world unload, VRO removes the exact unloaded world from Create Addition's
 energy-network map and Powah's cable-network map. This prevents old client or
 integrated-server levels from remaining reachable through repeated dimension
 changes and reconnects.
+
+The same lifecycle pass clears Vault Loot Beams tooltip entries. VRO also
+prevents Minecraft's global empty `ItemStack` singleton from retaining an
+`ItemEntity` reference after synchronized dropped-item updates.
 
 VRO also repairs two deterministic stale client states:
 

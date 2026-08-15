@@ -1,6 +1,6 @@
 # Source provenance audit
 
-Audit date: August 13, 2026
+Audit date: August 15, 2026
 
 This audit answers whether VRO's released behavior was copied, adapted,
 independently implemented after research, or written from profiling and
@@ -44,6 +44,9 @@ class is bundled in VRO.
 | Biome listener cache in HoYin Unobtanium fork | Downstream from VRO | Unobtanium fork commit `00d1837` postdates VRO's implementation |
 | Client wall/push skips | Adapted code | Entity Collision FPS Fix `cc16e184`, CC0-1.0 |
 | Create Addition/Powah unload cleanup | Independent reimplementation | Unobtanium retention discovery; VRO uses a different Forge unload/key-removal design |
+| Shared empty-stack entity-reference guard | Independent reimplementation | Unobtanium `a72a669`; VRO redirects only the singleton assignment |
+| Vault Loot Beams lazy tooltip/cache cleanup | Independent reimplementation | Unobtanium `f491eb4`; VRO preserves the mod's lazy query and adds Forge unload cleanup |
+| iSpawner display-item selection/frustum culling | Independent reimplementation | Unobtanium `f491eb4`; VRO uses direct inventory passes, Compare Mode, and preserves original view distance |
 | Particle-light cache | Independent design adaptation | Particle Core `1151fe6`, MIT |
 | Empty renderer/tick exits | Independent design adaptation | BadOptimizations `5de4a3a`, MIT |
 | Entity/block-entity renderer caches | Independent design adaptation | BadOptimizations `5de4a3a`, MIT |
@@ -80,6 +83,12 @@ Unobtanium replaces or cancels behavior around world-keyed Create Addition and
 Powah state. VRO instead subscribes to Forge's world-unload event and removes
 only the exact world key from each existing map. The target problem was learned
 from Unobtanium, but the retained expression and lifecycle are VRO's own.
+
+The empty-stack, Vault Loot Beams, and iSpawner changes follow the same
+provenance category. VRO retained the observed safety/performance boundaries,
+then implemented them directly against Minecraft 1.18.2 and the installed mod
+APIs. It does not use Unobtanium's method bodies, helper layout, or distance
+reduction. VRO also disables the overlapping mixins when Unobtanium is present.
 
 ### VRO code later appearing in a fork
 

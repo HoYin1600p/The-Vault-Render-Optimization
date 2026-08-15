@@ -4,6 +4,8 @@ Research date: 2026-08-01
 
 Follow-up audit: 2026-08-02
 
+Second follow-up audit: 2026-08-15
+
 This document records performance projects and implementation ideas that may be
 useful to a Forge 1.18.2 Vault Hunters client. It is a design and provenance
 ledger, not permission to copy source code. No candidate described here has
@@ -56,6 +58,33 @@ mechanisms are retained adaptations rather than independent research:
 The exact authorship, adaptation, and distribution obligations are recorded in
 `CREDITS.md` and `THIRD_PARTY_NOTICES.md`. VRO is released under
 AGPL-3.0-or-later.
+
+## 2026-08-15 Unobtanium and Create review
+
+Unobtanium was refreshed through revision
+`bb3e8a523807f919d217fa8008fefcb4b8e7fb13`. Three low-risk ideas were accepted
+as independent VRO implementations: preventing the shared empty item stack
+from retaining an entity, deferring Vault Loot Beams' eager tooltip work with
+unload cleanup, and replacing iSpawner's per-render stream/list construction
+with direct inventory passes. VRO deliberately did not adopt Unobtanium's
+shorter iSpawner display distance because that would remove visible output.
+
+Create 0.5.1.i was inspected from the installed 1.18.2 jar, and newer official
+Create renderer branches were reviewed through
+`87b3c6a65fd00c023a07b37b0353144bc7e6a5bf`. Super Glue itself is not normally
+drawn; the likely correlation is that glue assembles larger moving
+contraptions, whose structure and special block entities must then be rendered.
+The installed renderer repeats Flywheel backend/world eligibility checks for
+each moved block entity every frame. A modern behavioral reference, Create:
+Catalyst, reports caching that decision per tick, but its source is not being
+used and its project is all rights reserved.
+
+The safest future Create candidate is a VRO-owned cache of the Flywheel
+eligibility decision for one contraption render pass or client tick. Before
+shipping it, collect frame-time and allocation diagnostics with the problem
+contraption in view, with shaders both off and on. Whole-contraption distance
+culling helps only distant structures and changes visible output; server tick
+throttling changes gameplay and is outside VRO's client-only scope.
 
 ## Implementation Rules
 
@@ -506,7 +535,10 @@ research input; it does not imply code was copied.
 | Particle Core | `1151fe6aca4e1c3b62459de3e3a99ec32af2ac99` | MIT | Primary particle reference |
 | StutterFix | `05eb1855e3812687c130b8e11515ef923543d954` | MIT | Global scheduling change rejected |
 | ThreadTweak | `d418794b049f29b128c877b2cf030346b6df4ac5` | MIT | Global scheduling change rejected |
-| Unobtanium | `7bf6a6585014e07b9fca622482ce40e83b73d8e8` | AGPL-3.0-or-later | Learned-ability cache adaptation; separate world-retention design reference |
+| Create 1.18 renderer | installed `0.5.1.i`; source comparison `b4ebd54c9cf9b1988189d192b3038dbce02af876` | MIT code / ARR assets | Installed bytecode plus older 1.18 source branch; glue and contraption renderer investigation |
+| Create modern renderer | `87b3c6a65fd00c023a07b37b0353144bc7e6a5bf` | MIT code / ARR assets | Newer contraption visual architecture and changelog comparison |
+| Create: Catalyst | CurseForge project `1620723`, inspected 2026-08-15 | All rights reserved | Behavioral claims only; no source copied |
+| Unobtanium | `bb3e8a523807f919d217fa8008fefcb4b8e7fb13` | AGPL-3.0-or-later | Ability adaptation plus independently implemented world, empty-stack, Vault Loot Beams, and iSpawner design references |
 | Video Tape | `4b330488fb9510fe9ff8e7b02aee8b8016a1e56e` | MIT-0 | Framebuffer cleanup rejected |
 
 Before implementing from any entry, refresh its upstream repository, record the

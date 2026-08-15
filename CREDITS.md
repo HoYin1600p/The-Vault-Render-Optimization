@@ -28,6 +28,17 @@ retention risks. VRO's cleanup for those maps was independently implemented
 using Forge world-unload events and exact-key removal; those cleanup classes do
 not copy Unobtanium's collection replacement or cancellation mixins.
 
+Later Unobtanium work by `radimous` also identified avoidable retention through
+Minecraft's shared empty item stack, eager Vault Loot Beams tooltip work, and
+iSpawner renderer allocations. The relevant research commits are
+[`a72a669`](https://github.com/iwolfking/unobtanium/commit/a72a6699ff36ace7237aa9e1458da84736adc0e3)
+and
+[`f491eb4`](https://github.com/iwolfking/unobtanium/commit/f491eb48c4f6f0e0d13fb6c94b29cb3b56add04d).
+VRO's implementations were written independently against the installed
+Minecraft 1.18.2 APIs. They use different injection boundaries, Compare Mode
+behavior, unload cleanup, and coexistence rules; no Unobtanium implementation
+block was copied.
+
 VRO's Vault event-listener snapshot cache originated in VRO in June 2026. A
 biome-only version was later contributed by HoYin1600p to an Unobtanium fork,
 so that overlap does not represent code copied from Unobtanium into VRO.
