@@ -4,7 +4,7 @@
 [![Forge](https://img.shields.io/badge/Forge-40.3.11%2B-e04e39)](https://files.minecraftforge.net/net/minecraftforge/forge/index_1.18.2.html)
 [![Environment](https://img.shields.io/badge/Environment-Client-4b8bbe)](#requirements-and-support)
 [![License](https://img.shields.io/badge/License-AGPL--3.0--or--later-blue.svg)](LICENSE)
-[![Release](https://img.shields.io/badge/Release-0.3.3-7b68ee)](docs/releases/0.3.3.md)
+[![Release](https://img.shields.io/badge/Release-0.3.4-7b68ee)](docs/releases/0.3.4.md)
 
 The Vault Render Optimization (VRO) is a client-side Minecraft Forge 1.18.2
 mod that reduces repeated rendering and client simulation work in Vault
@@ -236,7 +236,7 @@ different pack files together.
 
 1. Stop Minecraft.
 2. Remove or disable every older VRO jar.
-3. Place `vault_render_optimization.0.3.3.jar` in the instance's `mods`
+3. Place `vault_render_optimization.0.3.4.jar` in the instance's `mods`
    directory.
 4. Keep only one active VRO jar.
 5. Remove Entity Collision FPS Fix only if you want VRO to own that same
@@ -263,6 +263,8 @@ for upgrades, removal, optional-mod coexistence, and issue isolation.
 | `/vro lights shaders on\|off` | Controls whether VRO lights remain active with shaders. |
 | `/vro lights interval <1-20>` | Changes the independent per-source update interval. |
 | `/vro create status` | Reports Create/Flywheel state and contraption-culling counters. |
+| `/vro create shader_compat status` | Reports whether Flywheel shader compatibility is configured, active, or using its fallback. |
+| `/vro create shader_compat on\|off` | Enables or disables Flywheel shader compatibility and immediately rebuilds Create renderers. |
 
 Compare Mode deliberately leaves crash guards, unloaded-world cleanup, and
 map-key compatibility active. Those are correctness features, not benchmarked
@@ -287,9 +289,10 @@ The complete option and coexistence reference is in
 - Renderer caches are discarded on resource reload.
 - Particle subclasses with custom or full-bright lighting keep their own path.
 - No asynchronous rendering or particle ticking is introduced.
-- No framebuffers, shaders, terrain chunk meshes, network packets, or server
-  collision decisions are modified. Create contraption meshes alone may be
-  divided into equivalent render sections.
+- Network packets, server gameplay, and server collision decisions are not
+  modified. Create contraption meshes may be divided into equivalent render
+  sections. On the strictly supported Oculus/Flywheel stack, VRO adapts
+  Flywheel-generated shaders so Create can retain GPU instancing.
 
 ## Documentation
 
@@ -299,7 +302,8 @@ The complete option and coexistence reference is in
 | [Configuration](docs/CONFIGURATION.md) | Every option, default, command, and immediate behavior |
 | [Testing](docs/TESTING.md) | Compare Mode and repeatable benchmark procedure |
 | [Performance validation](docs/PERFORMANCE_VALIDATION.md) | Four-client measured results and limitations |
-| [Release notes 0.3.3](docs/releases/0.3.3.md) | Current patch release and dynamic-light crash correction |
+| [Release notes 0.3.4](docs/releases/0.3.4.md) | Current release, including Create contraption and Flywheel shader rendering |
+| [Release notes 0.3.3](docs/releases/0.3.3.md) | Dynamic-light crash correction |
 | [Release notes 0.3.2](docs/releases/0.3.2.md) | Expanded 0.3.2 release details |
 | [Release notes 0.3.0](docs/releases/0.3.0.md) | Initial release history |
 | [Changelog](CHANGELOG.md) | Version-to-version changes |

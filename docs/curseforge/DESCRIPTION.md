@@ -97,7 +97,7 @@ Better Fps - Render Distance, and Dynamic Lights Reforged informed independent
 Forge 1.18.2 implementations and compatibility boundaries.
 
 - [Source code and issue tracker](https://github.com/HoYin1600p/The-Vault-Render-Optimization)
-- [Full release notes](https://github.com/HoYin1600p/The-Vault-Render-Optimization/blob/v0.3.3/docs/releases/0.3.3.md)
+- [Full release notes](https://github.com/HoYin1600p/The-Vault-Render-Optimization/blob/main/CHANGELOG.md)
 - [Complete credits](https://github.com/HoYin1600p/The-Vault-Render-Optimization/blob/main/CREDITS.md)
 - [Third-party notices](https://github.com/HoYin1600p/The-Vault-Render-Optimization/blob/main/THIRD_PARTY_NOTICES.md)
 - License: GNU Affero General Public License v3.0 or later
