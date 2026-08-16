@@ -5,7 +5,7 @@ updates to CurseForge.
 
 ## Project
 
-- Project ID: record after CurseForge creates the project
+- Project ID: `1637635`
 - Project summary: paste the complete contents of `PROJECT-SUMMARY.txt` from the assembled kit
 - Upload only the normal release JAR from `libs/`.
 - Never upload a sources JAR, development JAR, upload kit, or ZIP as the main

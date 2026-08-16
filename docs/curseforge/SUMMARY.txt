@@ -1,1 +1,1 @@
-Improves Vault Hunters frame consistency and memory use with render caching, terrain culling, dynamic-light controls, and client stability fixes.
+Client-side Vault Hunters and Create performance with smoother rendering, contraption culling, Flywheel shader support, memory cleanup, and stability fixes.
