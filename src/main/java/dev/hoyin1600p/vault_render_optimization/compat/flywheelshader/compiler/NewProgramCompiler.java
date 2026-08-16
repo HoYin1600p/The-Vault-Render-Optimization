@@ -60,7 +60,7 @@ public class NewProgramCompiler <TP extends ShaderPatcherBase,P extends WorldPro
             boolean dedicatedFailed = false;
 
             if (dedicatedSource.isPresent() && !disabledDedicated.contains(programSet)) {
-                P dedicatedProgram = compileProgram(ctx, isShadow, newPipeline, programSet, dedicatedSource.get());
+                P dedicatedProgram = compileProgram(ctx, isShadow, newPipeline, programSet, dedicatedSource.get(), true);
                 if (dedicatedProgram != null) {
                     FlywheelShaderCompatState.recordProgramSource(isShadow, true, false);
                     return dedicatedProgram;
@@ -78,7 +78,7 @@ public class NewProgramCompiler <TP extends ShaderPatcherBase,P extends WorldPro
             if(sourceReferenceOpt.isEmpty())
                 return null;
 
-            P generatedProgram = compileProgram(ctx, isShadow, newPipeline, programSet, sourceReferenceOpt.get());
+            P generatedProgram = compileProgram(ctx, isShadow, newPipeline, programSet, sourceReferenceOpt.get(), false);
             if (generatedProgram != null) {
                 FlywheelShaderCompatState.recordProgramSource(isShadow, false, dedicatedFailed);
             }
@@ -88,14 +88,14 @@ public class NewProgramCompiler <TP extends ShaderPatcherBase,P extends WorldPro
     }
 
     private P compileProgram(ProgramContext ctx, boolean isShadow, NewWorldRenderingPipeline pipeline,
-                             ProgramSet programSet, ProgramSource source) {
+                             ProgramSet programSet, ProgramSource source, boolean dedicatedProgram) {
         if (source.getVertexSource().isEmpty()) {
             return null;
         }
 
         try {
             String newVertexSource = patcher.patch(source.getVertexSource().get(),
-                    new ShaderPatcherBase.Context(ctx.spec.getVertexFile(), ctx.ctx, ctx.vertexType));
+                    new ShaderPatcherBase.Context(ctx.spec.getVertexFile(), ctx.ctx, ctx.vertexType, dedicatedProgram));
             newVertexSource = JcppProcessor.glslPreprocessSource(newVertexSource, environmentDefines);
             ProgramSource newProgramSource = programSourceOverrideVertexSource(ctx, programSet, source, newVertexSource);
             ((ProgramDirectivesAccessor) newProgramSource.getDirectives()).setFlwAlphaTestOverride(

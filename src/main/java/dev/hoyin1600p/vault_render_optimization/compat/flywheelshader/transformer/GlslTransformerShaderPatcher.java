@@ -80,6 +80,14 @@ public class GlslTransformerShaderPatcher extends ShaderPatcherBase {
 
     private static final Pattern versionPattern = Pattern.compile("^.*#version\\s+(\\d+)", Pattern.DOTALL);
 
+    private static final Set<String> legacyVertexMembers = Set.of(
+            "pos",
+            "color",
+            "texCoords",
+            "light",
+            "normal"
+    );
+
     public GlslTransformerShaderPatcher(Template<? extends VertexData> template, FileResolution header) {
         super(template, header);
         transformer = new SingleASTTransformer<>() {
@@ -117,6 +125,10 @@ public class GlslTransformerShaderPatcher extends ShaderPatcherBase {
 
     private void transform(TranslationUnit tree, Root root, ContextParameter parameter) {
         var vertexTemplate = template.get(parameter.ctx.getFile());
+
+        if (parameter.ctx.dedicatedProgram()) {
+            replaceLegacyDedicatedVertexReferences(root);
+        }
 
         var predefinesStats = ProcessFlywheelPredefine(tree, parameter, vertexTemplate);
         var prependMainStats = ProcessFlywheelCreateVertex(tree, vertexTemplate);
@@ -156,6 +168,20 @@ public class GlslTransformerShaderPatcher extends ShaderPatcherBase {
         } else {
             root.replaceReferenceExpressionsReport(transformer, "gl_MultiTexCoord1", "(vec4(_flw_v.light*240.0,0,1))");
         }
+    }
+
+    private void replaceLegacyDedicatedVertexReferences(Root root) {
+        root.process(root.identifierIndex.getStream("v").distinct(), identifier -> {
+            if (!(identifier.getParent() instanceof ReferenceExpression referenceExpression)
+                    || !(referenceExpression.getParent() instanceof MemberAccessExpression memberAccessExpression)
+                    || memberAccessExpression.getOperand() != referenceExpression
+                    || !legacyVertexMembers.contains(memberAccessExpression.getMember().getName())) {
+                return;
+            }
+
+            referenceExpression.replaceByAndDelete(
+                    transformer.parseExpression(identifier.getRoot(), "_flw_v"));
+        });
     }
 
     private static void RemoveOriginalAttributes(Root root, Map<String, Integer> attrVectorDims) {
