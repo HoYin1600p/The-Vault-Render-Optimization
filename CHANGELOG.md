@@ -9,7 +9,27 @@ and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ### Added
 
+- Added `/vro create status` diagnostics for Flywheel backend state, loaded
+  contraption size, special renderers, actors, and per-frame culling counters.
+- Added optional Flywheel shader-instancing compatibility for public Oculus
+  1.6.4, Rubidium 0.5.6, Create 0.5.1.i, and Flywheel 0.6.11. The feature has
+  saved in-game controls, Compare Mode integration, strict version gates, an
+  early startup recovery switch, and automatic fallback after shader-program
+  compilation failure.
+- Added guarded automatic restoration of Flywheel's upstream-default
+  `INSTANCING` backend when a modpack ships with Flywheel configured as `OFF`.
+  Unsupported GPUs and shader integration failures retain the fallback renderer,
+  and users can disable the behavior in VRO's client configuration.
+
 ### Changed
+
+- Large Create contraptions can now use cached 16-block render sections so
+  off-screen portions are frustum-culled without changing models or detail.
+- Create special block entities and movement actors are conservatively culled
+  inside contraptions, empty special-renderer buffer flushes are skipped, and
+  supported machinery uses tighter directional render bounds.
+- Changing Compare Mode now reloads Create's world renderers so each condition
+  owns freshly built contraption meshes.
 
 - Vault Loot Beams tooltip data is now populated only when a dropped item is
   actually evaluated for rendering instead of for every item entering the

@@ -49,6 +49,14 @@ An optimization build is not release-ready until it has exercised:
   spectator flight, plus opt-in horizontal culling at its distance boundary;
 - dynamic lights off by default, then enabled with held, dropped, entity, and
   resource-defined block-entity sources, including source removal and movement;
+- stationary and moving Create contraptions above and below the 512-block mesh
+  threshold, including a 1,600+ block glued structure viewed from every side;
+- Create belts, mechanical arms, deployers, portable storage interfaces, and
+  rollers at the edge of the camera frustum without disappearing early;
+- Create contraptions containing chests, tanks, actors, moving parts, and
+  translucent blocks with Flywheel instancing, batching, and off where usable;
+- repeated `/vro compare on` and `/vro compare off` transitions while a large
+  Create contraption is loaded, checking both visuals and `/vro create status`;
 - disconnect/reconnect, death/respawn, and dimension changes;
 - world unload, normal client exit with Powah present, and a multi-hour session;
 - shaders and Distant Horizons in a separate compatibility client;
@@ -57,6 +65,11 @@ An optimization build is not release-ready until it has exercised:
 Terrain-culling tests must confirm that chunk loading and Distant Horizons
 storage remain unchanged. Dynamic-light shader tests must confirm the default
 pause policy and the explicit opt-in path separately.
+
+Create tests must confirm identical geometry, textures, lighting, transparency,
+and animation on both sides of the frustum boundary. Record the one-time mesh
+build stall separately from steady-state frame time. Section culling is not a
+distance or detail optimization, so no block may change model with distance.
 
 Default optimizations must not suppress visible content or change lighting,
 animation timing, transparency, model state, loot, movement, or server rules.

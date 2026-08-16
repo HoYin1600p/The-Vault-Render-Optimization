@@ -6,6 +6,24 @@ mechanism can be reconstructed.
 
 ## Shipped adaptations
 
+### Iris & Oculus Flywheel Compat
+
+VRO's optional Create shader-instancing bridge under
+`compat/flywheelshader` is adapted from Iris & Oculus Flywheel Compat.
+
+- Project: Iris & Oculus Flywheel Compat by Red Face and contributors
+- Source: https://github.com/leon-o/iris-flw-compat
+- Adapted baseline: `7a981f9a845b402b49a82b4dae8d814b3480137e`
+- Copyright: Copyright (c) 2022 Red Face
+- License: MIT
+- Adaptation: targets public Oculus 1.6.4 and Rubidium 0.5.6, adds strict
+  optional-mod and version gates, VRO configuration and Compare Mode control,
+  an early startup recovery switch, diagnostics, automatic renderer refresh,
+  and a project-owned accessor for Minecraft's final shader uniform field.
+
+This is adapted source code. The complete upstream MIT license is retained at
+`docs/licenses/iris-flw-compat-MIT.txt` and embedded in the runnable jar.
+
 ### Unobtanium learned-ability cache
 
 VRO's `ClientAbilityDataMixin` is adapted from Unobtanium's
@@ -156,6 +174,31 @@ call while preserving its normal lazy query, clears retained tooltip entries
 on world unload, and performs two direct iSpawner inventory passes. VRO keeps
 iSpawner's original display interval, copied stack, and view distance. These
 mixins yield when Unobtanium is installed.
+
+### Create contraption-rendering research
+
+- Project: Create by simibubi and contributors
+- Source: https://github.com/Creators-of-Create/Create
+- Installed target: Create `0.5.1.i` for Minecraft 1.18.2
+- Source comparison revision: `b4ebd54c9cf9b1988189d192b3038dbce02af876`
+- License observed for code: MIT
+- Additional behavioral reference: Create: Catalyst, CurseForge project
+  `1620723`, inspected 2026-08-15, all rights reserved
+
+No Create or Create: Catalyst source file or implementation block was copied
+into VRO. The installed Create jar and official 1.18 source were inspected to
+identify the exact render lifecycle and compatibility boundaries. VRO then
+implemented its own fixed-section grouping, transformed frustum tests,
+diagnostic counters, cache lifecycle, and configuration directly against the
+public Create/Flywheel APIs. Create: Catalyst was used only as evidence that
+contraption rendering is a practical optimization target; its code was not
+available or used.
+
+VRO does not bundle Create, Flywheel, or their assets. Sectioned contraption
+meshes are generated at runtime from Create's existing models and preserve the
+same render layers, model data, lighting, and textures. The directional
+machinery bounds are independently calculated from each installed block
+entity's position, facing, extension, or belt chain direction.
 
 ## Compatibility behavior inspected
 
