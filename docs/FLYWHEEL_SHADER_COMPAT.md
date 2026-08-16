@@ -12,6 +12,12 @@ are active. It merges Flywheel's generated vertex logic into the active
 shader-pack block or shadow program. The feature is client-only and does not
 change Create simulation or server behavior.
 
+VRO also restores Flywheel's upstream-default `INSTANCING` backend when a pack
+ships with Flywheel set to `OFF`. This behavior is enabled by default through
+`create_rendering.auto_enable_flywheel_instancing`. It does not bypass
+Flywheel's GPU capability checks, and shader integration failures still switch
+to the standard renderer.
+
 ## Supported Stack
 
 - Minecraft 1.18.2

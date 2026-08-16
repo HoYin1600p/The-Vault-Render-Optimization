@@ -61,6 +61,11 @@ public final class CreateDiagnostics {
                         + "; empty flushes skipped " + frame.emptyFlushesSkipped()
                         + "; section threshold " + ClientOptimizationConfig.createSectionedMeshThreshold + "."
         ), false);
+        source.sendSuccess(new TextComponent(
+                "[VRO] Flywheel automatic instancing "
+                        + (ClientOptimizationConfig.createFlywheelAutoEnable ? "ON" : "OFF")
+                        + (FlywheelBackendManager.promotedBackend() ? "; restored from OFF this session." : ".")
+        ), false);
 
         if (!Backend.isOn() && largest >= ClientOptimizationConfig.createSectionedMeshThreshold) {
             source.sendSuccess(new TextComponent(

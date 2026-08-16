@@ -34,6 +34,7 @@ public final class ClientOptimizationConfig {
     private static final ForgeConfigSpec.BooleanValue CREATE_SECTIONED_CONTRAPTION_MESHES;
     private static final ForgeConfigSpec.IntValue CREATE_SECTIONED_MESH_THRESHOLD;
     private static final ForgeConfigSpec.BooleanValue CREATE_SMART_RENDER_BOUNDS;
+    private static final ForgeConfigSpec.BooleanValue CREATE_FLYWHEEL_AUTO_ENABLE;
     private static final ForgeConfigSpec.BooleanValue CREATE_FLYWHEEL_SHADER_COMPAT;
 
     private static volatile boolean compareMode;
@@ -60,6 +61,7 @@ public final class ClientOptimizationConfig {
     public static volatile boolean createSectionedContraptionMeshes = true;
     public static volatile int createSectionedMeshThreshold = 512;
     public static volatile boolean createSmartRenderBounds = true;
+    public static volatile boolean createFlywheelAutoEnable = true;
     public static volatile boolean createFlywheelShaderCompat = true;
 
     static {
@@ -168,6 +170,13 @@ public final class ClientOptimizationConfig {
         CREATE_SMART_RENDER_BOUNDS = builder
                 .comment("Use directional cached render bounds for supported Create machinery.")
                 .define("smart_machinery_render_bounds", true);
+        CREATE_FLYWHEEL_AUTO_ENABLE = builder
+                .comment(
+                        "Restore Flywheel's upstream-default instancing backend when a pack disables it.",
+                        "Unsupported GPUs and shader integration failures still fall back safely.",
+                        "Disable this option to preserve a manually selected OFF backend."
+                )
+                .define("auto_enable_flywheel_instancing", true);
         CREATE_FLYWHEEL_SHADER_COMPAT = builder
                 .comment(
                         "Keep Flywheel's instancing backend available with Oculus shaders.",
@@ -326,6 +335,7 @@ public final class ClientOptimizationConfig {
         createSectionedContraptionMeshes = CREATE_SECTIONED_CONTRAPTION_MESHES.get();
         createSectionedMeshThreshold = CREATE_SECTIONED_MESH_THRESHOLD.get();
         createSmartRenderBounds = CREATE_SMART_RENDER_BOUNDS.get();
+        createFlywheelAutoEnable = CREATE_FLYWHEEL_AUTO_ENABLE.get();
         createFlywheelShaderCompat = CREATE_FLYWHEEL_SHADER_COMPAT.get();
     }
 }

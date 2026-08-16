@@ -124,6 +124,7 @@ See [Dynamic lights](DYNAMIC_LIGHTS.md) for source definitions and diagnostics.
 | `create_rendering.sectioned_contraption_meshes` | `true` | Splits large contraption geometry into local 16-block sections for frustum culling |
 | `create_rendering.sectioned_mesh_block_threshold` | `512` | Minimum rendered-block count for sectioned contraption meshes |
 | `create_rendering.smart_machinery_render_bounds` | `true` | Uses tighter directional bounds for supported Create machinery |
+| `create_rendering.auto_enable_flywheel_instancing` | `true` | Restores Flywheel's upstream-default instancing backend when a pack configures it as `OFF`; unsupported hardware and integration failures retain the fallback renderer |
 
 Sectioned meshes preserve Create's original block models, textures, lighting,
 render layers, and shader program. The feature is not LOD: it does not reduce

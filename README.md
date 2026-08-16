@@ -173,7 +173,11 @@ mesh built for the other condition.
 Use `/vro create status` to report Flywheel's backend, loaded contraption and
 block counts, and the previous frame's section, actor, and block-entity culling
 counters. Flywheel instancing remains Create's preferred backend; VRO does not
-replace it.
+replace it. VRO restores Flywheel's upstream-default `INSTANCING` backend when
+a pack explicitly configures it as `OFF`. Unsupported hardware and shader
+integration failures retain Flywheel's safe fallback renderer. Set
+`create_rendering.auto_enable_flywheel_instancing=false` to preserve a manually
+selected `OFF` backend.
 
 With Oculus 1.6.x and Flywheel 0.6.11, VRO can retain that instancing backend
 while shaders are active. Use `/vro create shader_compat on|off|status` to

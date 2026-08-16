@@ -16,6 +16,10 @@ and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
   saved in-game controls, Compare Mode integration, strict version gates, an
   early startup recovery switch, and automatic fallback after shader-program
   compilation failure.
+- Added guarded automatic restoration of Flywheel's upstream-default
+  `INSTANCING` backend when a modpack ships with Flywheel configured as `OFF`.
+  Unsupported GPUs and shader integration failures retain the fallback renderer,
+  and users can disable the behavior in VRO's client configuration.
 
 ### Changed
 
