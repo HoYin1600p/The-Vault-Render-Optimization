@@ -46,6 +46,22 @@ The implementation is adapted from the MIT-licensed Iris & Oculus Flywheel
 Compat project. See `CREDITS.md`, `THIRD_PARTY_NOTICES.md`, and
 `docs/licenses/iris-flw-compat-MIT.txt` for exact provenance and terms.
 
+## Dedicated Shader-Pack Programs
+
+Shader packs may provide `gbuffers_flw.vsh/.fsh` for normal scene rendering
+and `shadow_flw.vsh/.fsh` for shadow-map rendering. VRO prefers a valid
+dedicated program, then injects the Flywheel 0.6 vertex layout required by the
+specific Create material being compiled. This allows a shader author to tune
+fragment, geometry, blending, and buffer behavior for Create separately from
+ordinary block rendering.
+
+When either dedicated program is absent, invalid, or fails to compile, VRO
+retries that pass with its generated compatibility program. A malformed
+optional program therefore does not remove the existing fallback. Use
+`/vro create status` to see whether the scene and shadow passes selected
+`DEDICATED`, `GENERATED FALLBACK`, or
+`GENERATED FALLBACK AFTER DEDICATED FAILURE`.
+
 ## Controls And Recovery
 
 The feature defaults on. It can be changed and saved while a world is loaded:

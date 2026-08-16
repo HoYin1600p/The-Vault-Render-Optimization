@@ -8,6 +8,12 @@ public final class FlywheelShaderCompatState {
     private static boolean failed;
     private static boolean fallbackPending;
     private static boolean successLogged;
+    private static boolean dedicatedGbuffersUsed;
+    private static boolean generatedGbuffersUsed;
+    private static boolean dedicatedGbuffersFailed;
+    private static boolean dedicatedShadowUsed;
+    private static boolean generatedShadowUsed;
+    private static boolean dedicatedShadowFailed;
 
     private FlywheelShaderCompatState() {
     }
@@ -20,6 +26,7 @@ public final class FlywheelShaderCompatState {
         failed = false;
         fallbackPending = false;
         successLogged = false;
+        resetProgramSources();
         VroFlywheelShaderCompat.LOGGER.info("Flywheel shader instancing compatibility available for the new Oculus pipeline");
     }
 
@@ -31,6 +38,7 @@ public final class FlywheelShaderCompatState {
         failed = false;
         fallbackPending = false;
         successLogged = false;
+        resetProgramSources();
     }
 
     public static synchronized boolean shouldUseShaderInstancing() {
@@ -57,6 +65,7 @@ public final class FlywheelShaderCompatState {
         failed = false;
         fallbackPending = false;
         successLogged = false;
+        resetProgramSources();
     }
 
     public static synchronized void recordSuccess() {
@@ -64,6 +73,37 @@ public final class FlywheelShaderCompatState {
             successLogged = true;
             VroFlywheelShaderCompat.LOGGER.info("Flywheel shader program integration succeeded");
         }
+    }
+
+    public static synchronized void recordProgramSource(boolean shadow, boolean dedicated, boolean dedicatedFailed) {
+        if (shadow) {
+            dedicatedShadowUsed |= dedicated;
+            generatedShadowUsed |= !dedicated;
+            dedicatedShadowFailed |= dedicatedFailed;
+        } else {
+            dedicatedGbuffersUsed |= dedicated;
+            generatedGbuffersUsed |= !dedicated;
+            dedicatedGbuffersFailed |= dedicatedFailed;
+        }
+    }
+
+    public static synchronized String describeProgramSource(boolean shadow) {
+        boolean dedicated = shadow ? dedicatedShadowUsed : dedicatedGbuffersUsed;
+        boolean generated = shadow ? generatedShadowUsed : generatedGbuffersUsed;
+        boolean dedicatedFailed = shadow ? dedicatedShadowFailed : dedicatedGbuffersFailed;
+        if (dedicatedFailed) {
+            return "GENERATED FALLBACK AFTER DEDICATED FAILURE";
+        }
+        if (dedicated && generated) {
+            return "MIXED DEDICATED/GENERATED";
+        }
+        if (dedicated) {
+            return "DEDICATED";
+        }
+        if (generated) {
+            return "GENERATED FALLBACK";
+        }
+        return "NOT COMPILED";
     }
 
     public static synchronized void recordFailure(String program, Throwable throwable) {
@@ -86,6 +126,15 @@ public final class FlywheelShaderCompatState {
         fallbackPending = false;
         Backend.refresh();
         Backend.reloadWorldRenderers();
+    }
+
+    private static void resetProgramSources() {
+        dedicatedGbuffersUsed = false;
+        generatedGbuffersUsed = false;
+        dedicatedGbuffersFailed = false;
+        dedicatedShadowUsed = false;
+        generatedShadowUsed = false;
+        dedicatedShadowFailed = false;
     }
 
     private static boolean featureEnabled() {
