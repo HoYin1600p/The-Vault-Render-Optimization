@@ -4,7 +4,7 @@
 [![Forge](https://img.shields.io/badge/Forge-40.3.11%2B-e04e39)](https://files.minecraftforge.net/net/minecraftforge/forge/index_1.18.2.html)
 [![Environment](https://img.shields.io/badge/Environment-Client-4b8bbe)](#requirements-and-support)
 [![License](https://img.shields.io/badge/License-AGPL--3.0--or--later-blue.svg)](LICENSE)
-[![Release](https://img.shields.io/badge/Release-0.3.4-7b68ee)](docs/releases/0.3.4.md)
+[![Release](https://img.shields.io/badge/Release-0.3.5-7b68ee)](docs/releases/0.3.5.md)
 
 The Vault Render Optimization (VRO) is a client-side Minecraft Forge 1.18.2
 mod that reduces repeated rendering and client simulation work in Vault
@@ -30,6 +30,8 @@ modify server gameplay. The remote server does not need the mod.
   off-screen special renderer work without reducing model detail.
 - Keeps Flywheel's GPU instancing path available for large Create contraptions
   when supported public Oculus shaders are active.
+- Uses shader-pack-provided `gbuffers_flw` and `shadow_flw` programs when
+  available, with automatic fallback to VRO's generated compatibility path.
 - Defers unused Vault Loot Beams tooltip work and clears its per-entity cache
   when a world unloads.
 - Removes iSpawner's per-frame stream/list allocations and allows ordinary
@@ -236,7 +238,7 @@ different pack files together.
 
 1. Stop Minecraft.
 2. Remove or disable every older VRO jar.
-3. Place `vault_render_optimization.0.3.4.jar` in the instance's `mods`
+3. Place `vault_render_optimization.0.3.5.jar` in the instance's `mods`
    directory.
 4. Keep only one active VRO jar.
 5. Remove Entity Collision FPS Fix only if you want VRO to own that same
@@ -302,7 +304,8 @@ The complete option and coexistence reference is in
 | [Configuration](docs/CONFIGURATION.md) | Every option, default, command, and immediate behavior |
 | [Testing](docs/TESTING.md) | Compare Mode and repeatable benchmark procedure |
 | [Performance validation](docs/PERFORMANCE_VALIDATION.md) | Four-client measured results and limitations |
-| [Release notes 0.3.4](docs/releases/0.3.4.md) | Current release, including Create contraption and Flywheel shader rendering |
+| [Release notes 0.3.5](docs/releases/0.3.5.md) | Current release, including dedicated Flywheel shader-pack programs |
+| [Release notes 0.3.4](docs/releases/0.3.4.md) | Create contraption and Flywheel shader rendering |
 | [Release notes 0.3.3](docs/releases/0.3.3.md) | Dynamic-light crash correction |
 | [Release notes 0.3.2](docs/releases/0.3.2.md) | Expanded 0.3.2 release details |
 | [Release notes 0.3.0](docs/releases/0.3.0.md) | Initial release history |
