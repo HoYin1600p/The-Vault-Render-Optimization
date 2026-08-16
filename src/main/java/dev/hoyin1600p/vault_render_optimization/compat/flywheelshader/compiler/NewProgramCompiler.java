@@ -17,20 +17,28 @@ import net.coderbot.iris.shaderpack.*;
 import net.coderbot.iris.shaderpack.loading.ProgramId;
 import net.coderbot.iris.shaderpack.preprocessor.JcppProcessor;
 import net.minecraft.resources.ResourceLocation;
+import dev.hoyin1600p.vault_render_optimization.compat.flywheelshader.FlywheelShaderCompatState;
+import dev.hoyin1600p.vault_render_optimization.compat.flywheelshader.VroFlywheelShaderCompat;
 import dev.hoyin1600p.vault_render_optimization.compat.flywheelshader.accessors.IrisRenderingPipelineAccessor;
 import dev.hoyin1600p.vault_render_optimization.compat.flywheelshader.accessors.ProgramDirectivesAccessor;
+import dev.hoyin1600p.vault_render_optimization.compat.flywheelshader.accessors.ProgramSetAccessor;
 import dev.hoyin1600p.vault_render_optimization.compat.flywheelshader.accessors.ProgramSourceAccessor;
 import dev.hoyin1600p.vault_render_optimization.compat.flywheelshader.transformer.ShaderPatcherBase;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 
 public class NewProgramCompiler <TP extends ShaderPatcherBase,P extends WorldProgram> extends IrisProgramCompilerBase<P>{
     private final Map<ProgramSet,ProgramFallbackResolver> resolvers = new HashMap<>();
+    private final Set<ProgramSet> disabledDedicatedGbuffers = Collections.newSetFromMap(new IdentityHashMap<>());
+    private final Set<ProgramSet> disabledDedicatedShadow = Collections.newSetFromMap(new IdentityHashMap<>());
     private final Iterable<StringPair> environmentDefines;
     public NewProgramCompiler(GlProgram.Factory<P> factory, Template<? extends VertexData> template, FileResolution header,Class<TP> patcherClass) throws NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
         super(factory, template, header);
@@ -47,27 +55,69 @@ public class NewProgramCompiler <TP extends ShaderPatcherBase,P extends WorldPro
         WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipelineNullable();
         if (pipeline instanceof NewWorldRenderingPipeline newPipeline) {
             ProgramSet programSet = ((IrisRenderingPipelineAccessor) newPipeline).getProgramSet();
-            Optional<ProgramSource> sourceReferenceOpt = getProgramSourceReference(programSet, ctx.spec.name, isShadow);
+            Set<ProgramSet> disabledDedicated = isShadow ? disabledDedicatedShadow : disabledDedicatedGbuffers;
+            Optional<ProgramSource> dedicatedSource = getDedicatedProgramSource(programSet, isShadow);
+            boolean dedicatedFailed = false;
+
+            if (dedicatedSource.isPresent() && !disabledDedicated.contains(programSet)) {
+                P dedicatedProgram = compileProgram(ctx, isShadow, newPipeline, programSet, dedicatedSource.get(), true);
+                if (dedicatedProgram != null) {
+                    FlywheelShaderCompatState.recordProgramSource(isShadow, true, false);
+                    return dedicatedProgram;
+                }
+
+                dedicatedFailed = true;
+                disabledDedicated.add(programSet);
+                VroFlywheelShaderCompat.LOGGER.warn(
+                        "Dedicated {} program failed; retrying with generated compatibility shader",
+                        isShadow ? "shadow_flw" : "gbuffers_flw"
+                );
+            }
+
+            Optional<ProgramSource> sourceReferenceOpt = getGeneratedProgramSource(programSet, ctx.spec.name, isShadow);
             if(sourceReferenceOpt.isEmpty())
                 return null;
 
-            ProgramSource sourceRef = sourceReferenceOpt.get();
-            if(sourceRef.getVertexSource().isEmpty())
-                return null;
-
-            String vertexSource = sourceRef.getVertexSource().get();
-            String newVertexSource = patcher.patch(vertexSource,new ShaderPatcherBase.Context(ctx.spec.getVertexFile(),
-                ctx.ctx, ctx.vertexType));
-            newVertexSource = JcppProcessor.glslPreprocessSource(newVertexSource, environmentDefines);
-            ProgramSource newProgramSource = programSourceOverrideVertexSource(ctx, programSet, sourceRef, newVertexSource);
-            ((ProgramDirectivesAccessor) newProgramSource.getDirectives()).setFlwAlphaTestOverride(
-                    new AlphaTest(AlphaTestFunction.GREATER, ctx.alphaDiscard));
-            return createWorldProgramBySource(ctx, isShadow, (IrisRenderingPipelineAccessor) newPipeline, newProgramSource);
+            P generatedProgram = compileProgram(ctx, isShadow, newPipeline, programSet, sourceReferenceOpt.get(), false);
+            if (generatedProgram != null) {
+                FlywheelShaderCompatState.recordProgramSource(isShadow, false, dedicatedFailed);
+            }
+            return generatedProgram;
         }
         return null;
     }
 
-    protected Optional<ProgramSource> getProgramSourceReference(ProgramSet programSet, ResourceLocation flwShaderName, boolean isShadow){
+    private P compileProgram(ProgramContext ctx, boolean isShadow, NewWorldRenderingPipeline pipeline,
+                             ProgramSet programSet, ProgramSource source, boolean dedicatedProgram) {
+        if (source.getVertexSource().isEmpty()) {
+            return null;
+        }
+
+        try {
+            String newVertexSource = patcher.patch(source.getVertexSource().get(),
+                    new ShaderPatcherBase.Context(ctx.spec.getVertexFile(), ctx.ctx, ctx.vertexType, dedicatedProgram));
+            newVertexSource = JcppProcessor.glslPreprocessSource(newVertexSource, environmentDefines);
+            ProgramSource newProgramSource = programSourceOverrideVertexSource(ctx, programSet, source, newVertexSource);
+            ((ProgramDirectivesAccessor) newProgramSource.getDirectives()).setFlwAlphaTestOverride(
+                    new AlphaTest(AlphaTestFunction.GREATER, ctx.alphaDiscard));
+            return createWorldProgramBySource(ctx, isShadow,
+                    (IrisRenderingPipelineAccessor) pipeline, newProgramSource);
+        } catch (RuntimeException exception) {
+            VroFlywheelShaderCompat.LOGGER.warn(
+                    "Could not transform Flywheel shader candidate {}",
+                    source.getName(),
+                    exception
+            );
+            return null;
+        }
+    }
+
+    private Optional<ProgramSource> getDedicatedProgramSource(ProgramSet programSet, boolean isShadow) {
+        ProgramSetAccessor accessor = (ProgramSetAccessor) programSet;
+        return isShadow ? accessor.getShadowFlw() : accessor.getGbuffersFlw();
+    }
+
+    protected Optional<ProgramSource> getGeneratedProgramSource(ProgramSet programSet, ResourceLocation flwShaderName, boolean isShadow){
 
         // Tessellation is currently not supported
         var resolver = resolvers.computeIfAbsent(programSet, ProgramFallbackResolver::new);
@@ -109,5 +159,7 @@ public class NewProgramCompiler <TP extends ShaderPatcherBase,P extends WorldPro
     public void clear() {
         super.clear();
         resolvers.clear();
+        disabledDedicatedGbuffers.clear();
+        disabledDedicatedShadow.clear();
     }
 }

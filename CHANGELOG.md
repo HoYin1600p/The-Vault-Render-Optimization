@@ -7,6 +7,15 @@ and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+## [0.3.5] - 2026-08-16
+
+### Added
+
+- Shader packs can now supply dedicated `gbuffers_flw` and `shadow_flw`
+  programs for Flywheel 0.6 scene and shadow rendering. VRO reports the active
+  source through `/vro create status` and retries its existing generated path
+  when a dedicated program is absent, invalid, or fails compilation.
+
 ## [0.3.4] - 2026-08-16
 
 ### Added

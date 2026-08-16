@@ -95,8 +95,7 @@ public abstract class IrisProgramCompilerBase<P extends WorldProgram> {
             }
 
         } catch (Exception exception) {
-            VroFlywheelShaderCompat.LOGGER.error("Fail to compile shader", exception);
-            FlywheelShaderCompatState.recordFailure(ctx.spec.name.toString(), exception);
+            VroFlywheelShaderCompat.LOGGER.warn("Could not compile Flywheel shader candidate", exception);
         }
 
         if (override != null) {

@@ -4,6 +4,7 @@ import com.jozufozu.flywheel.backend.Backend;
 import com.simibubi.create.content.contraptions.AbstractContraptionEntity;
 import com.simibubi.create.content.contraptions.Contraption;
 import com.simibubi.create.content.contraptions.ContraptionHandler;
+import dev.hoyin1600p.vault_render_optimization.compat.flywheelshader.FlywheelShaderCompatState;
 import dev.hoyin1600p.vault_render_optimization.config.ClientOptimizationConfig;
 import net.minecraft.client.Minecraft;
 import net.minecraft.commands.CommandSourceStack;
@@ -65,6 +66,11 @@ public final class CreateDiagnostics {
                 "[VRO] Flywheel automatic instancing "
                         + (ClientOptimizationConfig.createFlywheelAutoEnable ? "ON" : "OFF")
                         + (FlywheelBackendManager.promotedBackend() ? "; restored from OFF this session." : ".")
+        ), false);
+        source.sendSuccess(new TextComponent(
+                "[VRO] Flywheel shader programs: scene "
+                        + FlywheelShaderCompatState.describeProgramSource(false)
+                        + "; shadow " + FlywheelShaderCompatState.describeProgramSource(true) + "."
         ), false);
 
         if (!Backend.isOn() && largest >= ClientOptimizationConfig.createSectionedMeshThreshold) {

@@ -89,7 +89,7 @@ public abstract class ShaderPatcherBase {
      * @param ctx        The shader constants to apply.
      * @param vertexType The vertex type to use.
      */
-    public record Context(SourceFile file, StateSnapshot ctx, VertexType vertexType) {
+    public record Context(SourceFile file, StateSnapshot ctx, VertexType vertexType, boolean dedicatedProgram) {
 
         public SourceFile getFile() {
             return file;
