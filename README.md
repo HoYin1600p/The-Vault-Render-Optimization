@@ -28,6 +28,8 @@ modify server gameplay. The remote server does not need the mod.
 - Releases stale Create Addition and Powah world references after unloads.
 - Frustum-culls large Create contraptions in 16-block mesh sections and avoids
   off-screen special renderer work without reducing model detail.
+- Keeps Flywheel's GPU instancing path available for large Create contraptions
+  when supported public Oculus shaders are active.
 - Defers unused Vault Loot Beams tooltip work and clears its per-entity cache
   when a world unloads.
 - Removes iSpawner's per-frame stream/list allocations and allows ordinary
@@ -172,6 +174,12 @@ Use `/vro create status` to report Flywheel's backend, loaded contraption and
 block counts, and the previous frame's section, actor, and block-entity culling
 counters. Flywheel instancing remains Create's preferred backend; VRO does not
 replace it.
+
+With Oculus 1.6.x and Flywheel 0.6.11, VRO can retain that instancing backend
+while shaders are active. Use `/vro create shader_compat on|off|status` to
+control or inspect the path. Unsupported or incomplete render stacks remain a
+clean no-op. Recovery and acceptance testing are documented in
+[Create shader instancing compatibility](docs/FLYWHEEL_SHADER_COMPAT.md).
 
 ### World-map key compatibility
 

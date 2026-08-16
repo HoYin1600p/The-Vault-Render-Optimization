@@ -1,0 +1,67 @@
+package dev.hoyin1600p.vault_render_optimization.compat.flywheelshader.flywheel;
+
+import com.mojang.blaze3d.shaders.Uniform;
+import com.mojang.math.Matrix3f;
+import com.mojang.math.Matrix4f;
+import net.coderbot.iris.uniforms.CapturedRenderingState;
+import net.minecraft.client.renderer.ShaderInstance;
+import org.lwjgl.opengl.GL20;
+import dev.hoyin1600p.vault_render_optimization.compat.flywheelshader.iris.GlUniformMcMatrix3f;
+import dev.hoyin1600p.vault_render_optimization.compat.flywheelshader.iris.GlUniformMcMatrix4f;
+import dev.hoyin1600p.vault_render_optimization.compat.flywheelshader.mixin.flw.ShaderInstanceAccessor;
+
+public class IrisFlwCompatShaderWarp {
+    public ShaderInstance shader;
+    protected GlUniformMcMatrix4f uniformIrisProjMat;
+    protected GlUniformMcMatrix4f iris_uniformModelViewMat;
+    //protected GlUniformMcMatrix4f uniformModelViewMat;
+    protected GlUniformMcMatrix3f uniformNormalMatrix;
+    protected GlUniformMcMatrix4f uniformModelViewProjMat;
+
+    public IrisFlwCompatShaderWarp(ShaderInstance shader) {
+        this.shader = shader;
+        int progId = shader.getId();
+
+        //ModelViewMat may be removed if the shader doesn't use it.
+        //If the MODEL_VIEW_MATRIX is null, the game will crash when we call ExtendedShader::apply().
+        if(shader.MODEL_VIEW_MATRIX == null){
+            ((ShaderInstanceAccessor) shader).vroFlywheel$setModelViewMatrix(
+                    new Uniform("ModelViewMat", 10, 16, shader)
+            );
+            shader.MODEL_VIEW_MATRIX.set(Matrix4f.createScaleMatrix(1,1,1));
+        }
+
+        uniformIrisProjMat = new GlUniformMcMatrix4f(GL20.glGetUniformLocation(progId,"iris_ProjMat"));
+        iris_uniformModelViewMat = new GlUniformMcMatrix4f(GL20.glGetUniformLocation(progId,"iris_ModelViewMat"));
+        uniformNormalMatrix = new GlUniformMcMatrix3f(GL20.glGetUniformLocation(progId,"iris_NormalMat"));
+        uniformModelViewProjMat = new GlUniformMcMatrix4f(GL20.glGetUniformLocation(progId,"flw_ModelViewProjMat"));
+    }
+
+    public void bind() {
+        shader.apply();
+        setProjectionMatrix(CapturedRenderingState.INSTANCE.getGbufferProjection());
+        setModelViewMatrix(CapturedRenderingState.INSTANCE.getGbufferModelView());
+    }
+
+    public void unbind(){
+        shader.clear();
+    }
+
+    public int getProgramHandle(){
+        return shader.getId();
+    }
+    public void setProjectionMatrix(Matrix4f projectionMatrix){
+        uniformIrisProjMat.set(projectionMatrix);
+    }
+
+    public void setModelViewMatrix(Matrix4f modelView) {
+        iris_uniformModelViewMat.set(modelView);
+
+        if (this.uniformNormalMatrix != null) {
+            Matrix4f normalMatrix = new Matrix4f(modelView);
+            normalMatrix.invert();
+            normalMatrix.transpose();
+            this.uniformNormalMatrix.set(new Matrix3f(normalMatrix));
+        }
+    }
+}

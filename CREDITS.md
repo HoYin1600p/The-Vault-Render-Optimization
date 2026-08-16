@@ -7,6 +7,19 @@ relationships are intentionally separated below.
 
 ## Shipped adapted implementations
 
+### Iris & Oculus Flywheel Compat - Red Face and contributors
+
+- Source: [leon-o/iris-flw-compat](https://github.com/leon-o/iris-flw-compat)
+- Adapted baseline: `7a981f9a845b402b49a82b4dae8d814b3480137e`
+- License: MIT
+
+VRO adapts the project's Flywheel shader-program compiler, extended vertex
+format, render-layer integration, and Oculus pipeline access for Minecraft
+1.18.2. VRO adds public Oculus/Rubidium build targeting, strict startup gates,
+runtime configuration and diagnostics, Compare Mode ownership, automatic
+fallback, and a VRO-owned shader-uniform accessor. The upstream copyright and
+full MIT license are retained in the repository and release jar.
+
 ### Unobtanium - iwolfking, radimous, and contributors
 
 - Source: [iwolfking/unobtanium](https://github.com/iwolfking/unobtanium)

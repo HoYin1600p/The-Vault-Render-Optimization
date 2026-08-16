@@ -11,6 +11,11 @@ and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 - Added `/vro create status` diagnostics for Flywheel backend state, loaded
   contraption size, special renderers, actors, and per-frame culling counters.
+- Added optional Flywheel shader-instancing compatibility for public Oculus
+  1.6.4, Rubidium 0.5.6, Create 0.5.1.i, and Flywheel 0.6.11. The feature has
+  saved in-game controls, Compare Mode integration, strict version gates, an
+  early startup recovery switch, and automatic fallback after shader-program
+  compilation failure.
 
 ### Changed
 

@@ -1,0 +1,26 @@
+{
+  "required": false,
+  "minVersion": "0.8",
+  "package": "dev.hoyin1600p.vault_render_optimization.compat.flywheelshader.mixin",
+  "plugin": "dev.hoyin1600p.vault_render_optimization.compat.flywheelshader.mixin.FlywheelCompatMixinPlugin",
+  "compatibilityLevel": "JAVA_17",
+  "refmap": "mixins.vault_render_optimization.refmap.json",
+  "client": [
+    "flw.IrisHandlerMixin",
+    "flw.MixinInstancedRenderDispatcher",
+    "MixinLevelRender",
+    "flw.MixinProgramCompiler",
+    "flw.MixinWorldProgram",
+    "flw.AccessorVertexCompiler",
+    "flw.GlObjectAccessor",
+    "flw.ShaderInstanceAccessor",
+    "flw.vertex.MixinBufferBuilder",
+    "flw.vertex.MixinFormats",
+    "flw.vertex.MixinBlockModel",
+    "flw.vertex.MixinShadeSeparatingVertexConsumer",
+    "flw.vertex.MixinCubiodBuilder"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

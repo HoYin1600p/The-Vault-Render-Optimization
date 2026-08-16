@@ -34,6 +34,7 @@ public final class ClientOptimizationConfig {
     private static final ForgeConfigSpec.BooleanValue CREATE_SECTIONED_CONTRAPTION_MESHES;
     private static final ForgeConfigSpec.IntValue CREATE_SECTIONED_MESH_THRESHOLD;
     private static final ForgeConfigSpec.BooleanValue CREATE_SMART_RENDER_BOUNDS;
+    private static final ForgeConfigSpec.BooleanValue CREATE_FLYWHEEL_SHADER_COMPAT;
 
     private static volatile boolean compareMode;
 
@@ -59,6 +60,7 @@ public final class ClientOptimizationConfig {
     public static volatile boolean createSectionedContraptionMeshes = true;
     public static volatile int createSectionedMeshThreshold = 512;
     public static volatile boolean createSmartRenderBounds = true;
+    public static volatile boolean createFlywheelShaderCompat = true;
 
     static {
         ForgeConfigSpec.Builder builder = new ForgeConfigSpec.Builder();
@@ -166,6 +168,13 @@ public final class ClientOptimizationConfig {
         CREATE_SMART_RENDER_BOUNDS = builder
                 .comment("Use directional cached render bounds for supported Create machinery.")
                 .define("smart_machinery_render_bounds", true);
+        CREATE_FLYWHEEL_SHADER_COMPAT = builder
+                .comment(
+                        "Keep Flywheel's instancing backend available with Oculus shaders.",
+                        "Tested with Oculus 1.6.x, Rubidium/Embeddium, and Flywheel 0.6.11.",
+                        "Unsupported or incomplete mod stacks ignore this option."
+                )
+                .define("flywheel_shader_compat", true);
         builder.pop();
         SPEC = builder.build();
     }
@@ -200,10 +209,11 @@ public final class ClientOptimizationConfig {
         }
         try {
             Class<?> backend = Class.forName("com.jozufozu.flywheel.backend.Backend");
+            backend.getMethod("refresh").invoke(null);
             backend.getMethod("reloadWorldRenderers").invoke(null);
         } catch (ReflectiveOperationException | LinkageError exception) {
             VaultRenderOptimization.LOGGER.warn(
-                    "Could not refresh Create renderers after changing Compare Mode",
+                    "Could not refresh Create renderers after changing VRO configuration",
                     exception
             );
         }
@@ -263,6 +273,23 @@ public final class ClientOptimizationConfig {
         dynamicLightUpdateInterval = ticks;
     }
 
+    public static void setCreateFlywheelShaderCompat(boolean enabled) {
+        CREATE_FLYWHEEL_SHADER_COMPAT.set(enabled);
+        CREATE_FLYWHEEL_SHADER_COMPAT.save();
+        createFlywheelShaderCompat = enabled;
+        if (ModList.get().isLoaded("flywheel") && ModList.get().isLoaded("oculus")) {
+            try {
+                Class<?> state = Class.forName(
+                        "dev.hoyin1600p.vault_render_optimization.compat.flywheelshader.FlywheelShaderCompatState"
+                );
+                state.getMethod("resetForConfigurationChange").invoke(null);
+            } catch (ReflectiveOperationException | LinkageError exception) {
+                VaultRenderOptimization.LOGGER.warn("Could not reset Create shader compatibility state", exception);
+            }
+        }
+        reloadCreateRenderers();
+    }
+
     public static void onLoading(ModConfigEvent.Loading event) {
         bake(event.getConfig());
     }
@@ -299,5 +326,6 @@ public final class ClientOptimizationConfig {
         createSectionedContraptionMeshes = CREATE_SECTIONED_CONTRAPTION_MESHES.get();
         createSectionedMeshThreshold = CREATE_SECTIONED_MESH_THRESHOLD.get();
         createSmartRenderBounds = CREATE_SMART_RENDER_BOUNDS.get();
+        createFlywheelShaderCompat = CREATE_FLYWHEEL_SHADER_COMPAT.get();
     }
 }

@@ -6,6 +6,24 @@ mechanism can be reconstructed.
 
 ## Shipped adaptations
 
+### Iris & Oculus Flywheel Compat
+
+VRO's optional Create shader-instancing bridge under
+`compat/flywheelshader` is adapted from Iris & Oculus Flywheel Compat.
+
+- Project: Iris & Oculus Flywheel Compat by Red Face and contributors
+- Source: https://github.com/leon-o/iris-flw-compat
+- Adapted baseline: `7a981f9a845b402b49a82b4dae8d814b3480137e`
+- Copyright: Copyright (c) 2022 Red Face
+- License: MIT
+- Adaptation: targets public Oculus 1.6.4 and Rubidium 0.5.6, adds strict
+  optional-mod and version gates, VRO configuration and Compare Mode control,
+  an early startup recovery switch, diagnostics, automatic renderer refresh,
+  and a project-owned accessor for Minecraft's final shader uniform field.
+
+This is adapted source code. The complete upstream MIT license is retained at
+`docs/licenses/iris-flw-compat-MIT.txt` and embedded in the runnable jar.
+
 ### Unobtanium learned-ability cache
 
 VRO's `ClientAbilityDataMixin` is adapted from Unobtanium's

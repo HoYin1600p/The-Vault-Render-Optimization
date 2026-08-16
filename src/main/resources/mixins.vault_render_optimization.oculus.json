@@ -1,0 +1,21 @@
+{
+  "required": false,
+  "minVersion": "0.8",
+  "package": "dev.hoyin1600p.vault_render_optimization.compat.flywheelshader.mixin.iris",
+  "plugin": "dev.hoyin1600p.vault_render_optimization.compat.flywheelshader.mixin.FlywheelCompatMixinPlugin",
+  "compatibilityLevel": "JAVA_17",
+  "refmap": "mixins.vault_render_optimization.refmap.json",
+  "client": [
+    "ProgramSetMixin",
+    "MixinIrisRenderingPipeline",
+    "MixinShaderPackSourceNames",
+    "MixinProgramSamplers",
+    "MixinProgramSource",
+    "MixinProgramDirectives",
+    "AccessorExtendedShader",
+    "MixinShadowRenderer"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

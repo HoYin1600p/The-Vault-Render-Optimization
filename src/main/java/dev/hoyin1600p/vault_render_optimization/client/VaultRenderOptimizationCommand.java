@@ -4,6 +4,7 @@ import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import dev.hoyin1600p.vault_render_optimization.client.lighting.DynamicLightEngine;
 import dev.hoyin1600p.vault_render_optimization.client.create.CreateDiagnostics;
+import dev.hoyin1600p.vault_render_optimization.compat.flywheelshader.FlywheelShaderCompatState;
 import dev.hoyin1600p.vault_render_optimization.config.ClientOptimizationConfig;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
@@ -81,7 +82,15 @@ public final class VaultRenderOptimizationCommand {
                         .then(Commands.literal("create")
                                 .executes(context -> reportCreate(context.getSource()))
                                 .then(Commands.literal("status")
-                                        .executes(context -> reportCreate(context.getSource()))))
+                                        .executes(context -> reportCreate(context.getSource())))
+                                .then(Commands.literal("shader_compat")
+                                        .executes(context -> reportCreateShaderCompat(context.getSource()))
+                                        .then(Commands.literal("on")
+                                                .executes(context -> setCreateShaderCompat(context.getSource(), true)))
+                                        .then(Commands.literal("off")
+                                                .executes(context -> setCreateShaderCompat(context.getSource(), false)))
+                                        .then(Commands.literal("status")
+                                                .executes(context -> reportCreateShaderCompat(context.getSource())))))
         );
     }
 
@@ -210,6 +219,35 @@ public final class VaultRenderOptimizationCommand {
             source.sendSuccess(new TextComponent("[VRO] Create is not installed."), false);
             return 0;
         }
-        return CreateDiagnostics.report(source);
+        int result = CreateDiagnostics.report(source);
+        reportCreateShaderCompat(source);
+        return result;
+    }
+
+    private static int setCreateShaderCompat(CommandSourceStack source, boolean enabled) {
+        ClientOptimizationConfig.setCreateFlywheelShaderCompat(enabled);
+        return reportCreateShaderCompat(source);
+    }
+
+    private static int reportCreateShaderCompat(CommandSourceStack source) {
+        if (!ModList.get().isLoaded("oculus") || !ModList.get().isLoaded("flywheel")) {
+            source.sendSuccess(
+                    new TextComponent("[VRO] Create shader compatibility is unavailable; Oculus and Flywheel are required."),
+                    false
+            );
+            return 0;
+        }
+        source.sendSuccess(
+                new TextComponent(
+                        "[VRO] Create shader compatibility: configured "
+                                + state(ClientOptimizationConfig.createFlywheelShaderCompat)
+                                + ", pipeline " + state(FlywheelShaderCompatState.hasPipeline())
+                                + ", active " + state(FlywheelShaderCompatState.isRenderPathActive())
+                                + ", failed " + (FlywheelShaderCompatState.hasFailed() ? "YES" : "NO")
+                                + ". Changes apply immediately."
+                ),
+                false
+        );
+        return FlywheelShaderCompatState.isRenderPathActive() ? 1 : 0;
     }
 }
