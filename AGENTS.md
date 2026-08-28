@@ -3,6 +3,9 @@
 ## Public identity safety
 
 - This repository is public. Refer to the project owner only as `HoYin1600p`.
+- `hoyin1600p@gmail.com` and
+  `4504665+HoYin1600p@users.noreply.github.com` are approved public project
+  email addresses. They are not private identifiers or release blockers.
 - Never add a private legal name, private email address, home address, or other
   personal identifier to source, documentation, metadata, archives, jars,
   commits, branches, tags, release notes, or generated public artifacts.

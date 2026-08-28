@@ -13,6 +13,12 @@ if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($repositoryDirectory)) 
 $privateIdentity = -join @(69, 116, 104, 97, 110 | ForEach-Object { [char]$_ })
 $findings = [System.Collections.Generic.List[string]]::new()
 $archiveExtensions = @('.jar', '.zip')
+$approvedPublicEmails = [System.Collections.Generic.HashSet[string]]::new(
+    [StringComparer]::OrdinalIgnoreCase
+)
+[void]$approvedPublicEmails.Add('hoyin1600p@gmail.com')
+[void]$approvedPublicEmails.Add('4504665+HoYin1600p@users.noreply.github.com')
+[void]$approvedPublicEmails.Add('HoYin1600p@users.noreply.github.com')
 
 function Add-Matches {
     param(
@@ -154,6 +160,48 @@ if ($LASTEXITCODE -ne 0) {
 Add-Matches -Category 'commit metadata' -Lines @(
     $metadata | Select-String -SimpleMatch $privateIdentity -CaseSensitive:$false
 )
+
+$identityMetadata = & git -C $repositoryDirectory log --all --format='%H|%ae|%ce'
+if ($LASTEXITCODE -ne 0) {
+    throw 'Unable to inspect commit email metadata.'
+}
+foreach ($identityLine in @($identityMetadata)) {
+    $identityFields = $identityLine -split '\|', 3
+    if ($identityFields.Count -ne 3) {
+        throw "Unable to parse commit email metadata: $identityLine"
+    }
+
+    foreach ($emailRole in @(
+        @{ Name = 'author'; Email = $identityFields[1] },
+        @{ Name = 'committer'; Email = $identityFields[2] }
+    )) {
+        if (-not $approvedPublicEmails.Contains($emailRole.Email)) {
+            $findings.Add(
+                "unapproved $($emailRole.Name) email $($identityFields[0])`: $($emailRole.Email)"
+            )
+        }
+    }
+}
+
+$tagMetadata = & git -C $repositoryDirectory for-each-ref refs/tags `
+    --format='%(refname)|%(objecttype)|%(taggeremail)'
+if ($LASTEXITCODE -ne 0) {
+    throw 'Unable to inspect tag email metadata.'
+}
+foreach ($tagLine in @($tagMetadata)) {
+    $tagFields = $tagLine -split '\|', 3
+    if ($tagFields.Count -ne 3) {
+        throw "Unable to parse tag email metadata: $tagLine"
+    }
+    if ($tagFields[1] -ne 'tag') {
+        continue
+    }
+
+    $taggerEmail = $tagFields[2].Trim('<', '>')
+    if (-not $approvedPublicEmails.Contains($taggerEmail)) {
+        $findings.Add("unapproved tagger email $($tagFields[0])`: $taggerEmail")
+    }
+}
 
 $refs = & git -C $repositoryDirectory for-each-ref --format='%(refname)'
 if ($LASTEXITCODE -ne 0) {
