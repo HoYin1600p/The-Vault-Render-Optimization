@@ -6,6 +6,24 @@ mechanism can be reconstructed.
 
 ## Shipped adaptations
 
+### Forge Update Notifier
+
+VRO's client update-notification unit under `client/update` is a
+package-relocated copy of Forge Update Notifier.
+
+- Project: Forge Update Notifier by HoYin1600p
+- Source: https://github.com/HoYin1600p/Forge-Update-Notifier
+- Integrated revision: `4f5cacebf9543c8f94a93fd070ae762fcd1d4e9c`
+- Canonical VHA source revision: `483acee`
+- License: MIT
+- Adaptation: uses VRO's client initialization, client config, `/vro updates`
+  commands, raw GitHub manifest, fixed CurseForge project URL, Forge metadata,
+  documentation, and release process while preserving the canonical bounded,
+  fail-closed request and once-per-JVM reminder behavior.
+
+This is adapted source code. The complete MIT license is retained at
+`docs/licenses/forge-update-notifier-MIT.txt` and embedded in the runnable jar.
+
 ### Iris & Oculus Flywheel Compat
 
 VRO's optional Create shader-instancing bridge under

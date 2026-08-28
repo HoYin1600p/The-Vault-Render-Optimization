@@ -1,6 +1,6 @@
 # Source provenance audit
 
-Audit date: August 15, 2026
+Audit date: August 28, 2026
 
 This audit answers whether VRO's released behavior was copied, adapted,
 independently implemented after research, or written from profiling and
@@ -8,12 +8,13 @@ compatibility work inside this project.
 
 ## Conclusion
 
-VRO is not wholly clean-room code. Three small groups are explicit adaptations:
+VRO is not wholly clean-room code. Four groups are explicit adaptations:
 
-1. the learned-ability list cache adapts Unobtanium's AGPL implementation;
-2. the client collision mixins adapt Entity Collision FPS Fix's CC0
+1. the client update-notification unit adapts the MIT Forge Update Notifier;
+2. the learned-ability list cache adapts Unobtanium's AGPL implementation;
+3. the client collision mixins adapt Entity Collision FPS Fix's CC0
    implementation;
-3. simple-model face-list compaction and block-state `faceSturdy` array
+4. simple-model face-list compaction and block-state `faceSturdy` array
    canonicalization adapt later FerriteCore MIT implementations to the
    Minecraft 1.18.2 data layouts not covered by FerriteCore 4.2.2.
 
@@ -26,13 +27,15 @@ studying Particle Core and BadOptimizations. The world cleanup was independently
 written after Unobtanium identified the affected static maps. Section-distance
 culling and dynamic lighting were independently implemented after studying
 Better Fps - Render Distance and Dynamic Lights Reforged respectively. No
-complete third-party source file, mod jar, decompiled class, or Vault Hunters
-class is bundled in VRO.
+No third-party mod jar, decompiled class, or Vault Hunters class is bundled in
+VRO. The notifier is a documented package-relocated source adaptation from its
+MIT integration repository.
 
 ## Feature-by-feature origin
 
 | VRO feature | Relationship | Primary source or evidence |
 | --- | --- | --- |
+| Update manifest, menu row, and reminder system | Adapted source-copy unit | Forge Update Notifier `4f5cace`; canonical VHA source `483acee`; MIT |
 | Vault armor durability cache | Original VRO implementation | Client profiles and Vault runtime APIs |
 | Armor identified/damageable state | Original integration of newer behavior | Locally authorized Asgard Vault jar behavior and Vault `GearDataCache` API |
 | Armor texture/model cache | Original VRO implementation | Vault runtime APIs and observed repeated render path |
@@ -61,6 +64,18 @@ class is bundled in VRO.
 | Xaero stale cache-write crash guard | Original VRO compatibility fix | Client crash trace and installed Xaero cache lifecycle behavior |
 | Compare Mode, configuration, coexistence plugin | Original VRO implementation | VRO benchmark and compatibility requirements |
 | Four-pack compatibility build | Original VRO build tooling | Locally installed supported Vault API baselines |
+
+## Forge Update Notifier adaptation
+
+VRO package-relocates the canonical nine-class Forge 1.18.2 notifier unit and
+its seven contract test suites from Forge Update Notifier revision
+`4f5cacebf9543c8f94a93fd070ae762fcd1d4e9c`. That integration repository
+records VHA revision `483acee` as the canonical source. VRO retains the
+asynchronous bounded request, fixed download-link validation, parsing and
+filtering, coordinated menu placement, persistence, five/ten-launch cadence,
+and once-per-JVM session state. VRO-owned code supplies the physical-client
+initialization, config values, commands, metadata, raw GitHub manifest,
+CurseForge URL, and documentation.
 
 ## Unobtanium comparison
 

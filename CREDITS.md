@@ -7,6 +7,21 @@ relationships are intentionally separated below.
 
 ## Shipped adapted implementations
 
+### Forge Update Notifier - HoYin1600p
+
+- Source: [HoYin1600p/Forge-Update-Notifier](https://github.com/HoYin1600p/Forge-Update-Notifier)
+- Integrated revision: `4f5cacebf9543c8f94a93fd070ae762fcd1d4e9c`
+- Canonical VHA source revision: `483acee`
+- License: MIT
+
+VRO includes a package-relocated copy of the canonical Forge 1.18.2 update
+notifier. The copied unit supplies bounded asynchronous manifest fetching,
+version and severity parsing, coordinated menu rows, once-per-JVM reminder
+cadence, persistence, and failure handling. VRO adds its own initialization,
+client configuration, `/vro updates` commands, GitHub manifest, CurseForge
+link, Forge metadata, documentation, and release workflow. The complete MIT
+license is retained in the repository and release jar.
+
 ### Iris & Oculus Flywheel Compat - Red Face and contributors
 
 - Source: [leon-o/iris-flw-compat](https://github.com/leon-o/iris-flw-compat)

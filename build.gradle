@@ -70,6 +70,7 @@ repositories {
         name = 'sponge'
         url = 'https://repo.spongepowered.org/maven'
     }
+    mavenCentral()
 }
 
 def prismInstancesDirectory = new File(System.getProperty('user.home'), 'AppData/Roaming/PrismLauncher/instances')
@@ -168,6 +169,12 @@ dependencies {
     compileOnly files(createJarFile)
     compileOnly files(extractedFlywheelJar)
     compileOnly files(oculusModJarFile)
+
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.10.2'
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
 }
 
 tasks.register('printVaultCompatibilityTargets') {
@@ -214,6 +221,10 @@ tasks.named('jar', Jar).configure {
     }
 
     from(rootProject.file('docs/licenses/iris-flw-compat-MIT.txt')) {
+        into 'META-INF/licenses'
+    }
+
+    from(rootProject.file('docs/licenses/forge-update-notifier-MIT.txt')) {
         into 'META-INF/licenses'
     }
 

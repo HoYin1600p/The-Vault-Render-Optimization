@@ -4,6 +4,7 @@ import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import dev.hoyin1600p.vault_render_optimization.client.lighting.DynamicLightEngine;
 import dev.hoyin1600p.vault_render_optimization.client.create.CreateDiagnostics;
+import dev.hoyin1600p.vault_render_optimization.client.update.UpdateNoticeFilter;
 import dev.hoyin1600p.vault_render_optimization.compat.flywheelshader.FlywheelShaderCompatState;
 import dev.hoyin1600p.vault_render_optimization.config.ClientOptimizationConfig;
 import net.minecraft.commands.CommandSourceStack;
@@ -19,6 +20,22 @@ public final class VaultRenderOptimizationCommand {
         dispatcher.register(
                 Commands.literal("vro")
                         .executes(context -> report(context.getSource()))
+                        .then(Commands.literal("updates")
+                                .executes(context -> reportUpdates(context.getSource()))
+                                .then(Commands.literal("status")
+                                        .executes(context -> reportUpdates(context.getSource())))
+                                .then(Commands.literal("on")
+                                        .executes(context -> setUpdates(context.getSource(), true)))
+                                .then(Commands.literal("off")
+                                        .executes(context -> setUpdates(context.getSource(), false)))
+                                .then(Commands.literal("critical")
+                                        .executes(context -> setUpdateFilter(
+                                                context.getSource(),
+                                                UpdateNoticeFilter.CRITICAL)))
+                                .then(Commands.literal("all")
+                                        .executes(context -> setUpdateFilter(
+                                                context.getSource(),
+                                                UpdateNoticeFilter.ALL))))
                         .then(Commands.literal("compare")
                                 .executes(context -> report(context.getSource()))
                                 .then(Commands.literal("on")
@@ -92,6 +109,49 @@ public final class VaultRenderOptimizationCommand {
                                         .then(Commands.literal("status")
                                                 .executes(context -> reportCreateShaderCompat(context.getSource())))))
         );
+    }
+
+    private static int setUpdates(CommandSourceStack source, boolean enabled) {
+        ClientOptimizationConfig.setUpdateChecks(enabled);
+        source.sendSuccess(
+                new TextComponent(
+                        "[VRO] Update checks " + (enabled ? "enabled" : "disabled")
+                                + " and saved. The change applies immediately."
+                ),
+                false
+        );
+        reportUpdates(source);
+        return enabled ? 1 : 0;
+    }
+
+    private static int setUpdateFilter(
+            CommandSourceStack source,
+            UpdateNoticeFilter filter
+    ) {
+        ClientOptimizationConfig.setUpdateNoticeFilter(filter);
+        source.sendSuccess(
+                new TextComponent(
+                        "[VRO] Update types set to " + filter.name()
+                                + " and saved. The change applies immediately."
+                ),
+                false
+        );
+        reportUpdates(source);
+        return 1;
+    }
+
+    private static int reportUpdates(CommandSourceStack source) {
+        boolean enabled = ClientOptimizationConfig.updateChecksEnabled();
+        source.sendSuccess(
+                new TextComponent(
+                        "[VRO] Update checks are " + state(enabled)
+                                + "; displayed update types: "
+                                + ClientOptimizationConfig.updateNoticeFilter().name()
+                                + "."
+                ),
+                false
+        );
+        return enabled ? 1 : 0;
     }
 
     private static int set(CommandSourceStack source, boolean enabled) {

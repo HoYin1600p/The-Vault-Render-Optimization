@@ -3,6 +3,8 @@ package dev.hoyin1600p.vault_render_optimization.config;
 import dev.hoyin1600p.vault_render_optimization.VaultRenderOptimization;
 import dev.hoyin1600p.vault_render_optimization.cache.VaultGearRenderCache;
 import dev.hoyin1600p.vault_render_optimization.cache.VaultToolRenderCache;
+import dev.hoyin1600p.vault_render_optimization.client.update.UpdateNoticeFilter;
+import dev.hoyin1600p.vault_render_optimization.client.update.UpdateNoticeService;
 import net.minecraftforge.common.ForgeConfigSpec;
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.config.ModConfig;
@@ -12,6 +14,8 @@ public final class ClientOptimizationConfig {
     public static final ForgeConfigSpec SPEC;
 
     private static final ForgeConfigSpec.BooleanValue COMPARE_MODE;
+    private static final ForgeConfigSpec.BooleanValue UPDATE_CHECKS;
+    private static final ForgeConfigSpec.EnumValue<UpdateNoticeFilter> UPDATE_NOTICE_FILTER;
     private static final ForgeConfigSpec.BooleanValue PARTICLE_LIGHT_CACHE;
     private static final ForgeConfigSpec.BooleanValue EMPTY_PARTICLE_RENDER_SKIP;
     private static final ForgeConfigSpec.BooleanValue EMPTY_TOAST_RENDER_SKIP;
@@ -38,6 +42,8 @@ public final class ClientOptimizationConfig {
     private static final ForgeConfigSpec.BooleanValue CREATE_FLYWHEEL_SHADER_COMPAT;
 
     private static volatile boolean compareMode;
+    private static volatile boolean updateChecks = true;
+    private static volatile UpdateNoticeFilter updateFilter = UpdateNoticeFilter.CRITICAL;
 
     public static volatile boolean particleLightCache = true;
     public static volatile boolean emptyParticleRenderSkip = true;
@@ -66,6 +72,21 @@ public final class ClientOptimizationConfig {
 
     static {
         ForgeConfigSpec.Builder builder = new ForgeConfigSpec.Builder();
+        builder.push("updates");
+        UPDATE_CHECKS = builder
+                .comment(
+                        "Check VRO's raw GitHub update manifest asynchronously.",
+                        "The /vro updates command changes and saves this setting."
+                )
+                .define("check_for_updates", true);
+        UPDATE_NOTICE_FILTER = builder
+                .comment(
+                        "Choose which update types VRO may show: CRITICAL or ALL.",
+                        "CRITICAL is the safe default; ALL also permits normal update notices."
+                )
+                .defineEnum("update_types", UpdateNoticeFilter.CRITICAL);
+        builder.pop();
+
         builder.push("benchmark");
         COMPARE_MODE = builder
                 .comment(
@@ -199,6 +220,32 @@ public final class ClientOptimizationConfig {
         return compareMode;
     }
 
+    public static boolean updateChecksEnabled() {
+        return updateChecks;
+    }
+
+    public static UpdateNoticeFilter updateNoticeFilter() {
+        return updateFilter;
+    }
+
+    public static void setUpdateChecks(boolean enabled) {
+        UPDATE_CHECKS.set(enabled);
+        UPDATE_CHECKS.save();
+        updateChecks = enabled;
+        UpdateNoticeService.setEnabled(enabled);
+    }
+
+    public static void setUpdateNoticeFilter(UpdateNoticeFilter filter) {
+        UpdateNoticeFilter safeFilter = UpdateNoticeFilter.fromConfigValue(
+                filter,
+                UpdateNoticeFilter.CRITICAL
+        );
+        UPDATE_NOTICE_FILTER.set(safeFilter);
+        UPDATE_NOTICE_FILTER.save();
+        updateFilter = safeFilter;
+        UpdateNoticeService.setFilter(safeFilter);
+    }
+
     public static void setCompareMode(boolean enabled) {
         COMPARE_MODE.set(enabled);
         COMPARE_MODE.save();
@@ -313,6 +360,13 @@ public final class ClientOptimizationConfig {
         }
 
         compareMode = COMPARE_MODE.get();
+        updateChecks = UPDATE_CHECKS.get();
+        updateFilter = UpdateNoticeFilter.fromConfigValue(
+                UPDATE_NOTICE_FILTER.get(),
+                UpdateNoticeFilter.CRITICAL
+        );
+        UpdateNoticeService.setEnabled(updateChecks);
+        UpdateNoticeService.setFilter(updateFilter);
         particleLightCache = PARTICLE_LIGHT_CACHE.get();
         emptyParticleRenderSkip = EMPTY_PARTICLE_RENDER_SKIP.get();
         emptyToastRenderSkip = EMPTY_TOAST_RENDER_SKIP.get();

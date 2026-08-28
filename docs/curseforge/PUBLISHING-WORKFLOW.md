@@ -15,16 +15,22 @@ updates to CurseForge.
 
 Before opening CurseForge:
 
-1. Confirm the intended version has been built, tested, committed, tagged,
-   pushed, and released on GitHub.
-2. Run `scripts/verify-public-identity.ps1` and treat any match as blocking.
-3. Run `scripts/build-pack-compatibility.ps1` against every supported Vault
+1. Confirm the intended version's source and documentation are committed and
+   the release candidate has been built and tested. Do not publish the GitHub
+   release or update the live manifest yet.
+2. Read `.identity-scan/identity-scan-log.md`, validate its newest successful
+   checkpoint, and run the required incremental public-identity scan. Fall
+   back to a full scan when the checkpoint is absent or unsafe. Treat any
+   finding as blocking and append the result to the local ignored log.
+3. Run `scripts/verify-public-identity.ps1` as part of that scan and treat any
+   match as blocking.
+4. Run `scripts/build-pack-compatibility.ps1` against every supported Vault
    baseline.
-4. Confirm the normal JAR name, embedded mod version, and SHA-256 checksum.
-5. Run `scripts/assemble-curseforge-release.ps1 -Version X.Y.Z` and review the
+5. Confirm the normal JAR name, embedded mod version, and SHA-256 checksum.
+6. Run `scripts/assemble-curseforge-release.ps1 -Version X.Y.Z` and review the
    resulting local kit under `release/curseforge/`.
-6. Confirm the CurseForge project Summary exactly matches `PROJECT-SUMMARY.txt`.
-7. Keep the CurseForge changelog concise and user-visible. Do not substitute
+7. Confirm the CurseForge project Summary exactly matches `PROJECT-SUMMARY.txt`.
+8. Keep the CurseForge changelog concise and user-visible. Do not substitute
    the full GitHub release notes.
 
 ## Supported file metadata
@@ -63,6 +69,12 @@ After submission, return to the files list and verify:
 - Environment is `Client` and does not include `Server`.
 - Forge, Java 17, and Minecraft 1.18.2 are listed.
 - Processing or moderation has begun.
+
+After the CurseForge file is downloadable, publish and verify the matching
+GitHub release. Update `update.json` for the released version, message, and
+Minecraft promotions only after both downloads are live, then perform the
+required final identity scan and push the manifest last. This prevents clients
+from advertising a version that cannot yet be downloaded.
 
 Do not delete, archive, replace, or alter older files unless explicitly
 requested. Correct editable metadata on the existing file rather than

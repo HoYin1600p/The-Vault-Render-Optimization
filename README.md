@@ -4,7 +4,7 @@
 [![Forge](https://img.shields.io/badge/Forge-40.3.11%2B-e04e39)](https://files.minecraftforge.net/net/minecraftforge/forge/index_1.18.2.html)
 [![Environment](https://img.shields.io/badge/Environment-Client-4b8bbe)](#requirements-and-support)
 [![License](https://img.shields.io/badge/License-AGPL--3.0--or--later-blue.svg)](LICENSE)
-[![Release](https://img.shields.io/badge/Release-0.3.5-7b68ee)](docs/releases/0.3.5.md)
+[![Release](https://img.shields.io/badge/Release-0.4.0-7b68ee)](docs/releases/0.4.0.md)
 
 The Vault Render Optimization (VRO) is a client-side Minecraft Forge 1.18.2
 mod that reduces repeated rendering and client simulation work in Vault
@@ -41,6 +41,8 @@ modify server gameplay. The remote server does not need the mod.
 - Repairs two known client-only stale-state crashes without changing the
   server.
 - Resolves the Vault map and Xaero's World Map `M`-key conflict.
+- Checks VRO's GitHub manifest asynchronously and shows coordinated menu and
+  in-world update notices with a fixed CurseForge download link.
 - Provides immediate in-game Compare Mode for repeatable enabled/disabled
   benchmarks.
 - Includes opt-in spatially indexed dynamic lighting for held and dropped
@@ -193,6 +195,21 @@ The Vault's map key binding is active only while a client Vault is active. This
 allows Xaero's World Map to receive `M` in the overworld while preserving the
 Vault map inside Vault dimensions.
 
+### Update notices
+
+VRO can check its repository-owned Forge update manifest without blocking
+startup or rendering. An allowed update appears as a coordinated row on the
+main menu and may produce an occasional in-world reminder whose clickable link
+is fixed to VRO's official CurseForge page. VRO never downloads or installs an
+update.
+
+Checks are enabled by default, while the displayed update types default to
+`CRITICAL`. Select `ALL` explicitly to include ordinary release notices. The
+request uses short timeouts, rejects oversized responses, and fails closed on
+network, HTTP, or manifest errors. Each JVM can advance the reminder cadence
+once and deliver one chat reminder, so reconnects, dimensions, and server
+transfers cannot repeat it during the same client launch.
+
 ## Measured performance
 
 A deterministic 40-trial campaign tested five enabled and five disabled runs
@@ -238,7 +255,7 @@ different pack files together.
 
 1. Stop Minecraft.
 2. Remove or disable every older VRO jar.
-3. Place `vault_render_optimization.0.3.5.jar` in the instance's `mods`
+3. Place `vault_render_optimization.0.4.0.jar` in the instance's `mods`
    directory.
 4. Keep only one active VRO jar.
 5. Remove Entity Collision FPS Fix only if you want VRO to own that same
@@ -255,6 +272,9 @@ for upgrades, removal, optional-mod coexistence, and issue isolation.
 | `/vro compare on` | Saves and immediately disables VRO performance optimizations. |
 | `/vro compare off` | Saves and immediately enables configured VRO optimizations. |
 | `/vro compare status` | Reports whether Compare Mode is active. |
+| `/vro updates` | Reports whether update checks are enabled and which update types may be shown. |
+| `/vro updates on\|off` | Enables or disables update checks immediately and saves the setting. |
+| `/vro updates critical\|all` | Shows only critical updates, or opts into all update notices. |
 | `/vro culling` | Reports vertical and horizontal terrain-culling settings. |
 | `/vro culling vertical on\|off\|<distance>` | Changes vertical section culling immediately. |
 | `/vro culling horizontal on\|off\|<distance>` | Changes horizontal section culling immediately. |
@@ -277,6 +297,11 @@ performance changes. Commands are client-side and require no server permission.
 VRO writes `config/vault_render_optimization-client.toml`. Its generic render
 fast paths are enabled by default and can be disabled individually. Compare
 Mode is also saved there.
+
+Update checks are enabled by default, but notices default to critical updates
+only. The request is asynchronous, bounded, and fails closed; VRO never
+downloads or installs a mod update automatically. Normal notices require
+`/vro updates all` or the matching client-config value.
 
 The complete option and coexistence reference is in
 [Configuration and commands](docs/CONFIGURATION.md).
@@ -304,7 +329,8 @@ The complete option and coexistence reference is in
 | [Configuration](docs/CONFIGURATION.md) | Every option, default, command, and immediate behavior |
 | [Testing](docs/TESTING.md) | Compare Mode and repeatable benchmark procedure |
 | [Performance validation](docs/PERFORMANCE_VALIDATION.md) | Four-client measured results and limitations |
-| [Release notes 0.3.5](docs/releases/0.3.5.md) | Current release, including dedicated Flywheel shader-pack programs |
+| [Release notes 0.4.0](docs/releases/0.4.0.md) | Current release, including configurable update notices |
+| [Release notes 0.3.5](docs/releases/0.3.5.md) | Previous release with dedicated Flywheel shader-pack programs |
 | [Release notes 0.3.4](docs/releases/0.3.4.md) | Create contraption and Flywheel shader rendering |
 | [Release notes 0.3.3](docs/releases/0.3.3.md) | Dynamic-light crash correction |
 | [Release notes 0.3.2](docs/releases/0.3.2.md) | Expanded 0.3.2 release details |

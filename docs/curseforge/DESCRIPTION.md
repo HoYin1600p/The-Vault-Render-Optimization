@@ -12,6 +12,12 @@ Hunters is not installed.
 
 VRO is client-side. The remote server does not need it.
 
+VRO can check its raw GitHub update manifest asynchronously and show an update
+row on the main menu plus occasional clickable CurseForge reminders in chat.
+Checks are enabled by default, while displayed update types default to critical
+only. The feature has bounded network behavior, fails closed, and never
+downloads or installs updates.
+
 ## Vault Hunters improvements
 
 - Caches repeated Vault gear, armor, tool-model, ability HUD, durability, and
@@ -68,6 +74,20 @@ An optional spatial dynamic-light engine supports held and dropped items,
 luminous entities, and resource-defined block entities. It is disabled by
 default and can be controlled in game with `/vro lights`.
 
+## Update notices
+
+VRO checks its repository-owned update manifest in the background and never
+downloads or installs files. When an allowed release is available, it can show
+a small coordinated main-menu row and an occasional in-world reminder linking
+to this official CurseForge page.
+
+Update checks are enabled by default, while displayed update types default to
+critical-only. Use `/vro updates all` to include normal release notices or
+`/vro updates off` to disable VRO's menu and chat notices immediately. Short
+timeouts, response limits, and fail-closed parsing keep network or manifest
+problems nonfatal. Rejoining, changing dimensions, or transferring servers
+does not repeat a reminder during the same Minecraft launch.
+
 ## Compatibility
 
 - **Minecraft:** 1.18.2
@@ -100,6 +120,7 @@ required.
 | --- | --- |
 | `/vro` | Show the current Compare Mode state. |
 | `/vro compare on|off|status` | Compare VRO optimizations without restarting Minecraft. |
+| `/vro updates on|off|status|critical|all` | Control update checks and choose critical-only or all notices. |
 | `/vro culling` | View or change vertical and horizontal terrain culling. |
 | `/vro lights` | View or change the optional dynamic-light engine. |
 | `/vro create status` | Show Create, Flywheel, shader-path, and culling status. |

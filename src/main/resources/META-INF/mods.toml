@@ -7,8 +7,14 @@ modId="${mod_id}"
 version="${mod_version}"
 displayName="${mod_name}"
 authors="${mod_authors}"
+displayURL="https://www.curseforge.com/minecraft/mc-mods/vault-render-optimization"
+updateJSONURL="https://raw.githubusercontent.com/HoYin1600p/The-Vault-Render-Optimization/main/update.json"
 displayTest="IGNORE_SERVER_VERSION"
 description='''${mod_description}'''
+
+[modproperties."${mod_id}"]
+hoyinUpdateNotifier=true
+hoyinUpdateName="VRO"
 
 [[dependencies."${mod_id}"]]
 modId="forge"

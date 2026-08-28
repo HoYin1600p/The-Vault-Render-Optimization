@@ -14,16 +14,21 @@ render fast paths can load without it.
 1. Stop Minecraft completely.
 2. Open the instance's `mods` directory.
 3. Remove or disable every older VRO jar.
-4. Place `vault_render_optimization.0.3.5.jar` in the directory.
+4. Place `vault_render_optimization.0.4.0.jar` in the directory.
 5. Confirm that only one VRO jar ends in `.jar`.
 6. Launch the client. VRO creates
    `config/vault_render_optimization-client.toml` with release defaults.
+
+Update checks are enabled by default and display only critical notices unless
+the user explicitly selects all update types. Checks are asynchronous and
+never download or install files. VRO stores the reminder cadence separately in
+`config/vault_render_optimization-update-notice-state.json`.
 
 The remote server does not need VRO. Do not install the sources jar as a mod.
 
 ## Upgrade
 
-Stop Minecraft before replacing the jar. VRO 0.3.5 requires no cache deletion
+Stop Minecraft before replacing the jar. VRO 0.4.0 requires no cache deletion
 or configuration reset. New configuration keys receive their documented
 defaults when absent.
 
@@ -48,9 +53,11 @@ allows VRO's equivalent path to activate on the next launch.
 1. Stop Minecraft.
 2. Remove or disable the VRO jar.
 3. Optionally remove `config/vault_render_optimization-client.toml`.
+4. Optionally remove
+   `config/vault_render_optimization-update-notice-state.json`.
 
-VRO does not alter world saves or server data. The configuration file is the
-only persistent VRO state.
+VRO does not alter world saves or server data. Its client configuration and
+update-reminder cadence file are its only persistent state.
 
 ## Issue isolation
 

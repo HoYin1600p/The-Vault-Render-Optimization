@@ -57,6 +57,17 @@ An optimization build is not release-ready until it has exercised:
   translucent blocks with Flywheel instancing, batching, and off where usable;
 - repeated `/vro compare on` and `/vro compare off` transitions while a large
   Create contraption is loaded, checking both visuals and `/vro create status`;
+- an up-to-date update manifest producing no notice, plus a controlled newer
+  manifest producing one stable coordinated menu row and a clickable
+  CurseForge chat link;
+- `/vro updates off|on|critical|all` persistence and immediate behavior,
+  including a normal notice hidden by default and revealed without a second
+  request after selecting `ALL`;
+- critical five-launch and normal ten-launch reminder cadence, one eligible
+  count and at most one chat reminder per JVM, ten-tick deferred persistence,
+  and no extra count after reconnects, transfers, or dimension changes;
+- fail-closed notifier behavior for timeouts, HTTP errors, malformed or
+  oversized manifests, corrupt reminder state, and unwritable state paths;
 - disconnect/reconnect, death/respawn, and dimension changes;
 - world unload, normal client exit with Powah present, and a multi-hour session;
 - shaders and Distant Horizons in a separate compatibility client;

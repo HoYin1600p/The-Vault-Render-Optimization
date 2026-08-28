@@ -4,6 +4,7 @@ import dev.hoyin1600p.vault_render_optimization.client.VaultRenderOptimizationCo
 import dev.hoyin1600p.vault_render_optimization.client.create.FlywheelBackendManager;
 import dev.hoyin1600p.vault_render_optimization.client.lighting.DynamicLightEngine;
 import dev.hoyin1600p.vault_render_optimization.client.lighting.DynamicLightResourceLoader;
+import dev.hoyin1600p.vault_render_optimization.client.update.UpdateNoticeService;
 import dev.hoyin1600p.vault_render_optimization.config.ClientOptimizationConfig;
 import net.minecraftforge.client.event.RegisterClientCommandsEvent;
 import net.minecraftforge.client.event.RegisterClientReloadListenersEvent;
@@ -11,6 +12,7 @@ import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.ModList;
+import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.config.ModConfig;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
@@ -32,12 +34,24 @@ public final class VaultRenderOptimization {
         IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
         modEventBus.addListener(ClientOptimizationConfig::onLoading);
         modEventBus.addListener(ClientOptimizationConfig::onReloading);
+        modEventBus.addListener(this::onClientSetup);
         modEventBus.addListener(this::onRegisterClientReloadListeners);
         MinecraftForge.EVENT_BUS.addListener(this::onRegisterClientCommands);
         MinecraftForge.EVENT_BUS.addListener(DynamicLightEngine::onClientTick);
         if (supportsFlywheelBackendManagement()) {
             MinecraftForge.EVENT_BUS.addListener(FlywheelBackendManager::onClientTick);
         }
+    }
+
+    private void onClientSetup(FMLClientSetupEvent event) {
+        event.enqueueWork(() -> UpdateNoticeService.initialize(
+                MOD_ID,
+                "VRO",
+                "https://raw.githubusercontent.com/HoYin1600p/The-Vault-Render-Optimization/main/update.json",
+                "https://www.curseforge.com/minecraft/mc-mods/vault-render-optimization",
+                ClientOptimizationConfig.updateChecksEnabled(),
+                ClientOptimizationConfig.updateNoticeFilter()
+        ));
     }
 
     private void onRegisterClientCommands(RegisterClientCommandsEvent event) {

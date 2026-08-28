@@ -7,6 +7,65 @@ and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-08-28
+
+### Added
+
+- Added a client-only update-notification system sourced from the canonical
+  Forge Update Notifier integration package and relocated into VRO's own Java
+  package.
+- Added bounded asynchronous checks against VRO's raw GitHub update manifest.
+  Connection and request timeouts, HTTP status handling, a 262,144-character
+  response limit, strict JSON parsing, and fail-closed error handling keep the
+  render thread independent from network availability.
+- Added a deterministic main-menu update row coordinated with other
+  HoYin1600p mods through Forge metadata. Participating rows are sorted by
+  display name and mod ID so they do not overlap.
+- Added clickable in-world update reminders whose download target is fixed to
+  VRO's HTTPS CurseForge project page. Remote manifest content can provide a
+  short message but cannot replace the download link.
+- Added `update.json` at the repository root using Forge's update-manifest
+  schema, plus `updateJSONURL`, `displayURL`, and notifier coordination
+  properties in `mods.toml`.
+- Added persistent reminder state at
+  `config/vault_render_optimization-update-notice-state.json`, written
+  atomically after a ten-client-tick delay.
+- Added `/vro updates`, `/vro updates status`, `/vro updates on`,
+  `/vro updates off`, `/vro updates critical`, and `/vro updates all` as
+  immediate client-only controls that require no server permission.
+- Added 31 automated tests across manifest fetching and parsing, semantic
+  version ordering, severity filtering, state corruption and persistence,
+  reminder cadence, once-per-JVM session behavior, network failures, and the
+  repository's real VRO manifest.
+
+### Configuration
+
+- Added `updates.check_for_updates`, enabled by default. Disabling it cancels
+  the active request and hides VRO's menu and chat notices; enabling it starts
+  a fresh request without a restart.
+- Added `updates.update_types` with `CRITICAL` and `ALL` values. It defaults to
+  `CRITICAL`, and missing or invalid values fail closed to that setting.
+- Changing the update-type filter applies immediately to the already fetched
+  result without issuing another network request.
+
+### Reminder behavior
+
+- Critical notices are eligible every fifth qualifying client JVM launch;
+  normal notices are eligible every tenth launch and require the explicit
+  `ALL` filter.
+- A launch is eligible only after a successful manifest result confirms an
+  update and the client reaches a playable world frame.
+- Each JVM can advance the persisted counter at most once and deliver at most
+  one chat reminder. Rejoins, dimension changes, and server transfers in the
+  same JVM cannot advance or repeat it.
+
+### Licensing and release safety
+
+- Added exact Forge Update Notifier source provenance, its MIT license, and a
+  packaged license copy in the runnable jar.
+- Added the ignored append-only identity-scan log location and documented the
+  required baseline/incremental scan workflow for future public releases.
+
 ## [0.3.5] - 2026-08-16
 
 ### Added
@@ -154,7 +213,8 @@ and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 - Released the complete project under AGPL-3.0-or-later, with exact source
   revisions and third-party notices included.
 
-[Unreleased]: https://github.com/HoYin1600p/The-Vault-Render-Optimization/compare/v0.3.5...HEAD
+[Unreleased]: https://github.com/HoYin1600p/The-Vault-Render-Optimization/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/HoYin1600p/The-Vault-Render-Optimization/compare/v0.3.5...v0.4.0
 [0.3.5]: https://github.com/HoYin1600p/The-Vault-Render-Optimization/compare/v0.3.4...v0.3.5
 [0.3.4]: https://github.com/HoYin1600p/The-Vault-Render-Optimization/compare/v0.3.3...v0.3.4
 [0.3.3]: https://github.com/HoYin1600p/The-Vault-Render-Optimization/compare/v0.3.2...v0.3.3

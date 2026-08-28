@@ -9,6 +9,31 @@ config/vault_render_optimization-client.toml
 All release fast paths are enabled by default. Forge reloads changes made by
 VRO's command immediately. For manual file edits, stop Minecraft first.
 
+## Update notices
+
+| Key | Default | Purpose |
+| --- | --- | --- |
+| `updates.check_for_updates` | `true` | Checks VRO's raw GitHub update manifest without blocking the client |
+| `updates.update_types` | `CRITICAL` | Shows only `[CRITICAL]` notices; set `ALL` to include normal notices |
+
+The filter applies to both the coordinated main-menu row and in-world chat
+reminders. Changing it reuses an already fetched result. Invalid or missing
+filter values fall back to `CRITICAL`. Disabling checks cancels the active
+request and hides all notices; enabling them starts a fresh request
+immediately.
+
+Critical reminders are eligible every five qualifying client launches and
+normal reminders every ten. A launch counts at most once per JVM, only after a
+successful update result and a playable world frame. Rejoins, dimension
+changes, and server transfers in the same JVM do not advance the counter or
+show another reminder. Reminder state is stored in
+`config/vault_render_optimization-update-notice-state.json`.
+
+The manifest request uses HTTPS, has bounded connection/request timeouts and
+response size, and fails closed on network, HTTP, JSON, or local-state errors.
+The download target is always VRO's fixed CurseForge project page; remote JSON
+cannot replace it. VRO reports updates but never downloads or installs them.
+
 ## Compare Mode
 
 | Key | Default | Purpose |
@@ -77,6 +102,12 @@ yields both when Better Fps - Render Distance is installed.
 | `/vro compare status` | Shows Compare Mode state |
 | `/vro compare on` | Saves and immediately disables VRO performance paths |
 | `/vro compare off` | Saves and immediately enables configured performance paths |
+| `/vro updates` | Shows whether checks are enabled and the selected update types |
+| `/vro updates status` | Shows the same update-notice state explicitly |
+| `/vro updates on` | Enables checks, saves the setting, and starts a fresh request |
+| `/vro updates off` | Disables checks, saves the setting, and hides all notices |
+| `/vro updates critical` | Saves the critical-only filter and applies it immediately |
+| `/vro updates all` | Saves the all-update filter and applies it immediately |
 | `/vro culling` | Shows section-culling state and distances |
 | `/vro culling vertical on` | Enables vertical terrain culling immediately |
 | `/vro culling vertical off` | Disables vertical terrain culling immediately |
