@@ -1,0 +1,179 @@
+{
+  "schemaVersion": 1,
+  "releases": [
+    {
+      "version": "0.3.0",
+      "tag": "v0.3.0",
+      "state": "activated",
+      "releaseCommit": "bcbdd94c5bc141993c65d51a2ffdae7c66149725",
+      "jar": {
+        "filename": "vault_render_optimization.0.3.0.jar",
+        "size": 72759,
+        "sha256": "7ee4f265c9670f0923e95ed4f20010d982af198580c84ddf3cb2b537b6033af0"
+      },
+      "github": {
+        "releaseUrl": "https://github.com/HoYin1600p/The-Vault-Render-Optimization/releases/tag/v0.3.0"
+      },
+      "compatibility": {
+        "releaseChannel": "release",
+        "gameVersions": ["1.18.2"],
+        "loaders": ["Forge"]
+      },
+      "updateCheck": {
+        "used": false
+      }
+    },
+    {
+      "version": "0.3.2",
+      "tag": "v0.3.2",
+      "state": "activated",
+      "releaseCommit": "192eb726eff851ad1274f4feaaabf666c902983e",
+      "jar": {
+        "filename": "vault_render_optimization.0.3.2.jar",
+        "size": 115469,
+        "sha256": "48155297c0eb31e1491a35901543f78ad400ef425849a5c181e3b44f80637c3e"
+      },
+      "github": {
+        "releaseUrl": "https://github.com/HoYin1600p/The-Vault-Render-Optimization/releases/tag/v0.3.2"
+      },
+      "curseforge": {
+        "projectId": "1637635",
+        "fileId": "8568947",
+        "fileUrl": "https://www.curseforge.com/minecraft/mc-mods/vault-render-optimization/files/8568947",
+        "manualRelease": false
+      },
+      "compatibility": {
+        "releaseChannel": "release",
+        "gameVersions": ["1.18.2"],
+        "loaders": ["Forge"]
+      },
+      "updateCheck": {
+        "used": false
+      },
+      "timestamps": {
+        "submittedAt": "2026-08-03T12:04:15.587Z"
+      }
+    },
+    {
+      "version": "0.3.3",
+      "tag": "v0.3.3",
+      "state": "activated",
+      "releaseCommit": "10e258bd528b0e53294f2f45a136cdb22bf94cd9",
+      "jar": {
+        "filename": "vault_render_optimization.0.3.3.jar",
+        "size": 115634,
+        "sha256": "75cd249a670161521c9a5b5be2a453b2c1063b845c397c5df139ffbd64296ffc"
+      },
+      "github": {
+        "releaseUrl": "https://github.com/HoYin1600p/The-Vault-Render-Optimization/releases/tag/v0.3.3"
+      },
+      "curseforge": {
+        "projectId": "1637635",
+        "fileId": "8573976",
+        "fileUrl": "https://www.curseforge.com/minecraft/mc-mods/vault-render-optimization/files/8573976",
+        "manualRelease": false
+      },
+      "compatibility": {
+        "releaseChannel": "release",
+        "gameVersions": ["1.18.2"],
+        "loaders": ["Forge"]
+      },
+      "updateCheck": {
+        "used": false
+      },
+      "timestamps": {
+        "submittedAt": "2026-08-04T06:12:38.863Z"
+      }
+    },
+    {
+      "version": "0.3.4",
+      "tag": "v0.3.4",
+      "state": "activated",
+      "releaseCommit": "b8d6d5b279d2a2d7c84817e3a25a5aef5cb427c7",
+      "jar": {
+        "filename": "vault_render_optimization.0.3.4.jar",
+        "size": 259882,
+        "sha256": "7f500b717b13037c91d1a3629f1d6f64d24829bbeb8cb053a9b46a9d56cfa738"
+      },
+      "github": {
+        "releaseUrl": "https://github.com/HoYin1600p/The-Vault-Render-Optimization/releases/tag/v0.3.4"
+      },
+      "compatibility": {
+        "releaseChannel": "release",
+        "gameVersions": ["1.18.2"],
+        "loaders": ["Forge"]
+      },
+      "updateCheck": {
+        "used": false
+      }
+    },
+    {
+      "version": "0.3.5",
+      "tag": "v0.3.5",
+      "state": "activated",
+      "releaseCommit": "d4d949336178747e4bd230bd5579f72216bd5d3b",
+      "jar": {
+        "filename": "vault_render_optimization.0.3.5.jar",
+        "size": 262180,
+        "sha256": "b3e6befccf68f20b151ab8e405d5e258d0fff89c84d1c190f4cbddc9217f6c9a"
+      },
+      "github": {
+        "releaseUrl": "https://github.com/HoYin1600p/The-Vault-Render-Optimization/releases/tag/v0.3.5"
+      },
+      "curseforge": {
+        "projectId": "1637635",
+        "fileId": "8666359",
+        "fileUrl": "https://www.curseforge.com/minecraft/mc-mods/vault-render-optimization/files/8666359",
+        "manualRelease": false
+      },
+      "compatibility": {
+        "releaseChannel": "release",
+        "gameVersions": ["1.18.2"],
+        "loaders": ["Forge"]
+      },
+      "updateCheck": {
+        "used": false
+      },
+      "timestamps": {
+        "submittedAt": "2026-08-16T23:34:37.240Z"
+      }
+    },
+    {
+      "version": "0.4.0",
+      "tag": "v0.4.0",
+      "state": "activated",
+      "releaseCommit": "8c54a0ec5d5adc41c867f7c284767251e30f5d00",
+      "jar": {
+        "filename": "vault_render_optimization.0.4.0.jar",
+        "size": 291500,
+        "sha256": "39a6128f0c2c98bf113c6a54de9cc074c97a6aa7722e80caad8cf5780edb7af9"
+      },
+      "github": {
+        "releaseUrl": "https://github.com/HoYin1600p/The-Vault-Render-Optimization/releases/tag/v0.4.0"
+      },
+      "curseforge": {
+        "projectId": "1637635",
+        "fileId": "8753850",
+        "fileUrl": "https://www.curseforge.com/minecraft/mc-mods/vault-render-optimization/files/8753850",
+        "manualRelease": false
+      },
+      "compatibility": {
+        "releaseChannel": "release",
+        "gameVersions": ["1.18.2"],
+        "loaders": ["Forge"]
+      },
+      "updateCheck": {
+        "used": true,
+        "critical": false,
+        "message": "Configurable Update Notices",
+        "plannedVersion": "0.4.0"
+      },
+      "monitor": {
+        "mode": "manual-before-onboarding"
+      },
+      "timestamps": {
+        "submittedAt": "2026-08-28T12:42:46.357Z"
+      }
+    }
+  ]
+}

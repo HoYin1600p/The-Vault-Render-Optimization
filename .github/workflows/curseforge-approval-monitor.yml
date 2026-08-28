@@ -1,0 +1,39 @@
+name: CurseForge approval monitor
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '7,22,37,52 * * * *'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: vro-curseforge-approval-monitor
+  cancel-in-progress: false
+
+jobs:
+  verify-and-activate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the default branch with complete history
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: main
+
+      - name: Configure approved public Git identity
+        shell: bash
+        run: |
+          git config user.name HoYin1600p
+          git config user.email 4504665+HoYin1600p@users.noreply.github.com
+
+      - name: Rehearse monitor safety cases
+        shell: pwsh
+        run: ./scripts/curseforge-approval-monitor.ps1 -SelfTest
+
+      - name: Check exact CurseForge file and activate when safe
+        shell: pwsh
+        env:
+          CURSEFORGE_API_KEY: ${{ secrets.CURSEFORGE_API_KEY }}
+        run: ./scripts/curseforge-approval-monitor.ps1

@@ -1,0 +1,92 @@
+{
+  "schemaVersion": 1,
+  "workflow": {
+    "skill": "publish-mod-update",
+    "revision": 3
+  },
+  "modName": "The Vault Render Optimization",
+  "releaseLedger": "docs/release-ledger.json",
+  "version": {
+    "sourceFiles": [
+      "gradle.properties"
+    ],
+    "property": "mod_version",
+    "tagPrefix": "v"
+  },
+  "build": {
+    "testCommand": ".\\gradlew.bat test",
+    "compatibilityCommand": ".\\scripts\\build-pack-compatibility.ps1",
+    "buildCommand": ".\\gradlew.bat clean build",
+    "artifactGlob": "build/libs/vault_render_optimization.*.jar",
+    "excludeGlobs": [
+      "*-sources.jar",
+      "*-dev.jar",
+      "*-shadow.jar"
+    ]
+  },
+  "github": {
+    "repository": "HoYin1600p/The-Vault-Render-Optimization",
+    "defaultBranch": "main",
+    "versionTrackingJson": "update.json",
+    "versionTrackingProductionUrl": "https://raw.githubusercontent.com/HoYin1600p/The-Vault-Render-Optimization/main/update.json",
+    "versionTrackingPointers": {
+      "version": "/promos/1.18.2-latest",
+      "recommendedVersion": "/promos/1.18.2-recommended",
+      "messageTemplate": "/1.18.2/{version}",
+      "criticalEncoding": "message-prefix",
+      "criticalPrefix": "[CRITICAL] ",
+      "normalPrefix": "",
+      "removeMessageWhenNull": false
+    }
+  },
+  "curseforge": {
+    "projectId": "1637635",
+    "slug": "vault-render-optimization",
+    "uploadCommand": ".\\scripts\\publish-curseforge.ps1 -Version <version> -ChangelogFile <path> -GitHubReleaseUrl <url>",
+    "uploadDryRunCommand": ".\\scripts\\publish-curseforge.ps1 -Version 0.4.0 -ChangelogFile docs/curseforge/CHANGELOG-0.4.0.md -GitHubReleaseUrl https://github.com/HoYin1600p/The-Vault-Render-Optimization/releases/tag/v0.4.0 -DryRun",
+    "uploadTokenEnvironment": "CURSEFORGE_API_TOKEN",
+    "readApiBaseUrl": "https://api.curseforge.com/v1",
+    "descriptionFile": "docs/curseforge/DESCRIPTION.md",
+    "descriptionFormat": "markdown",
+    "releaseChannel": "release",
+    "gameVersionIds": [
+      68441,
+      73250
+    ],
+    "gameVersions": [
+      "1.18.2",
+      "Forge",
+      "Client"
+    ],
+    "approvalPollMinutes": 15,
+    "manualRelease": false
+  },
+  "compatibility": {
+    "gameVersionSources": [
+      "gradle.properties"
+    ],
+    "loaderSources": [
+      "src/main/resources/META-INF/mods.toml"
+    ],
+    "minecraft": "1.18.2",
+    "forge": "40.3.11 or newer in the Forge 40.x line",
+    "java": 17,
+    "environment": "client"
+  },
+  "identity": {
+    "scanCommand": ".\\scripts\\verify-public-identity.ps1",
+    "ignoredScanLog": ".identity-scan/identity-scan-log.md"
+  },
+  "automation": {
+    "approvalMonitor": {
+      "enabled": true,
+      "workflowFile": ".github/workflows/curseforge-approval-monitor.yml",
+      "command": ".\\scripts\\curseforge-approval-monitor.ps1",
+      "selfTestCommand": ".\\scripts\\curseforge-approval-monitor.ps1 -SelfTest",
+      "curseforgeReadSecret": "CURSEFORGE_API_KEY",
+      "scheduleMinutes": 15,
+      "attentionAfterHours": 72,
+      "activationMode": "direct-push"
+    }
+  }
+}
