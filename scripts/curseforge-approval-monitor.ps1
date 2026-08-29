@@ -308,11 +308,18 @@ function ConvertFrom-PublicFilePage {
     $flightText = ConvertFrom-NextFlightText -Html $Html
     $file = Get-EmbeddedJsonObject -Text $flightText -PropertyName 'file'
     $project = Get-EmbeddedJsonObject -Text $flightText -PropertyName 'project'
-    $canonicalMatch = [regex]::Match($flightText, '"canonical":"(?<url>[^"]+)"')
-    if (-not $canonicalMatch.Success) {
-        throw 'ATTENTION_REQUIRED: the public CurseForge page has no canonical URL.'
+    $canonicalPattern = '<link\b(?=[^>]*\brel=["'']canonical["''])(?=[^>]*\bhref=["''](?<url>[^"'']+)["''])[^>]*>'
+    $canonicalMatch = [regex]::Match($Html, $canonicalPattern, [Text.RegularExpressions.RegexOptions]::IgnoreCase)
+    if ($canonicalMatch.Success) {
+        $canonicalUrl = [Net.WebUtility]::HtmlDecode($canonicalMatch.Groups['url'].Value)
     }
-    $canonicalUrl = $canonicalMatch.Groups['url'].Value
+    else {
+        $canonicalMatch = [regex]::Match($flightText, '"canonical":"(?<url>[^"]+)"')
+        if (-not $canonicalMatch.Success) {
+            throw 'ATTENTION_REQUIRED: the public CurseForge page has no canonical URL.'
+        }
+        $canonicalUrl = $canonicalMatch.Groups['url'].Value
+    }
     if ($canonicalUrl.TrimEnd('/') -ne $ExpectedPageUrl.TrimEnd('/')) {
         throw "ATTENTION_REQUIRED: the public CurseForge page canonical URL does not match the exact ledger file: $canonicalUrl"
     }
@@ -608,11 +615,10 @@ function Invoke-SelfTest {
     }
     $pageUrl = Get-PublicFilePageUrl -Release $release
     $flight = '23:{"file":' + ($file | ConvertTo-Json -Depth 8 -Compress) +
-        ',"project":' + ($project | ConvertTo-Json -Depth 8 -Compress) +
-        ',"canonical":"' + $pageUrl + '"}'
+        ',"project":' + ($project | ConvertTo-Json -Depth 8 -Compress) + '}'
     $encodedFlight = ConvertTo-Json -InputObject $flight -Compress
     $downloadPath = "/minecraft/mc-mods/vault-render-optimization/download/$($release.curseforge.fileId)"
-    $fixtureHtml = "<html><head><script>self.__next_f.push([1,$encodedFlight])</script></head><body><a href=`"$downloadPath`">Download</a><a href=`"$($release.github.releaseUrl)`">Full changelog</a></body></html>"
+    $fixtureHtml = "<html><head><link rel=`"canonical`" href=`"$pageUrl`"><script>self.__next_f.push([1,$encodedFlight])</script></head><body><a href=`"$downloadPath`">Download</a><a href=`"$($release.github.releaseUrl)`">Full changelog</a></body></html>"
     $page = ConvertFrom-PublicFilePage -Html $fixtureHtml -Release $release -ExpectedPageUrl $pageUrl
     $download = [pscustomobject]@{
         Bytes = $bytes
