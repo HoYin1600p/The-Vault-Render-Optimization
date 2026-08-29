@@ -351,11 +351,11 @@ function Get-PublicDownload {
         $download = $downloadPage
     }
     else {
-        $downloadPageHtml = [Text.Encoding]::UTF8.GetString($downloadPage.Bytes)
         $expectedEndpoint = "https://www.curseforge.com/api/v1/mods/$($Release.curseforge.projectId)/files/$($Release.curseforge.fileId)/download"
-        if ($downloadPageHtml.IndexOf($expectedEndpoint, [StringComparison]::Ordinal) -lt 0) {
-            throw 'ATTENTION_REQUIRED: the public download page does not expose the expected exact-file download action.'
-        }
+        # CurseForge serves more than one HTML representation for the public
+        # download page. The exact file page above already proved the matching
+        # /download/{fileId} action; continue through its unauthenticated
+        # exact-file endpoint even when the intermediate HTML omits the link.
         $download = Invoke-PublicGet -Uri $expectedEndpoint
     }
 
