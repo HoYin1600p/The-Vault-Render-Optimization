@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "workflow": {
     "skill": "publish-mod-update",
-    "revision": 3
+    "revision": 4
   },
   "modName": "The Vault Render Optimization",
   "releaseLedger": "docs/release-ledger.json",
@@ -41,11 +41,10 @@
   },
   "curseforge": {
     "projectId": "1637635",
-    "slug": "vault-render-optimization",
+    "projectSlug": "vault-render-optimization",
     "uploadCommand": ".\\scripts\\publish-curseforge.ps1 -Version <version> -ChangelogFile <path> -GitHubReleaseUrl <url>",
     "uploadDryRunCommand": ".\\scripts\\publish-curseforge.ps1 -Version 0.4.0 -ChangelogFile docs/curseforge/CHANGELOG-0.4.0.md -GitHubReleaseUrl https://github.com/HoYin1600p/The-Vault-Render-Optimization/releases/tag/v0.4.0 -DryRun",
     "uploadTokenEnvironment": "CURSEFORGE_API_TOKEN",
-    "readApiBaseUrl": "https://api.curseforge.com/v1",
     "descriptionFile": "docs/curseforge/DESCRIPTION.md",
     "descriptionFormat": "markdown",
     "releaseChannel": "release",
@@ -83,7 +82,8 @@
       "workflowFile": ".github/workflows/curseforge-approval-monitor.yml",
       "command": ".\\scripts\\curseforge-approval-monitor.ps1",
       "selfTestCommand": ".\\scripts\\curseforge-approval-monitor.ps1 -SelfTest",
-      "curseforgeReadSecret": "CURSEFORGE_API_KEY",
+      "verificationMode": "public-file-page",
+      "publicFileUrlTemplate": "https://www.curseforge.com/minecraft/mc-mods/{projectSlug}/files/{fileId}",
       "scheduleMinutes": 15,
       "attentionAfterHours": 72,
       "activationMode": "direct-push"

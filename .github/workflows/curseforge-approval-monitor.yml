@@ -2,6 +2,12 @@ name: CurseForge approval monitor
 
 on:
   workflow_dispatch:
+    inputs:
+      live_public_check:
+        description: Verify a known public CurseForge file page and download without credentials
+        required: false
+        default: false
+        type: boolean
   schedule:
     - cron: '7,22,37,52 * * * *'
 
@@ -32,8 +38,11 @@ jobs:
         shell: pwsh
         run: ./scripts/curseforge-approval-monitor.ps1 -SelfTest
 
+      - name: Verify known public CurseForge page and download
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.live_public_check }}
+        shell: pwsh
+        run: ./scripts/curseforge-approval-monitor.ps1 -LivePublicCheck
+
       - name: Check exact CurseForge file and activate when safe
         shell: pwsh
-        env:
-          CURSEFORGE_API_KEY: ${{ secrets.CURSEFORGE_API_KEY }}
         run: ./scripts/curseforge-approval-monitor.ps1

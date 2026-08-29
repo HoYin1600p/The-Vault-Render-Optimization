@@ -1,5 +1,6 @@
 param(
-    [switch]$SelfTest
+    [switch]$SelfTest,
+    [switch]$LivePublicCheck
 )
 
 $ErrorActionPreference = 'Stop'
@@ -18,6 +19,22 @@ function Get-ActiveRelease {
         throw "The release ledger has $($active.Count) active entries; exactly zero or one is allowed."
     }
     return $active | Select-Object -First 1
+}
+
+function Get-PublicFilePageUrl {
+    param([object]$Release)
+
+    $projectSlug = [string]$manifest.curseforge.projectSlug
+    $fileId = [string]$Release.curseforge.fileId
+    if ([string]::IsNullOrWhiteSpace($projectSlug) -or $projectSlug -notmatch '^[a-z0-9-]+$') {
+        throw 'The configured CurseForge project slug is missing or invalid.'
+    }
+    if ([string]::IsNullOrWhiteSpace($fileId) -or $fileId -notmatch '^\d+$') {
+        throw 'The active ledger entry has no valid upload-returned CurseForge file ID.'
+    }
+    return ([string]$manifest.automation.approvalMonitor.publicFileUrlTemplate).
+        Replace('{projectSlug}', $projectSlug).
+        Replace('{fileId}', $fileId)
 }
 
 function Get-ReleaseMessage {
@@ -135,99 +152,353 @@ function Get-BytesSha256 {
     }
 }
 
+function Get-ResponseDisposition {
+    param([int]$StatusCode)
+
+    if ($StatusCode -ge 200 -and $StatusCode -lt 300) { return 'SUCCESS' }
+    if ($StatusCode -eq 404) { return 'PENDING' }
+    if ($StatusCode -in @(403, 429, 500, 502, 503, 504)) { return 'RETRYABLE' }
+    return 'ATTENTION_REQUIRED'
+}
+
+function Invoke-PublicGet {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$Uri,
+        [switch]$NotFoundIsPending,
+        [int]$MaximumAttempts = 3
+    )
+
+    Add-Type -AssemblyName System.Net.Http
+    $handler = [Net.Http.HttpClientHandler]::new()
+    $handler.AllowAutoRedirect = $true
+    $handler.MaxAutomaticRedirections = 8
+    $handler.UseCookies = $false
+    $handler.AutomaticDecompression = [Net.DecompressionMethods]::GZip -bor [Net.DecompressionMethods]::Deflate
+    $client = [Net.Http.HttpClient]::new($handler)
+    $client.Timeout = [TimeSpan]::FromSeconds(45)
+    $client.DefaultRequestHeaders.UserAgent.ParseAdd('VRO-Approval-Monitor/1.0')
+    $client.DefaultRequestHeaders.Accept.ParseAdd('text/html,application/java-archive,application/octet-stream;q=0.9,*/*;q=0.8')
+    $client.DefaultRequestHeaders.CacheControl = [Net.Http.Headers.CacheControlHeaderValue]::new()
+    $client.DefaultRequestHeaders.CacheControl.NoCache = $true
+
+    try {
+        for ($attempt = 1; $attempt -le $MaximumAttempts; $attempt++) {
+            $response = $null
+            try {
+                $response = $client.GetAsync($Uri).GetAwaiter().GetResult()
+                $statusCode = [int]$response.StatusCode
+                $disposition = Get-ResponseDisposition -StatusCode $statusCode
+                if ($disposition -eq 'SUCCESS') {
+                    $bytes = $response.Content.ReadAsByteArrayAsync().GetAwaiter().GetResult()
+                    return [pscustomobject]@{
+                        State = 'SUCCESS'
+                        StatusCode = $statusCode
+                        Bytes = [byte[]]$bytes
+                        FinalUri = [string]$response.RequestMessage.RequestUri.AbsoluteUri
+                        ContentType = [string]$response.Content.Headers.ContentType.MediaType
+                        ContentDisposition = [string]$response.Content.Headers.ContentDisposition
+                    }
+                }
+                if ($disposition -eq 'PENDING' -and $NotFoundIsPending) {
+                    return [pscustomobject]@{
+                        State = 'PENDING'
+                        StatusCode = $statusCode
+                        Bytes = [byte[]]@()
+                        FinalUri = $Uri
+                        ContentType = ''
+                        ContentDisposition = ''
+                    }
+                }
+                if ($disposition -eq 'RETRYABLE' -and $attempt -lt $MaximumAttempts) {
+                    Start-Sleep -Seconds $attempt
+                    continue
+                }
+                throw "ATTENTION_REQUIRED: public CurseForge request returned HTTP $statusCode after $attempt attempt(s): $Uri"
+            }
+            catch {
+                if ($_.Exception.Message.StartsWith('ATTENTION_REQUIRED:')) { throw }
+                if ($attempt -ge $MaximumAttempts) {
+                    throw "ATTENTION_REQUIRED: public CurseForge request failed after $attempt attempt(s): $Uri. $($_.Exception.Message)"
+                }
+                Start-Sleep -Seconds $attempt
+            }
+            finally {
+                if ($null -ne $response) { $response.Dispose() }
+            }
+        }
+    }
+    finally {
+        $client.Dispose()
+        $handler.Dispose()
+    }
+}
+
+function ConvertFrom-NextFlightText {
+    param([string]$Html)
+
+    $pattern = 'self\.__next_f\.push\(\[1,"(?<payload>(?:\\.|[^"\\])*)"\]\)'
+    $segments = [Collections.Generic.List[string]]::new()
+    foreach ($match in [regex]::Matches($Html, $pattern)) {
+        try {
+            $decoded = ConvertFrom-Json -InputObject ('"' + $match.Groups['payload'].Value + '"')
+            [void]$segments.Add([string]$decoded)
+        }
+        catch {
+            throw 'ATTENTION_REQUIRED: the public CurseForge page contains unreadable embedded data.'
+        }
+    }
+    if ($segments.Count -eq 0) {
+        throw 'ATTENTION_REQUIRED: the public CurseForge page has no recognizable embedded data.'
+    }
+    return $segments -join "`n"
+}
+
+function Get-EmbeddedJsonObject {
+    param(
+        [string]$Text,
+        [string]$PropertyName
+    )
+
+    $needle = '"' + $PropertyName + '":'
+    $searchIndex = 0
+    while ($searchIndex -lt $Text.Length) {
+        $propertyIndex = $Text.IndexOf($needle, $searchIndex, [StringComparison]::Ordinal)
+        if ($propertyIndex -lt 0) { break }
+        $valueIndex = $propertyIndex + $needle.Length
+        while ($valueIndex -lt $Text.Length -and [char]::IsWhiteSpace($Text[$valueIndex])) { $valueIndex++ }
+        if ($valueIndex -ge $Text.Length -or $Text[$valueIndex] -ne '{') {
+            $searchIndex = $propertyIndex + $needle.Length
+            continue
+        }
+
+        $depth = 0
+        $insideString = $false
+        $escaped = $false
+        for ($index = $valueIndex; $index -lt $Text.Length; $index++) {
+            $character = $Text[$index]
+            if ($insideString) {
+                if ($escaped) { $escaped = $false; continue }
+                if ($character -eq [char]92) { $escaped = $true; continue }
+                if ($character -eq [char]34) { $insideString = $false }
+                continue
+            }
+            if ($character -eq [char]34) { $insideString = $true; continue }
+            if ($character -eq '{') { $depth++ }
+            elseif ($character -eq '}') {
+                $depth--
+                if ($depth -eq 0) {
+                    $json = $Text.Substring($valueIndex, $index - $valueIndex + 1)
+                    return $json | ConvertFrom-Json
+                }
+            }
+        }
+        throw "ATTENTION_REQUIRED: the public CurseForge page has an incomplete $PropertyName record."
+    }
+    throw "ATTENTION_REQUIRED: the public CurseForge page does not expose its $PropertyName record."
+}
+
+function ConvertFrom-PublicFilePage {
+    param(
+        [string]$Html,
+        [object]$Release,
+        [string]$ExpectedPageUrl
+    )
+
+    $flightText = ConvertFrom-NextFlightText -Html $Html
+    $file = Get-EmbeddedJsonObject -Text $flightText -PropertyName 'file'
+    $project = Get-EmbeddedJsonObject -Text $flightText -PropertyName 'project'
+    $canonicalMatch = [regex]::Match($flightText, '"canonical":"(?<url>[^"]+)"')
+    if (-not $canonicalMatch.Success) {
+        throw 'ATTENTION_REQUIRED: the public CurseForge page has no canonical URL.'
+    }
+    $canonicalUrl = $canonicalMatch.Groups['url'].Value
+    if ($canonicalUrl.TrimEnd('/') -ne $ExpectedPageUrl.TrimEnd('/')) {
+        throw "ATTENTION_REQUIRED: the public CurseForge page canonical URL does not match the exact ledger file: $canonicalUrl"
+    }
+
+    $expectedDownloadPath = "/minecraft/mc-mods/$($manifest.curseforge.projectSlug)/download/$($Release.curseforge.fileId)"
+    if ($Html.IndexOf($expectedDownloadPath, [StringComparison]::Ordinal) -lt 0 -and
+        $flightText.IndexOf($expectedDownloadPath, [StringComparison]::Ordinal) -lt 0) {
+        throw 'ATTENTION_REQUIRED: the exact public CurseForge page has no matching download action.'
+    }
+
+    return [pscustomobject]@{
+        PageUrl = $ExpectedPageUrl
+        CanonicalUrl = $canonicalUrl
+        DownloadPageUrl = "https://www.curseforge.com$expectedDownloadPath"
+        File = $file
+        Project = $project
+        SearchableText = "$Html`n$flightText"
+    }
+}
+
+function Get-PublicDownload {
+    param(
+        [object]$Page,
+        [object]$Release
+    )
+
+    $downloadPage = Invoke-PublicGet -Uri $Page.DownloadPageUrl
+    if ($downloadPage.ContentType -in @('application/java-archive', 'application/octet-stream')) {
+        $download = $downloadPage
+    }
+    else {
+        $downloadPageHtml = [Text.Encoding]::UTF8.GetString($downloadPage.Bytes)
+        $expectedEndpoint = "https://www.curseforge.com/api/v1/mods/$($Release.curseforge.projectId)/files/$($Release.curseforge.fileId)/download"
+        if ($downloadPageHtml.IndexOf($expectedEndpoint, [StringComparison]::Ordinal) -lt 0) {
+            throw 'ATTENTION_REQUIRED: the public download page does not expose the expected exact-file download action.'
+        }
+        $download = Invoke-PublicGet -Uri $expectedEndpoint
+    }
+
+    $finalUri = [Uri]$download.FinalUri
+    $fileName = [Uri]::UnescapeDataString([IO.Path]::GetFileName($finalUri.AbsolutePath))
+    if ([string]::IsNullOrWhiteSpace($fileName) -and -not [string]::IsNullOrWhiteSpace($download.ContentDisposition)) {
+        $fileName = ([string]$download.ContentDisposition -replace '^.*filename\*?=(?:UTF-8''|)"?', '' -replace '".*$', '').Trim()
+    }
+    return [pscustomobject]@{
+        Bytes = [byte[]]$download.Bytes
+        FinalUri = $download.FinalUri
+        FileName = $fileName
+        ContentType = $download.ContentType
+    }
+}
+
+function Assert-CurseForgePageAndDownload {
+    param(
+        [object]$Page,
+        [object]$Download,
+        [object]$Release,
+        [switch]$SkipChangelogLink
+    )
+
+    if ([string]$Page.Project.id -ne [string]$Release.curseforge.projectId) {
+        throw 'ATTENTION_REQUIRED: CurseForge project ID mismatch.'
+    }
+    if ([string]$Page.Project.slug -ne [string]$manifest.curseforge.projectSlug) {
+        throw 'ATTENTION_REQUIRED: CurseForge project slug mismatch.'
+    }
+    if ([int]$Page.Project.status -ne 4 -or [int]$Page.Project.downloadAvailability -ne 1) {
+        throw 'ATTENTION_REQUIRED: the CurseForge project/file does not report public download availability.'
+    }
+    if ([string]$Page.File.id -ne [string]$Release.curseforge.fileId) {
+        throw 'ATTENTION_REQUIRED: CurseForge file ID mismatch.'
+    }
+    if ([string]$Page.File.fileName -ne [string]$Release.jar.filename) {
+        throw 'ATTENTION_REQUIRED: CurseForge filename mismatch.'
+    }
+    $expectedDisplayName = "The Vault Render Optimization $($Release.version)"
+    if ([string]$Page.File.displayName -ne $expectedDisplayName) {
+        throw 'ATTENTION_REQUIRED: CurseForge display-name mismatch.'
+    }
+    if ([int64]$Page.File.fileLength -ne [int64]$Release.jar.size) {
+        throw 'ATTENTION_REQUIRED: CurseForge file-size metadata mismatch.'
+    }
+    if ([int]$Page.File.releaseType -ne 1) {
+        throw 'ATTENTION_REQUIRED: CurseForge release channel is not Release.'
+    }
+
+    $actualVersions = [Collections.Generic.List[string]]::new()
+    foreach ($value in @($Page.File.gameVersions)) { [void]$actualVersions.Add([string]$value) }
+    foreach ($flavor in @($Page.File.flavors)) { [void]$actualVersions.Add([string]$flavor.name) }
+    if ([bool]$Page.File.isClientCompatible) { [void]$actualVersions.Add('Client') }
+    $actualVersionSet = @($actualVersions | Sort-Object -Unique)
+    $expectedVersionSet = @($manifest.curseforge.gameVersions | ForEach-Object { [string]$_ } | Sort-Object -Unique)
+    if (($actualVersionSet -join "`n") -ne ($expectedVersionSet -join "`n")) {
+        throw "ATTENTION_REQUIRED: CurseForge game-version/loader/environment metadata mismatch: $($actualVersionSet -join ', ')"
+    }
+
+    $expectedRelations = @($Release.curseforge.relations | ForEach-Object { [string]$_ } | Sort-Object -Unique)
+    $actualRelations = @($Page.File.relatedProjects | ForEach-Object {
+        if ($null -ne $_.id) { [string]$_.id }
+        elseif ($null -ne $_.projectId) { [string]$_.projectId }
+        else { [string]$_ }
+    } | Sort-Object -Unique)
+    if (($actualRelations -join "`n") -ne ($expectedRelations -join "`n")) {
+        throw 'ATTENTION_REQUIRED: CurseForge related-project metadata mismatch.'
+    }
+
+    if (-not $SkipChangelogLink -and
+        $Page.SearchableText.IndexOf([string]$Release.github.releaseUrl, [StringComparison]::OrdinalIgnoreCase) -lt 0) {
+        throw 'ATTENTION_REQUIRED: the CurseForge changelog does not link to the full GitHub release.'
+    }
+    if ([string]$Download.FileName -ne [string]$Release.jar.filename) {
+        throw "ATTENTION_REQUIRED: the public download filename does not match the ledger: $($Download.FileName)"
+    }
+    if ($Download.Bytes.LongLength -ne [int64]$Release.jar.size) {
+        throw 'ATTENTION_REQUIRED: the public download size does not match the ledger.'
+    }
+    if ((Get-BytesSha256 -Bytes $Download.Bytes) -ne [string]$Release.jar.sha256) {
+        throw 'ATTENTION_REQUIRED: the public download SHA-256 does not match the ledger.'
+    }
+}
+
 function Assert-PublicArtifactIdentity {
     param(
-        [string]$Path,
+        [byte[]]$Bytes,
         [string]$Label
     )
 
     $prohibitedIdentity = -join @(69, 116, 104, 97, 110 | ForEach-Object { [char]$_ })
     if ($Label.IndexOf($prohibitedIdentity, [StringComparison]::OrdinalIgnoreCase) -ge 0) {
-        throw 'The public artifact filename contains the prohibited identity.'
+        throw 'ATTENTION_REQUIRED: the public artifact filename contains the prohibited identity.'
     }
     Add-Type -AssemblyName System.IO.Compression.FileSystem
-    $archive = [IO.Compression.ZipFile]::OpenRead($Path)
+    $memory = [IO.MemoryStream]::new($Bytes, $false)
+    $archive = [IO.Compression.ZipArchive]::new($memory, [IO.Compression.ZipArchiveMode]::Read, $false)
     try {
         foreach ($entry in $archive.Entries) {
             if ($entry.FullName.IndexOf($prohibitedIdentity, [StringComparison]::OrdinalIgnoreCase) -ge 0) {
-                throw "The public artifact contains the prohibited identity in an archive path."
+                throw 'ATTENTION_REQUIRED: the public artifact contains the prohibited identity in an archive path.'
             }
-            $stream = $entry.Open()
+            $entryStream = $entry.Open()
             try {
-                $memory = [IO.MemoryStream]::new()
+                $entryMemory = [IO.MemoryStream]::new()
                 try {
-                    $stream.CopyTo($memory)
-                    $text = [Text.Encoding]::Latin1.GetString($memory.ToArray())
+                    $entryStream.CopyTo($entryMemory)
+                    $text = [Text.Encoding]::Latin1.GetString($entryMemory.ToArray())
                     if ($text.IndexOf($prohibitedIdentity, [StringComparison]::OrdinalIgnoreCase) -ge 0) {
-                        throw "The public artifact contains the prohibited identity in $($entry.FullName)."
+                        throw "ATTENTION_REQUIRED: the public artifact contains the prohibited identity in $($entry.FullName)."
                     }
                 }
-                finally {
-                    $memory.Dispose()
-                }
+                finally { $entryMemory.Dispose() }
             }
-            finally {
-                $stream.Dispose()
-            }
+            finally { $entryStream.Dispose() }
         }
     }
     finally {
         $archive.Dispose()
+        $memory.Dispose()
     }
 }
 
-function Assert-CurseForgeMetadata {
+function Invoke-PublicFileVerification {
     param(
-        [object]$File,
         [object]$Release,
-        [string]$Changelog,
-        [byte[]]$ArtifactBytes
+        [switch]$SkipChangelogLink
     )
 
-    $expectedProject = [string]$Release.curseforge.projectId
-    $expectedFile = [string]$Release.curseforge.fileId
-    if ([string]$File.modId -ne $expectedProject -and [string]$File.projectId -ne $expectedProject) {
-        throw 'CurseForge project ID mismatch.'
+    $pageUrl = Get-PublicFilePageUrl -Release $Release
+    $pageResponse = Invoke-PublicGet -Uri $pageUrl -NotFoundIsPending
+    if ($pageResponse.State -eq 'PENDING') {
+        return [pscustomobject]@{ State = 'PENDING'; PageUrl = $pageUrl }
     }
-    if ([string]$File.id -ne $expectedFile) {
-        throw 'CurseForge file ID mismatch.'
+    if ($pageResponse.ContentType -ne 'text/html') {
+        throw "ATTENTION_REQUIRED: the exact CurseForge file page returned unexpected content type $($pageResponse.ContentType)."
     }
-    if ([string]$File.fileName -ne [string]$Release.jar.filename) {
-        throw 'CurseForge filename mismatch.'
-    }
-    $expectedDisplayName = "The Vault Render Optimization $($Release.version)"
-    if ([string]$File.displayName -ne $expectedDisplayName) {
-        throw 'CurseForge display-name mismatch.'
-    }
-    if ([int64]$File.fileLength -ne [int64]$Release.jar.size) {
-        throw 'CurseForge file-size metadata mismatch.'
-    }
-    if ([int]$File.releaseType -ne 1) {
-        throw 'CurseForge release channel is not Release.'
-    }
-
-    $actualVersions = @($File.gameVersions | ForEach-Object { [string]$_ } | Sort-Object -Unique)
-    $expectedVersions = @($manifest.curseforge.gameVersions | ForEach-Object { [string]$_ } | Sort-Object -Unique)
-    if (($actualVersions -join "`n") -ne ($expectedVersions -join "`n")) {
-        throw "CurseForge game-version/loader/environment metadata mismatch: $($actualVersions -join ', ')"
-    }
-
-    $expectedRelations = @($Release.curseforge.relations | ForEach-Object { [string]$_ } | Sort-Object -Unique)
-    $actualRelations = @($File.dependencies | ForEach-Object {
-        if ($null -ne $_.modId) { [string]$_.modId } else { [string]$_ }
-    } | Sort-Object -Unique)
-    if (($actualRelations -join "`n") -ne ($expectedRelations -join "`n")) {
-        throw 'CurseForge related-project metadata mismatch.'
-    }
-
-    if (-not $Changelog.Contains([string]$Release.github.releaseUrl)) {
-        throw 'The CurseForge changelog does not link to the full GitHub release.'
-    }
-    if ($ArtifactBytes.LongLength -ne [int64]$Release.jar.size) {
-        throw 'The public download size does not match the ledger.'
-    }
-    if ((Get-BytesSha256 -Bytes $ArtifactBytes) -ne [string]$Release.jar.sha256) {
-        throw 'The public download SHA-256 does not match the ledger.'
+    $html = [Text.Encoding]::UTF8.GetString($pageResponse.Bytes)
+    $page = ConvertFrom-PublicFilePage -Html $html -Release $Release -ExpectedPageUrl $pageUrl
+    $download = Get-PublicDownload -Page $page -Release $Release
+    Assert-CurseForgePageAndDownload -Page $page -Download $download -Release $Release -SkipChangelogLink:$SkipChangelogLink
+    Assert-PublicArtifactIdentity -Bytes $download.Bytes -Label ([string]$Release.jar.filename)
+    return [pscustomobject]@{
+        State = 'PUBLIC_VERIFIED'
+        PageUrl = $pageUrl
+        DownloadUrl = $download.FinalUri
+        Sha256 = Get-BytesSha256 -Bytes $download.Bytes
+        Page = $page
+        Download = $download
     }
 }
 
@@ -269,16 +540,25 @@ function Confirm-ProductionUpdateJson {
             $production = Invoke-RestMethod -Uri $manifest.github.versionTrackingProductionUrl -Headers @{
                 'Cache-Control' = 'no-cache'
             }
-            if (Test-ActivationValues -UpdateJson $production -Release $Release) {
-                return
-            }
+            if (Test-ActivationValues -UpdateJson $production -Release $Release) { return }
         }
         catch {
             if ($attempt -eq 8) { throw }
         }
         if ($attempt -lt 8) { Start-Sleep -Seconds 5 }
     }
-    throw 'The production update JSON did not expose the expected activation values.'
+    throw 'ATTENTION_REQUIRED: the production update JSON did not expose the expected activation values.'
+}
+
+function Get-SimulatedSequenceOutcome {
+    param([int[]]$StatusCodes)
+
+    foreach ($statusCode in $StatusCodes) {
+        $disposition = Get-ResponseDisposition -StatusCode $statusCode
+        if ($disposition -eq 'RETRYABLE') { continue }
+        return $disposition
+    }
+    return 'ATTENTION_REQUIRED'
 }
 
 function Invoke-SelfTest {
@@ -291,64 +571,96 @@ function Invoke-SelfTest {
     if ($null -ne (Get-ActiveRelease -Ledger $ledger)) {
         throw 'NO_PENDING self-test failed: the production ledger unexpectedly has an active release.'
     }
+    $results = [ordered]@{
+        noPending = 'PASS'
+        pending404 = if ((Get-ResponseDisposition -StatusCode 404) -eq 'PENDING') { 'PASS' } else { throw '404 was not pending.' }
+        temporary403 = if ((Get-SimulatedSequenceOutcome -StatusCodes @(403, 200)) -eq 'SUCCESS') { 'PASS - retried' } else { throw '403 retry failed.' }
+        temporary429 = if ((Get-SimulatedSequenceOutcome -StatusCodes @(429, 200)) -eq 'SUCCESS') { 'PASS - retried' } else { throw '429 retry failed.' }
+        temporary5xx = if ((Get-SimulatedSequenceOutcome -StatusCodes @(503, 200)) -eq 'SUCCESS') { 'PASS - retried' } else { throw '5xx retry failed.' }
+    }
 
     $bytes = [Text.Encoding]::UTF8.GetBytes('simulated verified mod artifact')
     $hash = Get-BytesSha256 -Bytes $bytes
     $release = [pscustomobject]@{
         version = '9.9.9'
-        state = 'awaiting_approval'
+        state = 'prepared'
         jar = [pscustomobject]@{ filename = 'vault_render_optimization.9.9.9.jar'; size = $bytes.Length; sha256 = $hash }
         github = [pscustomobject]@{ releaseUrl = 'https://github.com/HoYin1600p/The-Vault-Render-Optimization/releases/tag/v9.9.9' }
         curseforge = [pscustomobject]@{ projectId = '1637635'; fileId = '9999999'; manualRelease = $false; relations = @() }
         updateCheck = [pscustomobject]@{ used = $true; critical = $false; message = 'Simulated verified release'; plannedVersion = '9.9.9' }
     }
     $file = [pscustomobject]@{
-        modId = 1637635
         id = 9999999
         fileName = $release.jar.filename
         displayName = 'The Vault Render Optimization 9.9.9'
         fileLength = $bytes.Length
         releaseType = 1
-        gameVersions = @('Client', 'Forge', '1.18.2')
-        dependencies = @()
+        gameVersions = @('1.18.2')
+        flavors = @([pscustomobject]@{ id = 1; name = 'Forge' })
+        relatedProjects = @()
+        isClientCompatible = $true
     }
-
-    $results = [ordered]@{
-        noPending = 'PASS'
-        pending404 = 'PASS - simulated HTTP 404 remains awaiting_approval'
+    $project = [pscustomobject]@{
+        id = 1637635
+        slug = 'vault-render-optimization'
+        status = 4
+        downloadAvailability = 1
     }
-    Assert-CurseForgeMetadata -File $file -Release $release -Changelog "Full details: $($release.github.releaseUrl)" -ArtifactBytes $bytes
-    $results.validMatchingArtifact = 'PASS'
+    $pageUrl = Get-PublicFilePageUrl -Release $release
+    $flight = '23:{"file":' + ($file | ConvertTo-Json -Depth 8 -Compress) +
+        ',"project":' + ($project | ConvertTo-Json -Depth 8 -Compress) +
+        ',"canonical":"' + $pageUrl + '"}'
+    $encodedFlight = ConvertTo-Json -InputObject $flight -Compress
+    $downloadPath = "/minecraft/mc-mods/vault-render-optimization/download/$($release.curseforge.fileId)"
+    $fixtureHtml = "<html><head><script>self.__next_f.push([1,$encodedFlight])</script></head><body><a href=`"$downloadPath`">Download</a><a href=`"$($release.github.releaseUrl)`">Full changelog</a></body></html>"
+    $page = ConvertFrom-PublicFilePage -Html $fixtureHtml -Release $release -ExpectedPageUrl $pageUrl
+    $download = [pscustomobject]@{
+        Bytes = $bytes
+        FinalUri = "https://mediafilez.forgecdn.net/files/9999/999/$($release.jar.filename)"
+        FileName = $release.jar.filename
+        ContentType = 'application/java-archive'
+    }
+    $release.state = 'awaiting_approval'
+    Assert-CurseForgePageAndDownload -Page $page -Download $download -Release $release
+    $results.validPublicPageAndArtifact = 'PASS'
 
     try {
-        $badBytes = [Text.Encoding]::UTF8.GetBytes('different bytes')
-        Assert-CurseForgeMetadata -File $file -Release $release -Changelog $release.github.releaseUrl -ArtifactBytes $badBytes
+        $badDownload = $download | ConvertTo-Json -Depth 6 | ConvertFrom-Json
+        $badDownload.Bytes = [Text.Encoding]::UTF8.GetBytes('different bytes')
+        Assert-CurseForgePageAndDownload -Page $page -Download $badDownload -Release $release
         throw 'Hash-mismatch self-test did not fail closed.'
     }
     catch {
         if ($_.Exception.Message -eq 'Hash-mismatch self-test did not fail closed.') { throw }
-        $results.hashMismatch = 'PASS - blocked'
+        $results.hashMismatch = 'PASS - ATTENTION_REQUIRED'
     }
 
     try {
-        $badFile = $file | ConvertTo-Json -Depth 6 | ConvertFrom-Json
-        $badFile.releaseType = 2
-        Assert-CurseForgeMetadata -File $badFile -Release $release -Changelog $release.github.releaseUrl -ArtifactBytes $bytes
+        $badPage = $page | ConvertTo-Json -Depth 12 | ConvertFrom-Json
+        $badPage.File.releaseType = 2
+        Assert-CurseForgePageAndDownload -Page $badPage -Download $download -Release $release
         throw 'Metadata-mismatch self-test did not fail closed.'
     }
     catch {
         if ($_.Exception.Message -eq 'Metadata-mismatch self-test did not fail closed.') { throw }
-        $results.metadataMismatch = 'PASS - blocked'
+        $results.metadataMismatch = 'PASS - ATTENTION_REQUIRED'
+    }
+
+    try {
+        ConvertFrom-PublicFilePage -Html '<html><body>changed page</body></html>' -Release $release -ExpectedPageUrl $pageUrl | Out-Null
+        throw 'Page-format drift self-test did not fail closed.'
+    }
+    catch {
+        if ($_.Exception.Message -eq 'Page-format drift self-test did not fail closed.') { throw }
+        $results.pageFormatDrift = 'PASS - ATTENTION_REQUIRED'
     }
 
     $simulatedLedger = $ledger | ConvertTo-Json -Depth 20 | ConvertFrom-Json
     $simulatedLedger.releases += $release
     $simulatedUpdate = Get-Content -LiteralPath $updateJsonPath -Raw | ConvertFrom-Json
-    $beforeSimulatedUpdate = $simulatedUpdate | ConvertTo-Json -Depth 20
-    if ($release.state -eq 'awaiting_approval') {
-        if (($simulatedUpdate | ConvertTo-Json -Depth 20) -ne $beforeSimulatedUpdate) {
-            throw 'Pending-release simulation changed the client JSON.'
-        }
+    $beforeActivation = $simulatedUpdate | ConvertTo-Json -Depth 20
+    if (($simulatedUpdate | ConvertTo-Json -Depth 20) -ne $beforeActivation) {
+        throw 'Pending-release simulation changed the client JSON.'
     }
     $release.state = 'public_verified'
     Set-ActivationValues -UpdateJson $simulatedUpdate -Release $release
@@ -369,7 +681,6 @@ function Invoke-SelfTest {
     Write-JsonFile -Path (Join-Path $testRoot 'simulated-release-ledger.json') -Value $simulatedLedger
     Write-JsonFile -Path (Join-Path $testRoot 'simulated-update.json') -Value $simulatedUpdate
     Write-JsonFile -Path (Join-Path $testRoot 'self-test-results.json') -Value $results
-
     if ((Get-FileHash -LiteralPath $ledgerPath -Algorithm SHA256).Hash -ne $productionLedgerHash -or
         (Get-FileHash -LiteralPath $updateJsonPath -Algorithm SHA256).Hash -ne $productionUpdateHash) {
         throw 'A self-test changed a production release file.'
@@ -378,8 +689,29 @@ function Invoke-SelfTest {
     $results.GetEnumerator() | ForEach-Object { Write-Host "$($_.Key): $($_.Value)" }
 }
 
+function Invoke-LivePublicCheck {
+    $ledger = Get-Content -LiteralPath $ledgerPath -Raw | ConvertFrom-Json
+    $knownRelease = $ledger.releases |
+        Where-Object { $_.state -eq 'activated' -and $null -ne $_.curseforge.fileId } |
+        Select-Object -Last 1
+    if ($null -eq $knownRelease) {
+        throw 'ATTENTION_REQUIRED: the ledger has no known public CurseForge file for a live route check.'
+    }
+    $verification = Invoke-PublicFileVerification -Release $knownRelease -SkipChangelogLink
+    if ($verification.State -ne 'PUBLIC_VERIFIED') {
+        throw 'ATTENTION_REQUIRED: the known public CurseForge file did not verify.'
+    }
+    Write-Host "PUBLIC_VERIFIED: $($verification.PageUrl)"
+    Write-Host "Public download: $($verification.DownloadUrl)"
+    Write-Host "SHA-256: $($verification.Sha256)"
+}
+
 if ($SelfTest) {
     Invoke-SelfTest
+    exit 0
+}
+if ($LivePublicCheck) {
+    Invoke-LivePublicCheck
     exit 0
 }
 
@@ -395,7 +727,7 @@ if ($LASTEXITCODE -ne 0) { throw 'The checkout cannot fast-forward to the defaul
 $ledger = Get-Content -LiteralPath $ledgerPath -Raw | ConvertFrom-Json
 $release = Get-ActiveRelease -Ledger $ledger
 if ($null -eq $release) {
-    Write-Host 'NO_PENDING: no active release exists; no credential or tracked write is required.'
+    Write-Host 'NO_PENDING: no active release exists; no tracked write is required.'
     exit 0
 }
 if ($release.state -eq 'prepared') {
@@ -404,51 +736,24 @@ if ($release.state -eq 'prepared') {
 }
 
 if ($release.state -in @('awaiting_approval', 'approved_awaiting_release')) {
-    $apiKey = [Environment]::GetEnvironmentVariable([string]$manifest.automation.approvalMonitor.curseforgeReadSecret)
-    if ([string]::IsNullOrWhiteSpace($apiKey)) {
-        throw "The $($manifest.automation.approvalMonitor.curseforgeReadSecret) GitHub Actions secret is required while a release is active."
+    $verification = Invoke-PublicFileVerification -Release $release
+    if ($verification.State -eq 'PENDING') {
+        Write-Host 'PENDING: the exact public CurseForge file page is not available; production JSON is unchanged.'
+        exit 0
     }
-    $apiRoot = $manifest.curseforge.readApiBaseUrl.TrimEnd('/')
-    $fileUri = "$apiRoot/mods/$($release.curseforge.projectId)/files/$($release.curseforge.fileId)"
-    try {
-        $fileResponse = Invoke-RestMethod -Uri $fileUri -Headers @{ 'x-api-key' = $apiKey }
-    }
-    catch {
-        $statusCode = [int]$_.Exception.Response.StatusCode
-        if ($statusCode -eq 404) {
-            Write-Host 'PENDING: the exact CurseForge file is not public yet; production JSON is unchanged.'
-            exit 0
-        }
-        throw
-    }
-    $file = $fileResponse.data
-    if ($null -eq $file) { throw 'The CurseForge read API returned no file data.' }
-
-    $changelogResponse = Invoke-RestMethod -Uri "$fileUri/changelog" -Headers @{ 'x-api-key' = $apiKey }
-    $changelog = [string]$changelogResponse.data
-    $downloadUrl = [string]$file.downloadUrl
-    if ([string]::IsNullOrWhiteSpace($downloadUrl)) {
-        $fileId = [string]$release.curseforge.fileId
-        $downloadUrl = "https://edge.forgecdn.net/files/$($fileId.Substring(0, $fileId.Length - 3))/$($fileId.Substring($fileId.Length - 3))/$($release.jar.filename)"
-    }
-    $downloadDirectory = Join-Path $repositoryDirectory 'build/mod-publish-rehearsal'
-    New-Item -ItemType Directory -Path $downloadDirectory -Force | Out-Null
-    $downloadPath = Join-Path $downloadDirectory ([string]$release.jar.filename)
-    Invoke-WebRequest -Uri $downloadUrl -OutFile $downloadPath
-    $artifactBytes = [IO.File]::ReadAllBytes($downloadPath)
-    Assert-CurseForgeMetadata -File $file -Release $release -Changelog $changelog -ArtifactBytes $artifactBytes
-    Assert-PublicArtifactIdentity -Path $downloadPath -Label ([string]$release.jar.filename)
-
+    Write-Host "PUBLIC_VERIFIED: $($verification.PageUrl)"
     $release.state = 'public_verified'
-    if ($null -eq $release.timestamps) { $release | Add-Member -NotePropertyName timestamps -NotePropertyValue ([pscustomobject]@{}) }
+    if ($null -eq $release.timestamps) {
+        $release | Add-Member -NotePropertyName timestamps -NotePropertyValue ([pscustomobject]@{})
+    }
     if ($null -eq $release.timestamps.PSObject.Properties['publicVerifiedAt']) {
         $release.timestamps | Add-Member -NotePropertyName publicVerifiedAt -NotePropertyValue ([DateTime]::UtcNow.ToString('o'))
     }
     else { $release.timestamps.publicVerifiedAt = [DateTime]::UtcNow.ToString('o') }
     if ($null -eq $release.curseforge.PSObject.Properties['fileUrl']) {
-        $release.curseforge | Add-Member -NotePropertyName fileUrl -NotePropertyValue $downloadUrl
+        $release.curseforge | Add-Member -NotePropertyName fileUrl -NotePropertyValue $verification.PageUrl
     }
-    else { $release.curseforge.fileUrl = $downloadUrl }
+    else { $release.curseforge.fileUrl = $verification.PageUrl }
     Write-JsonFile -Path $ledgerPath -Value $ledger
     Invoke-IdentityCheckedPush -Path $manifest.releaseLedger -Message "Record CurseForge public verification for v$($release.version)"
 }
@@ -470,7 +775,7 @@ if ($null -eq $release) {
     exit 0
 }
 if ($release.state -ne 'public_verified') {
-    throw "Unexpected active state after verification: $($release.state)"
+    throw "ATTENTION_REQUIRED: unexpected active state after verification: $($release.state)"
 }
 $release.state = 'activated'
 if ($null -eq $release.timestamps.PSObject.Properties['activatedAt']) {

@@ -83,17 +83,20 @@ After submission, return to the files list and verify:
 - Forge, Java 17, and Minecraft 1.18.2 are listed.
 - Processing or moderation has begun.
 
-The approval monitor queries the exact file ID through the official read API,
-then verifies its public unauthenticated bytes, hash, filename, size, channel,
-compatibility, relations, display name, and full GitHub changelog link. A 404 or
-pending file cannot change `update.json`. Only a fully verified file advances
-to `public_verified`; the monitor then activates the existing Forge JSON fields,
-reads them back through the production raw URL, and finally records `activated`.
-Every public push is narrow and identity-scanned. Repeated runs are safe.
+The approval monitor builds the exact public Minecraft file-page URL from the
+project slug and upload-returned file ID. Without cookies, author credentials,
+or a read API key, it verifies the page's embedded file record, follows the
+page's public download action, and compares the downloaded JAR's filename,
+size, and SHA-256 with the release ledger. It also verifies the release channel,
+compatibility, relations, display name, and full GitHub changelog link.
 
-The workflow needs the CurseForge for Studios read key in the repository secret
-`CURSEFORGE_API_KEY`. The secret is not needed when the ledger has no active
-release, so a no-pending manual dispatch remains a non-writing health check.
+A 404 remains pending and cannot change `update.json`. Temporary 403, 429, or
+server failures are retried only within a bounded run; persistent access or
+page-format failures stop with `ATTENTION_REQUIRED`. Only a fully verified file
+advances to `public_verified`; the monitor then activates the existing Forge
+JSON fields, reads them back through the production raw URL, and finally records
+`activated`. Every public push is narrow and identity-scanned. Repeated runs are
+safe, and no CurseForge for Studios account or read secret is required.
 
 Do not delete, archive, replace, or alter older files unless explicitly
 requested. Correct editable metadata on the existing file rather than
