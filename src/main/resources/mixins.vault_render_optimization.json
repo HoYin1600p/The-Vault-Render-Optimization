@@ -15,6 +15,7 @@
     "backport.modernfix.client.model.variant.MultiVariantMixin",
     "backport.modernfix.client.render.RebuildTaskMixin",
     "backport.modernfix.client.skin.SkinManagerMixin",
+    "backport.modernfix.client.texture.StitcherMixin",
     "AltarConduitClientCrashGuardMixin",
     "BlockEntityRenderDispatcherMixin",
     "BlockEntityTypeRendererCacheMixin",
