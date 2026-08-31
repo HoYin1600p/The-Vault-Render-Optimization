@@ -6,6 +6,7 @@
   "compatibilityLevel": "JAVA_17",
   "refmap": "mixins.vault_render_optimization.refmap.json",
   "client": [
+    "backport.modernfix.client.render.RebuildTaskMixin",
     "AltarConduitClientCrashGuardMixin",
     "BlockEntityRenderDispatcherMixin",
     "BlockEntityTypeRendererCacheMixin",
