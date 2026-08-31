@@ -97,4 +97,3 @@ abstract class RebuildTaskMixin {
         return region.getBlockState(position);
     }
 }
-

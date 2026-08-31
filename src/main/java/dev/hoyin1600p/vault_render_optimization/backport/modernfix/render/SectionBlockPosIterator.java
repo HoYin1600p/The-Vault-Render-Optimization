@@ -75,4 +75,3 @@ public final class SectionBlockPosIterator implements Iterator<BlockPos> {
         return position;
     }
 }
-
