@@ -4,6 +4,7 @@ import dev.hoyin1600p.vault_render_optimization.VaultRenderOptimization;
 import dev.hoyin1600p.vault_render_optimization.backport.BootstrapRenderBackportConfig;
 import dev.hoyin1600p.vault_render_optimization.backport.ModernFixOwnership;
 import dev.hoyin1600p.vault_render_optimization.backport.RenderBackportFeature;
+import dev.hoyin1600p.vault_render_optimization.backport.RenderBackportCompatibility;
 import dev.hoyin1600p.vault_render_optimization.backport.RenderBackportOwnershipRegistry;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -285,27 +286,16 @@ public final class VaultRenderOptimizationMixinPlugin implements IMixinConfigPlu
     }
 
     private String probeBackportCompatibility(RenderBackportFeature feature) {
-        if (modDiscoveryFailed) {
-            return "loaded-mod discovery failed; ownership cannot be verified safely";
-        }
-        if (feature == RenderBackportFeature.CHUNK_MESHING && fluidloggedLoaded) {
-            return "Fluidlogged changes the chunk meshing state lookup path";
-        }
-        if (feature == RenderBackportFeature.BUFFER_BUILDER_LEAK_FIX
-                && (isometricRendersLoaded || witherStormModLoaded)) {
-            return "an upstream-incompatible render mod is installed"
-                    + " (Isometric Renders or Cracker's Wither Storm Mod)";
-        }
-        if (feature == RenderBackportFeature.CTM_METADATA_CACHE_CONCURRENCY
-                && !ctmCompatible) {
-            return "the validated ConnectedTexturesMod version is not installed";
-        }
-        if (feature == RenderBackportFeature.MODEL_DATA_MANAGER_CONCURRENCY
-                && rubidiumLoaded
-                && !embeddiumLoaded) {
-            return "legacy Rubidium refreshes Forge model data only on worker threads";
-        }
-        return null;
+        return RenderBackportCompatibility.blocker(
+                feature,
+                modDiscoveryFailed,
+                fluidloggedLoaded,
+                isometricRendersLoaded,
+                witherStormModLoaded,
+                rubidiumLoaded,
+                embeddiumLoaded,
+                ctmCompatible
+        );
     }
 
     private boolean hasVersion(String modId, String expectedVersion) {
