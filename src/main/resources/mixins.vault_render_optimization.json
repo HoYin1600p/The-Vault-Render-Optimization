@@ -10,6 +10,7 @@
     "backport.modernfix.client.entity.CubeDefinitionMixin",
     "backport.modernfix.client.entity.EntityModelSetMixin",
     "backport.modernfix.client.render.RebuildTaskMixin",
+    "backport.modernfix.client.skin.SkinManagerMixin",
     "AltarConduitClientCrashGuardMixin",
     "BlockEntityRenderDispatcherMixin",
     "BlockEntityTypeRendererCacheMixin",
