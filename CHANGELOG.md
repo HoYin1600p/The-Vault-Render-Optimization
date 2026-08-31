@@ -7,6 +7,34 @@ and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### Added
+
+- Added eleven ModernFix-derived client render and graphics backports: chunk
+  meshing traversal, duplicate BufferBuilder allocation prevention,
+  reload-safe entity-model cube compaction, bounded profile-texture hashing,
+  multipart selector caching, model-variant traversal, transformation hash
+  caching, Forge OBJ cache concurrency, guarded STB atlas stitching, Forge
+  model-data concurrency, and CTM metadata-cache concurrency.
+- Added restart-bound per-feature configuration and `/vro backports`
+  diagnostics with immutable owner/reason reporting.
+- Added a repository-owned provenance ledger and embedded the complete
+  ModernFix LGPL-3.0-or-later license in the runnable jar.
+
+### Compatibility
+
+- Added exact feature-level ownership arbitration among VRO, the temporary
+  current VH Accelerator overlap, and genuinely active ModernFix options.
+  Unknown ModernFix state fails closed, and VRO does not force ownership of
+  the texture stitcher.
+- Preserved the Fluidlogged chunk-meshing exclusion; Isometric Renders and
+  Cracker's Wither Storm Mod BufferBuilder exclusions; legacy Rubidium versus
+  Embeddium model-data gate; and the exact CTM `1.18.2-1.1.5+5` layout gate.
+
+### Verification
+
+- Ported the focused traversal, duplicate-allocation, cube-cache, and
+  profile-texture cache tests and added ownership/config bootstrap coverage.
+
 ## [0.4.0] - 2026-08-28
 
 ### Added

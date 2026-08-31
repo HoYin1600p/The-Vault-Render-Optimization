@@ -7,6 +7,26 @@ relationships are intentionally separated below.
 
 ## Shipped adapted implementations
 
+### ModernFix - embeddedt, Fury_Phoenix, and contributors
+
+- Source: [embeddedt/ModernFix](https://github.com/embeddedt/ModernFix)
+- Relocated VHA baseline: `7d2a69943e6e5bee629759b5ad0c4c47f6a20980`
+- License: LGPL-3.0-or-later
+
+VRO includes eleven ModernFix-derived client render/graphics adaptations for
+Minecraft Forge 1.18.2: chunk meshing, duplicate BufferBuilder protection,
+entity-model cube compaction, bounded profile-texture hashing, model selector
+and variant traversal caches, transformation hashing, OBJ cache concurrency,
+guarded STB atlas stitching, Forge model-data concurrency, and CTM metadata
+concurrency. Exact source paths, revisions, adaptation notes, ownership rules,
+and compatibility gates are recorded in
+[`docs/MODERNFIX_RENDER_BACKPORTS.md`](docs/MODERNFIX_RENDER_BACKPORTS.md).
+
+The STB stitcher also preserves ModernFix's credit to
+[GTNewHorizons/lwjgl3ify](https://github.com/GTNewHorizons/lwjgl3ify) at
+`f21364cd3d178aef863458a2faa1f5718a4e350d` under LGPL-3.0. The complete LGPL
+text is retained in the repository and runnable jar.
+
 ### Forge Update Notifier - HoYin1600p
 
 - Source: [HoYin1600p/Forge-Update-Notifier](https://github.com/HoYin1600p/Forge-Update-Notifier)

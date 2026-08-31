@@ -228,6 +228,10 @@ tasks.named('jar', Jar).configure {
         into 'META-INF/licenses'
     }
 
+    from(rootProject.file('docs/licenses/modernfix-LGPL-3.0-or-later.txt')) {
+        into 'META-INF/licenses'
+    }
+
     manifest {
         attributes([
                 "Specification-Title"     : mod_id,

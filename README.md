@@ -23,6 +23,9 @@ modify server gameplay. The remote server does not need the mod.
 - Reuses safe particle-light and renderer lookups and skips renderer setup when
   there is nothing to draw.
 - Reduces retained block-state and baked-model memory beyond FerriteCore 4.2.2.
+- Adds eleven ModernFix-derived render/model improvements with per-feature
+  ownership, compatibility gates, and safe coexistence with ModernFix and the
+  temporary VH Accelerator overlap.
 - Skips terrain sections beyond a configurable vertical render range without
   changing chunk loading or Distant Horizons storage.
 - Releases stale Create Addition and Powah world references after unloads.
@@ -105,6 +108,27 @@ VRO also applies conservative optimizations outside Vault-specific code:
 
 These paths are independently configurable and do not intentionally change
 visible output. Shader-sensitive lightmap and sky-color caching were rejected.
+
+### ModernFix render and model backports
+
+VRO carries selected later ModernFix improvements adapted to Forge 1.18.2:
+allocation-light chunk meshing; duplicate BufferBuilder protection;
+reload-safe entity-model cube compaction; bounded profile-texture hashing;
+multipart selector, model-variant, transformation, and OBJ cache improvements;
+guarded STB texture-atlas stitching; and concurrency corrections for Forge
+model data and validated CTM metadata.
+
+Each feature is restart-bound and independently configurable. VRO yields when
+ModernFix reports the exact implementation active. During the migration from
+VH Accelerator, VRO also yields only when VHA still contains that exact class,
+preventing duplicate mixins without permanently coupling ownership to VHA's
+mod ID. Compatibility exclusions preserve Fluidlogged, Isometric Renders,
+Cracker's Wither Storm Mod, legacy Rubidium, Embeddium, and validated CTM
+behavior. Use `/vro backports` for the selected owner and reason.
+
+Exact source commits, upstream copyrights, license terms, and behavioral
+adaptations are documented in
+[ModernFix render-backport provenance](docs/MODERNFIX_RENDER_BACKPORTS.md).
 
 ### Memory and terrain distance
 

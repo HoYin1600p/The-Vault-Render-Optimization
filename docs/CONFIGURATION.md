@@ -49,6 +49,36 @@ not reuse data created under the previous state. When Create is installed, it
 also reloads Create's world renderers so a sectioned or monolithic contraption
 mesh is rebuilt for the newly selected condition.
 
+The ModernFix-derived startup backports below read Compare Mode before mixin
+selection and stay disabled for that entire JVM launch. Restart after changing
+Compare Mode when those paths are part of a comparison.
+
+## ModernFix render backports
+
+These restart-bound options default on. VRO applies one only when its exact
+implementation is not still present in VH Accelerator, ModernFix does not own
+the corresponding active option, and the compatibility gate passes. An
+unverifiable ModernFix state fails closed.
+
+| Key | Default | Purpose / compatibility |
+| --- | --- | --- |
+| `modernfix_backports.chunkMeshing` | `true` | Reuses a section iterator and duplicate block-state lookup; unavailable with Fluidlogged. |
+| `modernfix_backports.bufferBuilderLeakFix` | `true` | Prevents duplicate RenderBuffers allocation; unavailable with Isometric Renders or Cracker's Wither Storm Mod. |
+| `modernfix_backports.compactEntityModels` | `true` | Shares immutable entity-model cubes and clears the cache on model reload. |
+| `modernfix_backports.profileTextureHashCache` | `true` | Bounds repeated profile-texture URL/hash work to 2,048 entries with 60-second after-access expiry. |
+| `modernfix_backports.modelSelectorPredicateCache` | `true` | Caches multipart selector predicates by block state definition. |
+| `modernfix_backports.modelVariantTraversal` | `true` | Reduces allocations while preserving missing-texture reporting. |
+| `modernfix_backports.modelTransformationHashCache` | `true` | Caches immutable model transformation hashes. |
+| `modernfix_backports.objModelCacheConcurrency` | `true` | Uses concurrent Forge OBJ material and model caches. |
+| `modernfix_backports.fasterTextureStitching` | `true` | Uses guarded STB packing for atlases with at least 100 sprites; small/oversized candidates retain vanilla behavior. |
+| `modernfix_backports.modelDataManagerConcurrencyFix` | `true` | Corrects Forge model-data refresh concurrency; unavailable with legacy Rubidium unless Embeddium is present. |
+| `modernfix_backports.ctmMetadataCacheConcurrencyFix` | `true` | Corrects nullable CTM metadata caching only for validated CTM `1.18.2-1.1.5+5`. |
+
+Use `/vro backports` to see the immutable owner and reason selected for each
+feature in the current launch. See
+[`MODERNFIX_RENDER_BACKPORTS.md`](MODERNFIX_RENDER_BACKPORTS.md) for exact
+source provenance and ownership rules.
+
 ## Render fast paths
 
 | Key | Default | Purpose |
@@ -102,6 +132,7 @@ yields both when Better Fps - Render Distance is installed.
 | `/vro compare status` | Shows Compare Mode state |
 | `/vro compare on` | Saves and immediately disables VRO performance paths |
 | `/vro compare off` | Saves and immediately enables configured performance paths |
+| `/vro backports` | Reports the launch-time owner and reason for every ModernFix-derived render backport |
 | `/vro updates` | Shows whether checks are enabled and the selected update types |
 | `/vro updates status` | Shows the same update-notice state explicitly |
 | `/vro updates on` | Enables checks, saves the setting, and starts a fresh request |

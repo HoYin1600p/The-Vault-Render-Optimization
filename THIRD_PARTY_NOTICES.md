@@ -6,6 +6,32 @@ mechanism can be reconstructed.
 
 ## Shipped adaptations
 
+### ModernFix render and graphics backports
+
+VRO contains selected source adapted from ModernFix for Minecraft Forge 1.18.2.
+
+- Project: ModernFix by embeddedt and contributors
+- Source: https://github.com/embeddedt/ModernFix
+- Relocated VHA baseline: `7d2a69943e6e5bee629759b5ad0c4c47f6a20980`
+- Copyright: embeddedt, Fury_Phoenix, and the contributors identified in the
+  retained source headers and ModernFix history
+- License: LGPL-3.0-or-later
+- Complete provenance: `docs/MODERNFIX_RENDER_BACKPORTS.md`
+
+Every adapted Java file retains its LGPL SPDX identifier, upstream source path,
+exact source revision, original copyright, and VRO adaptation note. VRO's
+project license remains AGPL-3.0-or-later. The complete ModernFix LGPL text is
+retained at `docs/licenses/modernfix-LGPL-3.0-or-later.txt` and embedded in the
+runnable jar.
+
+ModernFix's STB atlas stitcher adapts work from GTNewHorizons/lwjgl3ify:
+
+- Source: https://github.com/GTNewHorizons/lwjgl3ify
+- Revision: `f21364cd3d178aef863458a2faa1f5718a4e350d`
+- License: LGPL-3.0
+
+VRO preserves that transitive source and license attribution.
+
 ### Forge Update Notifier
 
 VRO's client update-notification unit under `client/update` is a
