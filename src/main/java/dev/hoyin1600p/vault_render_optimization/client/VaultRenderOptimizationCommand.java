@@ -2,6 +2,7 @@ package dev.hoyin1600p.vault_render_optimization.client;
 
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
+import dev.hoyin1600p.vault_render_optimization.backport.RenderBackportOwnershipRegistry;
 import dev.hoyin1600p.vault_render_optimization.client.lighting.DynamicLightEngine;
 import dev.hoyin1600p.vault_render_optimization.client.create.CreateDiagnostics;
 import dev.hoyin1600p.vault_render_optimization.client.update.UpdateNoticeFilter;
@@ -44,6 +45,8 @@ public final class VaultRenderOptimizationCommand {
                                         .executes(context -> set(context.getSource(), false)))
                                 .then(Commands.literal("status")
                                         .executes(context -> report(context.getSource()))))
+                        .then(Commands.literal("backports")
+                                .executes(context -> reportBackports(context.getSource())))
                         .then(Commands.literal("culling")
                                 .executes(context -> reportCulling(context.getSource()))
                                 .then(Commands.literal("vertical")
@@ -182,6 +185,20 @@ public final class VaultRenderOptimizationCommand {
                 false
         );
         return enabled ? 1 : 0;
+    }
+
+    private static int reportBackports(CommandSourceStack source) {
+        source.sendSuccess(
+                new TextComponent(
+                        "[VRO] ModernFix render-backport ownership: "
+                                + RenderBackportOwnershipRegistry.summary()
+                ),
+                false
+        );
+        for (String line : RenderBackportOwnershipRegistry.reportLines()) {
+            source.sendSuccess(new TextComponent("[VRO] " + line), false);
+        }
+        return 1;
     }
 
     private static int setVerticalCulling(CommandSourceStack source, boolean enabled) {

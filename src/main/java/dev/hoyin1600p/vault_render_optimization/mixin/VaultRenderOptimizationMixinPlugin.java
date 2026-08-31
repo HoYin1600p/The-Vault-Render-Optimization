@@ -1,7 +1,16 @@
 package dev.hoyin1600p.vault_render_optimization.mixin;
 
+import dev.hoyin1600p.vault_render_optimization.VaultRenderOptimization;
+import dev.hoyin1600p.vault_render_optimization.backport.BootstrapRenderBackportConfig;
+import dev.hoyin1600p.vault_render_optimization.backport.ModernFixOwnership;
+import dev.hoyin1600p.vault_render_optimization.backport.RenderBackportFeature;
+import dev.hoyin1600p.vault_render_optimization.backport.RenderBackportOwnershipRegistry;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import net.minecraftforge.fml.loading.FMLLoader;
 import net.minecraftforge.fml.loading.LoadingModList;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.fml.loading.FMLEnvironment;
 import org.objectweb.asm.tree.ClassNode;
 import org.spongepowered.asm.mixin.extensibility.IMixinConfigPlugin;
 import org.spongepowered.asm.mixin.extensibility.IMixinInfo;
@@ -91,10 +100,50 @@ public final class VaultRenderOptimizationMixinPlugin implements IMixinConfigPlu
     );
 
     private LoadingModList loadingModList;
+    private boolean physicalClient;
+    private boolean modDiscoveryFailed;
+    private boolean modernFixLoaded;
+    private boolean fluidloggedLoaded;
+    private boolean isometricRendersLoaded;
+    private boolean witherStormModLoaded;
+    private boolean rubidiumLoaded;
+    private boolean embeddiumLoaded;
+    private boolean ctmCompatible;
 
     @Override
     public void onLoad(String mixinPackage) {
-        loadingModList = FMLLoader.getLoadingModList();
+        physicalClient = FMLEnvironment.dist == Dist.CLIENT;
+        try {
+            loadingModList = FMLLoader.getLoadingModList();
+            modernFixLoaded = isModLoaded("modernfix");
+            fluidloggedLoaded = isModLoaded("fluidlogged");
+            isometricRendersLoaded = isModLoaded("isometric-renders");
+            witherStormModLoaded = isModLoaded("witherstormmod");
+            rubidiumLoaded = isModLoaded("rubidium");
+            embeddiumLoaded = isModLoaded("embeddium");
+            ctmCompatible = hasVersion("ctm", "1.18.2-1.1.5+5");
+        } catch (RuntimeException | LinkageError failure) {
+            modDiscoveryFailed = true;
+            loadingModList = null;
+            VaultRenderOptimization.LOGGER.debug(
+                    "Loaded mods could not be queried during render-backport selection",
+                    failure
+            );
+        }
+
+        BootstrapRenderBackportConfig.capture();
+        RenderBackportOwnershipRegistry.initialize(
+                physicalClient,
+                BootstrapRenderBackportConfig.compareMode(),
+                BootstrapRenderBackportConfig::enabled,
+                this::vhAcceleratorProvidesFeature,
+                this::probeModernFixOwnership,
+                this::probeBackportCompatibility
+        );
+        VaultRenderOptimization.LOGGER.info(
+                "ModernFix render-backport ownership: {}",
+                RenderBackportOwnershipRegistry.summary()
+        );
     }
 
     @Override
@@ -104,6 +153,11 @@ public final class VaultRenderOptimizationMixinPlugin implements IMixinConfigPlu
 
     @Override
     public boolean shouldApplyMixin(String targetClassName, String mixinClassName) {
+        RenderBackportFeature renderBackport = RenderBackportFeature.forMixin(mixinClassName);
+        if (renderBackport != null) {
+            return RenderBackportOwnershipRegistry.vroOwns(renderBackport);
+        }
+
         String simpleName = mixinClassName.substring(mixinClassName.lastIndexOf('.') + 1);
 
         if (COLLISION_MIXINS.contains(simpleName)) {
@@ -143,6 +197,124 @@ public final class VaultRenderOptimizationMixinPlugin implements IMixinConfigPlu
     private boolean isModLoaded(String modId) {
         LoadingModList modList = loadingModList != null ? loadingModList : FMLLoader.getLoadingModList();
         return modList != null && modList.getModFileById(modId) != null;
+    }
+
+    private boolean vhAcceleratorProvidesFeature(RenderBackportFeature feature) {
+        if (modDiscoveryFailed || loadingModList == null) {
+            return false;
+        }
+        for (String markerClass : feature.vhAcceleratorMarkerClasses()) {
+            try {
+                if (loadingModList.findResource(markerClass.replace('.', '/') + ".class") != null) {
+                    return true;
+                }
+            } catch (RuntimeException | LinkageError failure) {
+                VaultRenderOptimization.LOGGER.debug(
+                        "Could not locate the VH Accelerator overlap marker for {}",
+                        feature.id(),
+                        failure
+                );
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private ModernFixOwnership probeModernFixOwnership(RenderBackportFeature feature) {
+        if (modDiscoveryFailed) {
+            return ModernFixOwnership.UNKNOWN;
+        }
+        if (!modernFixLoaded) {
+            return ModernFixOwnership.ABSENT;
+        }
+
+        if (!feature.modernFixMarkerClasses().isEmpty()) {
+            boolean markerPresent = false;
+            for (String markerClass : feature.modernFixMarkerClasses()) {
+                try {
+                    if (loadingModList != null
+                            && loadingModList.findResource(
+                            markerClass.replace('.', '/') + ".class"
+                    ) != null) {
+                        markerPresent = true;
+                        break;
+                    }
+                } catch (RuntimeException | LinkageError failure) {
+                    VaultRenderOptimization.LOGGER.debug(
+                            "Could not locate the ModernFix marker for {}",
+                            feature.id(),
+                            failure
+                    );
+                    return ModernFixOwnership.UNKNOWN;
+                }
+            }
+            if (!markerPresent) {
+                return ModernFixOwnership.INACTIVE;
+            }
+        }
+
+        if (feature.modernFixMixinKeys().isEmpty()) {
+            return ModernFixOwnership.INACTIVE;
+        }
+        try {
+            Class<?> pluginClass = Class.forName(
+                    "org.embeddedt.modernfix.core.ModernFixMixinPlugin",
+                    false,
+                    VaultRenderOptimizationMixinPlugin.class.getClassLoader()
+            );
+            Field instanceField = pluginClass.getField("instance");
+            Object instance = instanceField.get(null);
+            if (instance == null) {
+                return ModernFixOwnership.UNKNOWN;
+            }
+            Method optionMethod = pluginClass.getMethod("isOptionEnabled", String.class);
+            for (String option : feature.modernFixMixinKeys()) {
+                if (Boolean.TRUE.equals(optionMethod.invoke(instance, option))) {
+                    return ModernFixOwnership.ACTIVE;
+                }
+            }
+            return ModernFixOwnership.INACTIVE;
+        } catch (ReflectiveOperationException | RuntimeException | LinkageError failure) {
+            VaultRenderOptimization.LOGGER.debug(
+                    "Could not query ModernFix ownership for {}",
+                    feature.id(),
+                    failure
+            );
+            return ModernFixOwnership.UNKNOWN;
+        }
+    }
+
+    private String probeBackportCompatibility(RenderBackportFeature feature) {
+        if (modDiscoveryFailed) {
+            return "loaded-mod discovery failed; ownership cannot be verified safely";
+        }
+        if (feature == RenderBackportFeature.CHUNK_MESHING && fluidloggedLoaded) {
+            return "Fluidlogged changes the chunk meshing state lookup path";
+        }
+        if (feature == RenderBackportFeature.BUFFER_BUILDER_LEAK_FIX
+                && (isometricRendersLoaded || witherStormModLoaded)) {
+            return "an upstream-incompatible render mod is installed"
+                    + " (Isometric Renders or Cracker's Wither Storm Mod)";
+        }
+        if (feature == RenderBackportFeature.CTM_METADATA_CACHE_CONCURRENCY
+                && !ctmCompatible) {
+            return "the validated ConnectedTexturesMod version is not installed";
+        }
+        if (feature == RenderBackportFeature.MODEL_DATA_MANAGER_CONCURRENCY
+                && rubidiumLoaded
+                && !embeddiumLoaded) {
+            return "legacy Rubidium refreshes Forge model data only on worker threads";
+        }
+        return null;
+    }
+
+    private boolean hasVersion(String modId, String expectedVersion) {
+        if (loadingModList == null || loadingModList.getModFileById(modId) == null) {
+            return false;
+        }
+        return loadingModList.getMods().stream()
+                .filter(mod -> modId.equals(mod.getModId()))
+                .anyMatch(mod -> expectedVersion.equals(mod.getVersion().toString()));
     }
 
     @Override

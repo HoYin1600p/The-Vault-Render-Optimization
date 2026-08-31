@@ -1,10 +1,13 @@
 package dev.hoyin1600p.vault_render_optimization.config;
 
 import dev.hoyin1600p.vault_render_optimization.VaultRenderOptimization;
+import dev.hoyin1600p.vault_render_optimization.backport.RenderBackportFeature;
 import dev.hoyin1600p.vault_render_optimization.cache.VaultGearRenderCache;
 import dev.hoyin1600p.vault_render_optimization.cache.VaultToolRenderCache;
 import dev.hoyin1600p.vault_render_optimization.client.update.UpdateNoticeFilter;
 import dev.hoyin1600p.vault_render_optimization.client.update.UpdateNoticeService;
+import java.util.EnumMap;
+import java.util.Map;
 import net.minecraftforge.common.ForgeConfigSpec;
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.config.ModConfig;
@@ -14,6 +17,8 @@ public final class ClientOptimizationConfig {
     public static final ForgeConfigSpec SPEC;
 
     private static final ForgeConfigSpec.BooleanValue COMPARE_MODE;
+    private static final EnumMap<RenderBackportFeature, ForgeConfigSpec.BooleanValue>
+            RENDER_BACKPORT_OPTIONS = new EnumMap<>(RenderBackportFeature.class);
     private static final ForgeConfigSpec.BooleanValue UPDATE_CHECKS;
     private static final ForgeConfigSpec.EnumValue<UpdateNoticeFilter> UPDATE_NOTICE_FILTER;
     private static final ForgeConfigSpec.BooleanValue PARTICLE_LIGHT_CACHE;
@@ -42,6 +47,8 @@ public final class ClientOptimizationConfig {
     private static final ForgeConfigSpec.BooleanValue CREATE_FLYWHEEL_SHADER_COMPAT;
 
     private static volatile boolean compareMode;
+    private static volatile Map<RenderBackportFeature, Boolean> renderBackportOptions =
+            defaultRenderBackportOptions();
     private static volatile boolean updateChecks = true;
     private static volatile UpdateNoticeFilter updateFilter = UpdateNoticeFilter.CRITICAL;
 
@@ -95,6 +102,19 @@ public final class ClientOptimizationConfig {
                         "The /vro compare command changes and saves this setting."
                 )
                 .define("compare_mode", false);
+        builder.pop();
+
+        builder.push("modernfix_backports");
+        for (RenderBackportFeature feature : RenderBackportFeature.values()) {
+            RENDER_BACKPORT_OPTIONS.put(
+                    feature,
+                    builder.comment(
+                            "Enable VRO's " + feature.displayName() + " backport when VRO owns it.",
+                            "This option is evaluated during startup and requires a game restart.",
+                            "VRO yields to the current VH Accelerator implementation and to an active ModernFix implementation."
+                    ).define(feature.configKey(), true)
+            );
+        }
         builder.pop();
 
         builder.push("render_fast_paths");
@@ -218,6 +238,10 @@ public final class ClientOptimizationConfig {
 
     public static boolean compareModeEnabled() {
         return compareMode;
+    }
+
+    public static boolean renderBackportConfigured(RenderBackportFeature feature) {
+        return renderBackportOptions.getOrDefault(feature, true);
     }
 
     public static boolean updateChecksEnabled() {
@@ -360,6 +384,10 @@ public final class ClientOptimizationConfig {
         }
 
         compareMode = COMPARE_MODE.get();
+        EnumMap<RenderBackportFeature, Boolean> backportValues =
+                new EnumMap<>(RenderBackportFeature.class);
+        RENDER_BACKPORT_OPTIONS.forEach((feature, value) -> backportValues.put(feature, value.get()));
+        renderBackportOptions = Map.copyOf(backportValues);
         updateChecks = UPDATE_CHECKS.get();
         updateFilter = UpdateNoticeFilter.fromConfigValue(
                 UPDATE_NOTICE_FILTER.get(),
@@ -391,5 +419,14 @@ public final class ClientOptimizationConfig {
         createSmartRenderBounds = CREATE_SMART_RENDER_BOUNDS.get();
         createFlywheelAutoEnable = CREATE_FLYWHEEL_AUTO_ENABLE.get();
         createFlywheelShaderCompat = CREATE_FLYWHEEL_SHADER_COMPAT.get();
+    }
+
+    private static Map<RenderBackportFeature, Boolean> defaultRenderBackportOptions() {
+        EnumMap<RenderBackportFeature, Boolean> defaults =
+                new EnumMap<>(RenderBackportFeature.class);
+        for (RenderBackportFeature feature : RenderBackportFeature.values()) {
+            defaults.put(feature, true);
+        }
+        return Map.copyOf(defaults);
     }
 }
