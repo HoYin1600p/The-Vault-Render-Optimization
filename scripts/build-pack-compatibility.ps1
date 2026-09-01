@@ -1,5 +1,6 @@
 param(
-    [string]$PrismInstancesDirectory = "$env:APPDATA\PrismLauncher\instances"
+    [string]$PrismInstancesDirectory = "$env:APPDATA\PrismLauncher\instances",
+    [switch]$RetainJar
 )
 
 $ErrorActionPreference = 'Stop'
@@ -57,13 +58,16 @@ try {
     $modVersion = (Select-String -LiteralPath $propertiesPath -Pattern '^mod_version=(.+)$').Matches[0].Groups[1].Value
     $jarName = "vault_render_optimization.$modVersion.jar"
     $builtJar = Join-Path $repositoryDirectory "build\libs\$jarName"
-    $retainedJar = Join-Path $repositoryDirectory "libs\$jarName"
-
-    Copy-Item -LiteralPath $builtJar -Destination $retainedJar -Force
-    $hash = (Get-FileHash -LiteralPath $retainedJar -Algorithm SHA256).Hash
-
-    Write-Host "Compatibility build complete: $retainedJar"
+    $hash = (Get-FileHash -LiteralPath $builtJar -Algorithm SHA256).Hash
+    Write-Host "Compatibility build complete: $builtJar"
     Write-Host "SHA-256: $hash"
+    if ($RetainJar) {
+        $retainedJar = Join-Path $repositoryDirectory "libs\$jarName"
+        Copy-Item -LiteralPath $builtJar -Destination $retainedJar -Force
+        Write-Host "Retained compatibility jar: $retainedJar"
+    } else {
+        Write-Host 'Built jar was not copied into tracked libs; pass -RetainJar only for an authorized release build.'
+    }
 }
 finally {
     Pop-Location
