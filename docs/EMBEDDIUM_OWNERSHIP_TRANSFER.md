@@ -3,9 +3,9 @@
 This ledger records the renderer corrections transferred from HoYin1600p's
 Embeddium stability fork into VRO. The source fork was read-only during the
 transfer. The matching VRO commits, renderer/version guards, automated tests,
-and accepted gameplay regressions are complete. The source implementations are
-authorized for removal; a control run follows removal to verify the resulting
-single-owner stack.
+and accepted gameplay regressions are complete. The source implementations
+were surgically removed in Embeddium commit `ced34c84`, and the resulting
+single-owner control is recorded in Embeddium commit `565016a2`.
 
 Validated renderer baselines:
 
@@ -22,16 +22,16 @@ under `[embeddium_transfers]`; performance-sensitive paths yield in Compare
 Mode while narrow correctness guards remain active. Startup diagnostics report
 `APPLIED`, `YIELDED`, or `BLOCKED` with a reason.
 
-| ID | Feature | VRO commit | Automated validation | Manual validation remaining | Source removable? |
+| ID | Feature | VRO commit | Automated validation | Validation remaining | Source status |
 |---|---|---|---|---|---|
-| VRO-EMB-04 | Adjacent-position block occlusion | `1021ad6` | Unit ownership/config tests; stock renderer layouts; five-pack build; live stock-Embeddium startup/rebuild pressure; operator-confirmed custom-block and Cake-room behavior | Post-removal control | Yes |
-| VRO-EMB-05 | Null-buffer vertex sink | `782542d` | Guard unit test; stock renderer layouts; five-pack build; live Create/Flywheel startup, reload, dimension, and flight smoke tests; inherited stable-fork gameplay | Post-removal control | Yes |
-| VRO-EMB-10 | Direct CCL renderer lookup | `4f26ac5` | Embeddium-only ownership gate; CCL lambda layout; five-pack build; CCL-present empty-registry pack scan; dormant-path risk accepted | Post-removal control | Yes |
-| VRO-EMB-02 | Bounded vertex-buffer retention | `332d75d` | Growth/overflow/retention unit tests; stock layouts; five-pack build; live rebuild/flight pressure; inherited gameplay sessions up to 12 hours | Post-removal control | Yes |
-| VRO-EMB-03 | Preemptive async arena growth | `7d88682` | Required/headroom/ceiling unit tests; stock layouts; five-pack build; live causal isolation and fixed-increment regression; inherited gameplay sessions up to 12 hours | Post-removal control | Yes |
-| VRO-EMB-06 | Smooth non-luminous fluid lighting | `2f1f320` | Lighting policy and reload-cache tests; stock layouts; five-pack build; resource reload and dimension cycle; operator-confirmed fluid behavior | Post-removal control | Yes |
-| VRO-EMB-08 | Chunk-layer shader-color reset | `b0f9d8b` | Compare-mode ownership test; stock layouts; five-pack build; shader reload with Oculus, Create/Flywheel, and Botania loaded; more than one month of stable-fork DH use | Post-removal VRO/DH control | Yes |
-| VRO-EMB-01 | Chunk rebuild de-duplication | `06273e4` | Pending strength/task-state tests; separate renderer layouts; five-pack build; 49,152 block mutations, block entities, fluids, and mass mob-kill pressure; operator-confirmed Cake-room and stable-fork gameplay | Post-removal control | Yes |
+| VRO-EMB-04 | Adjacent-position block occlusion | `1021ad6` | Unit ownership/config tests; stock renderer layouts; five-pack build; live stock-Embeddium startup/rebuild pressure; operator-confirmed custom-block and Cake-room behavior | None | Removed in `ced34c84` |
+| VRO-EMB-05 | Null-buffer vertex sink | `782542d` | Guard unit test; stock renderer layouts; five-pack build; live Create/Flywheel startup, reload, dimension, and flight smoke tests; inherited stable-fork gameplay | None | Removed in `ced34c84` |
+| VRO-EMB-10 | Direct CCL renderer lookup | `4f26ac5` | Embeddium-only ownership gate; CCL lambda layout; five-pack build; CCL-present empty-registry pack scan; dormant-path risk accepted; post-removal guarded `BLOCKED` decision | None | Removed in `ced34c84` |
+| VRO-EMB-02 | Bounded vertex-buffer retention | `332d75d` | Growth/overflow/retention unit tests; stock layouts; five-pack build; live rebuild/flight pressure; inherited gameplay sessions up to 12 hours; post-removal single ownership | None | Removed in `ced34c84` |
+| VRO-EMB-03 | Preemptive async arena growth | `7d88682` | Required/headroom/ceiling unit tests; stock layouts; five-pack build; live causal isolation and fixed-increment regression; inherited gameplay sessions up to 12 hours; post-removal single ownership | None | Removed in `ced34c84` |
+| VRO-EMB-06 | Smooth non-luminous fluid lighting | `2f1f320` | Lighting policy and reload-cache tests; stock layouts; five-pack build; resource reload and dimension cycle; operator-confirmed fluid behavior; post-removal single ownership | None | Removed in `ced34c84` |
+| VRO-EMB-08 | Chunk-layer shader-color reset | `b0f9d8b` | Compare-mode ownership test; stock layouts; five-pack build; shader reload with Oculus, Create/Flywheel, and Botania loaded; more than one month of stable-fork DH use; post-removal DH initialization | None | Removed in `ced34c84` |
+| VRO-EMB-01 | Chunk rebuild de-duplication | `06273e4` | Pending strength/task-state tests; separate renderer layouts; five-pack build; 49,152 block mutations, block entities, fluids, and mass mob-kill pressure; operator-confirmed Cake-room and stable-fork gameplay; post-removal single ownership | None | Removed in `ced34c84` |
 
 Source provenance is the repository ledger at
 `VRO_OWNERSHIP_TRANSFER.md` in the Embeddium fork at commit `7b085088`,
@@ -54,11 +54,8 @@ Completed on 2026-09-01 without installing into a Prism instance:
   `META-INF/LICENSE`, `META-INF/THIRD_PARTY_NOTICES.md`, and the retained LGPL
   text. The JAR was not copied into tracked `libs`.
 
-Automated implementation and accepted gameplay validation are complete. All
-eight original fork implementations are eligible for removal. The remaining
-control is deliberately post-removal: build the fork without these copies,
-load it with VRO, verify VRO owns each applicable feature exactly once, and
-confirm the guarded Distant Horizons stack still starts.
+Automated implementation, accepted gameplay validation, source removal, and
+the post-removal single-owner control are complete for all eight transfers.
 
 ## CMA Asgard live validation
 
@@ -105,9 +102,8 @@ Minecraft `1.18.2`:
 
 CodeChickenLib and Distant Horizons were not installed in this instance, and
 fullscreen mode prevented CMA's windowed-only resize action. The prior full
-Create/Flywheel and stable-fork campaigns do not need to be repeated. Distant
-Horizons is coupled to the custom Embeddium build, so its VRO load control must
-follow removal of the transferred implementation from that fork.
+Create/Flywheel and stable-fork campaigns do not need to be repeated. The later
+post-removal control below covers the custom Embeddium/Distant Horizons stack.
 
 ## Inherited long-session validation
 
@@ -123,8 +119,8 @@ overnight soak is no longer required.
 The operator also confirmed custom-block occlusion, fluid rendering, and Cake
 room behavior from the stable fork. Those behaviors are accepted together with
 VRO's source-equivalence, guarded-load, structural, and live startup checks.
-The source implementations are authorized for removal. The required control
-run verifies the removal rather than blocking it.
+The source implementations were subsequently removed and the required control
+run verified the resulting single-owner stack.
 
 ## CodeChickenLib lookup scope
 
@@ -159,7 +155,36 @@ transferred implementations from the custom Embeddium fork:
 - VRO-EMB-01: `RenderSection.java` and `RenderSectionManager.java`, source
   `a8cebc3a`.
 
-Removal must be surgical because the source commits may contain surrounding
-fork work. Do not revert whole commits when that would discard unrelated
-changes. After removal, build the custom Embeddium JAR and perform the single-
-owner VRO startup/control checks before declaring the fork cleanup complete.
+Removal was performed surgically because the source commits contain surrounding
+fork work. Embeddium commit `ced34c84` removed only the eight transferred
+implementations while preserving the fork's GL boundary reset, stable block-
+entity diffuse lighting, empty loading-screen guard, and high-distance
+spectator visibility.
+
+## Post-removal single-owner control
+
+Embeddium commit `565016a2b7af449d2d42724a7fe1f0b6dd95a75b` records the
+completed control and tracked standard-name JAR update:
+
+- Embeddium `gradlew clean build`: PASS with three pre-existing warnings.
+- Embeddium runtime JAR SHA-256:
+  `D71FA18869A6C3831B44635E5E467C6C4017867AFD0E947BB199CAC37EE9B072`.
+- VRO `gradlew clean build`: PASS with known annotation-processor warnings.
+- VRO runtime JAR SHA-256:
+  `FFCF6632E20FFD16F4C673CCEC4F20FCE1DC944E24F0D2115F47553BA3B25E29`.
+- The dedicated DH Test Client used Embeddium `ced34c84`, VRO `0.4.0`,
+  Distant Horizons `3.2.1-b-dev`, and Oculus `1.6.5-dh-compat`.
+- VRO-EMB-01, -02, -03, -04, -05, -06, and -08 each reported `APPLIED`
+  exactly once. VRO-EMB-10 reported `BLOCKED` exactly once because CCL was
+  absent, matching the accepted dormant-path policy.
+- No duplicate ownership mixin, mixin application/injection failure,
+  VRO/Embeddium/Oculus fatal error, or OpenGL error was present.
+- Distant Horizons initialized a `CLIENT_SERVER` world and all configured DH
+  levels before the old test world's login timed out during unrelated Forge
+  registry synchronization. The captured thread was waiting in
+  `HandshakeHandler.handleRegistryLoading` after local Vault registry mappings;
+  this is a test-instance limitation after renderer/DH initialization, not a
+  transfer failure.
+
+No transferred renderer implementation remains in the Embeddium fork source.
+All eight ownership transfers and the source cleanup are complete.
