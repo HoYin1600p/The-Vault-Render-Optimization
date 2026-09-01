@@ -274,3 +274,9 @@ null-buffer, and shader-color correctness guards.
 the native capacity retained by each reusable chunk-build vertex buffer; a
 larger one-off allocation is trimmed at the next build start and `destroy()`
 continues to free it deterministically.
+
+`embeddium_transfers.asyncArenaGrowthDivisor` defaults to `6`; a smaller value
+reserves more VRAM headroom and reduces repeated arena compactions.
+`asyncArenaMaxHeadroomMib` defaults to `64` and caps only speculative headroom,
+never bytes required by the current upload. This control is independent of
+vertex-buffer retention.

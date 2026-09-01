@@ -24,6 +24,8 @@ public final class ClientOptimizationConfig {
     private static final EnumMap<RendererTransferFeature, ForgeConfigSpec.BooleanValue>
             RENDERER_TRANSFER_OPTIONS = new EnumMap<>(RendererTransferFeature.class);
     private static final ForgeConfigSpec.IntValue VERTEX_BUFFER_MAX_RETAINED_MIB;
+    private static final ForgeConfigSpec.IntValue ASYNC_ARENA_GROWTH_DIVISOR;
+    private static final ForgeConfigSpec.IntValue ASYNC_ARENA_MAX_HEADROOM_MIB;
     private static final ForgeConfigSpec.BooleanValue UPDATE_CHECKS;
     private static final ForgeConfigSpec.EnumValue<UpdateNoticeFilter> UPDATE_NOTICE_FILTER;
     private static final ForgeConfigSpec.BooleanValue PARTICLE_LIGHT_CACHE;
@@ -92,6 +94,8 @@ public final class ClientOptimizationConfig {
     public static volatile boolean createFlywheelAutoEnable = true;
     public static volatile boolean createFlywheelShaderCompat = true;
     public static volatile int vertexBufferMaxRetainedMib = 16;
+    public static volatile int asyncArenaGrowthDivisor = 6;
+    public static volatile int asyncArenaMaxHeadroomMib = 64;
 
     static {
         ForgeConfigSpec.Builder builder = new ForgeConfigSpec.Builder();
@@ -150,6 +154,14 @@ public final class ClientOptimizationConfig {
                 "Maximum native capacity retained by one renderer vertex buffer between builds.",
                 "Larger one-off buffers are trimmed at the next start; destroy still frees them deterministically."
         ).defineInRange("vertexBufferMaxRetainedMib", 16, 1, 256);
+        ASYNC_ARENA_GROWTH_DIVISOR = builder.comment(
+                "Reserve roughly current arena capacity divided by this value during a resize.",
+                "Smaller values trade more speculative VRAM for fewer resize/compaction events."
+        ).defineInRange("asyncArenaGrowthDivisor", 6, 2, 64);
+        ASYNC_ARENA_MAX_HEADROOM_MIB = builder.comment(
+                "Maximum speculative VRAM headroom added by one arena growth.",
+                "Memory required by the actual upload is never capped by this value."
+        ).defineInRange("asyncArenaMaxHeadroomMib", 64, 1, 512);
         builder.pop();
 
         builder.push("render_fast_paths");
@@ -483,6 +495,8 @@ public final class ClientOptimizationConfig {
         );
         rendererTransferOptions = Map.copyOf(rendererTransferValues);
         vertexBufferMaxRetainedMib = VERTEX_BUFFER_MAX_RETAINED_MIB.get();
+        asyncArenaGrowthDivisor = ASYNC_ARENA_GROWTH_DIVISOR.get();
+        asyncArenaMaxHeadroomMib = ASYNC_ARENA_MAX_HEADROOM_MIB.get();
         updateChecks = UPDATE_CHECKS.get();
         updateFilter = UpdateNoticeFilter.fromConfigValue(
                 UPDATE_NOTICE_FILTER.get(),

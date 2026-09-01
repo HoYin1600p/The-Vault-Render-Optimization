@@ -9,6 +9,7 @@
     "backport.embeddium.occlusion.BlockOcclusionCacheMixin",
     "backport.embeddium.buffer.BufferBuilderVertexSinkMixin",
     "backport.embeddium.buffer.VertexBufferBuilderMixin",
+    "backport.embeddium.buffer.AsyncBufferArenaMixin",
     "backport.embeddium.ccl.CCLCompatMixin",
     "backport.modernfix.client.buffer.RenderBuffersMixin",
     "backport.modernfix.client.ctm.ResourceUtilMixin",
