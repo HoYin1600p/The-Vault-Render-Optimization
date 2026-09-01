@@ -23,6 +23,7 @@ public final class ClientOptimizationConfig {
             RENDER_BACKPORT_OPTIONS = new EnumMap<>(RenderBackportFeature.class);
     private static final EnumMap<RendererTransferFeature, ForgeConfigSpec.BooleanValue>
             RENDERER_TRANSFER_OPTIONS = new EnumMap<>(RendererTransferFeature.class);
+    private static final ForgeConfigSpec.IntValue VERTEX_BUFFER_MAX_RETAINED_MIB;
     private static final ForgeConfigSpec.BooleanValue UPDATE_CHECKS;
     private static final ForgeConfigSpec.EnumValue<UpdateNoticeFilter> UPDATE_NOTICE_FILTER;
     private static final ForgeConfigSpec.BooleanValue PARTICLE_LIGHT_CACHE;
@@ -90,6 +91,7 @@ public final class ClientOptimizationConfig {
     public static volatile boolean createSmartRenderBounds = true;
     public static volatile boolean createFlywheelAutoEnable = true;
     public static volatile boolean createFlywheelShaderCompat = true;
+    public static volatile int vertexBufferMaxRetainedMib = 16;
 
     static {
         ForgeConfigSpec.Builder builder = new ForgeConfigSpec.Builder();
@@ -144,6 +146,10 @@ public final class ClientOptimizationConfig {
                     ).define(feature.configKey(), true)
             );
         }
+        VERTEX_BUFFER_MAX_RETAINED_MIB = builder.comment(
+                "Maximum native capacity retained by one renderer vertex buffer between builds.",
+                "Larger one-off buffers are trimmed at the next start; destroy still frees them deterministically."
+        ).defineInRange("vertexBufferMaxRetainedMib", 16, 1, 256);
         builder.pop();
 
         builder.push("render_fast_paths");
@@ -476,6 +482,7 @@ public final class ClientOptimizationConfig {
                 (feature, value) -> rendererTransferValues.put(feature, value.get())
         );
         rendererTransferOptions = Map.copyOf(rendererTransferValues);
+        vertexBufferMaxRetainedMib = VERTEX_BUFFER_MAX_RETAINED_MIB.get();
         updateChecks = UPDATE_CHECKS.get();
         updateFilter = UpdateNoticeFilter.fromConfigValue(
                 UPDATE_NOTICE_FILTER.get(),

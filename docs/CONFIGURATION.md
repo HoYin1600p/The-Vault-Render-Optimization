@@ -269,3 +269,8 @@ validated Embeddium `0.3.18` or Rubidium `0.5.6` class layouts. An unknown or
 ambiguous renderer stack is blocked rather than guessed. Compare Mode disables
 performance-sensitive transfers but retains the adjacent-position occlusion,
 null-buffer, and shader-color correctness guards.
+
+`embeddium_transfers.vertexBufferMaxRetainedMib` defaults to `16`. It bounds
+the native capacity retained by each reusable chunk-build vertex buffer; a
+larger one-off allocation is trimmed at the next build start and `destroy()`
+continues to free it deterministically.
