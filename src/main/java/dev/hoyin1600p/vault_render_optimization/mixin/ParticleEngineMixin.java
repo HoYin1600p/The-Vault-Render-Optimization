@@ -2,6 +2,7 @@ package dev.hoyin1600p.vault_render_optimization.mixin;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import dev.hoyin1600p.vault_render_optimization.config.ClientOptimizationConfig;
+import dev.hoyin1600p.vault_render_optimization.client.particle.ParticleDiagnostics;
 import net.minecraft.client.Camera;
 import net.minecraft.client.particle.Particle;
 import net.minecraft.client.particle.ParticleEngine;
@@ -46,6 +47,7 @@ public abstract class ParticleEngineMixin {
             }
         }
 
+        ParticleDiagnostics.recordEmptyRenderSkip();
         ci.cancel();
     }
 }

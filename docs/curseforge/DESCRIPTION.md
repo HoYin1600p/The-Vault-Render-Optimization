@@ -31,7 +31,7 @@ Use `/vro create status` to see the active Flywheel backend, shader path, and co
 ## General performance and memory
 
 *   Reduces client collision work around dense mob farms and rapid kill systems.
-*   Reuses safe particle-light and renderer lookups and skips empty particle, toast, tutorial, debug, and renderer setup work.
+*   Builds ordinary particle billboards from the camera basis, reuses Rubidium/Embeddium packed output, shares same-tick light results, and skips empty particle, toast, tutorial, debug, and renderer setup work without hiding visible effects.
 *   Compacts baked-model and block-state data beyond the reductions already present in FerriteCore 4.2.2.
 *   Adds separate vertical and horizontal terrain-section culling. Vertical culling is enabled by default; horizontal culling is optional.
 *   Cleans up retained Create Addition, Powah, Vault Loot Beams, and empty-item references during long sessions and world changes.
@@ -74,6 +74,7 @@ No server installation, world migration, cache deletion, or settings reset is re
 | <code>/vro</code>                       |Show the current Compare Mode state.                           |
 | <code>/vro compare on|off|status</code> |Compare VRO optimizations without restarting Minecraft.        |
 | <code>/vro updates on|off|status|critical|all</code> |Control update checks and choose critical-only or all notices. |
+| <code>/vro particles</code>             |Control hot billboard ownership, shared light caching, and particle diagnostics. |
 | <code>/vro culling</code>               |View or change vertical and horizontal terrain culling.        |
 | <code>/vro lights</code>                |View or change the optional dynamic-light engine.              |
 | <code>/vro create status</code>         |Show Create, Flywheel, shader-path, and culling status.        |

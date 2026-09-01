@@ -27,6 +27,22 @@ The STB stitcher also preserves ModernFix's credit to
 `f21364cd3d178aef863458a2faa1f5718a4e350d` under LGPL-3.0. The complete LGPL
 text is retained in the repository and runnable jar.
 
+### Flerovium - MoePus and contributors
+
+- Source: [MoePus/Flerovium](https://github.com/MoePus/Flerovium)
+- Adapted source revision: `240f08c62745d57bf200440c9932e0c7907bc5f7`
+- Adapted source path:
+  `src/main/java/com/moepus/flerovium/mixins/Particle/SingleQuadParticleMixin.java`
+- License: LGPL-3.0-only
+
+VRO adapts Flerovium's camera-left/up particle billboard calculation, which
+avoids rotating four separate corners with a quaternion. VRO isolates the
+calculation in a reusable allocation-free geometry helper, adds a portable
+Minecraft writer, reuses Rubidium/Embeddium's packed particle writer when it
+is installed, and supplies hot ownership/configuration and diagnostics.
+Flerovium remains the owner when installed, preventing duplicate output. The
+complete upstream LGPL text is retained in the repository and runnable jar.
+
 ### Forge Update Notifier - HoYin1600p
 
 - Source: [HoYin1600p/Forge-Update-Notifier](https://github.com/HoYin1600p/Forge-Update-Notifier)
@@ -124,8 +140,10 @@ caches; the additions are deliberately limited to data 4.2.2 does not own.
 
 Particle Core demonstrated the value of avoiding repeated particle-light
 queries. VRO independently implemented a narrow Forge 1.18.2 cache keyed by
-client tick and block position. It does not port Particle Core's renderer,
-asynchronous ticking, movement caching, spawn suppression, or particle limits.
+client tick and block position, then extended it with a bounded same-position
+cache shared by particles during that tick. It does not port Particle Core's
+renderer, asynchronous ticking, movement caching, spawn suppression, or
+particle limits.
 
 ### BadOptimizations - Thosea
 

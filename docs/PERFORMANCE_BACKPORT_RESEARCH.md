@@ -144,23 +144,24 @@ caching, render-distance and count controls, asynchronous ticking, and spawn
 suppression. Forge support begins after 1.18.2, which makes the safe mechanisms
 real backport candidates.
 
-The recommended first implementation is deliberately narrower:
+The first retained implementation is deliberately narrower:
 
-- Skip a particle only when its finite bounding box is outside the current
-  camera frustum.
-- Preserve particles with custom, invalid, or effectively infinite bounds.
 - Cache packed light for a particle within a client tick when its block position
   has not changed.
+- Share identical block-light results among particles in the same block during
+  that tick, with a strict bound.
+- Build ordinary billboard geometry from the camera left/up basis while
+  preserving roll, UV order, color, light, and renderer-native packed writes.
 - Invalidate naturally on position/tick change, world change, and renderer
   teardown.
-- Provide a particle-class compatibility blacklist.
 - Do not reduce particle count, distance, or spawn rate.
 - Do not move particle ticking to worker threads.
 
-Embeddium already accelerates particle vertex submission. The proposed work
-should avoid duplicating that and focus only on visibility and repeated light
-queries. This is especially relevant to the previously profiled mob-spawner and
-rapid-death-particle workload.
+Embeddium already accelerates particle vertex submission. VRO reuses that
+packed writer when present and can yield the full billboard path back to the
+renderer without restarting. A portable writer covers clients without that
+renderer. Forge 1.18.2 already performs its established particle-frustum step,
+so VRO does not add another visible-particle culling policy.
 
 Asynchronous particle ticking is deferred. Modded particles commonly touch
 world, entity, texture, and renderer state that is not thread-safe, so it has a
@@ -490,10 +491,12 @@ not be silently bypassed by VRO.
 
 ### Flerovium
 
-Flerovium's fast entity and particle vertex writers substantially overlap
-Embeddium. Its reusable ideas reduce to particle frustum checks and light
-caching, already covered by the safer Particle Core proposal. Item-render LOD
-or face culling changes visuals and should not be enabled by default.
+Flerovium's camera-basis particle billboard calculation is now adapted under
+LGPL-3.0-only from commit
+`240f08c62745d57bf200440c9932e0c7907bc5f7`. VRO does not copy Flerovium's
+native-memory writer, entity writer, particle culling, item-render LOD, or face
+culling. Its geometry is paired with VRO's portable output or the installed
+Rubidium/Embeddium packed writer and yields entirely when Flerovium is present.
 
 ## Rejected or Deferred
 
@@ -558,7 +561,7 @@ research input; it does not imply code was copied.
 | FerriteCore | `0cef1f2add1f1329aa6e690e8e292acd625c5c6d` | MIT | Modern branch comparison |
 | FerriteCore model-side compaction | `b63de54a7c40135ba3910608a7f32c263ee29c4f` | MIT | Post-4.2.2 independent VRO candidate |
 | FerriteCore `faceSturdy` deduplication | `187114231d9dd4ed1f843cd78ad00f2f7f503190` | MIT | Post-4.2.2 independent VRO candidate |
-| Flerovium | `69aa397e12b2863672d90b31ca7773f3d7e1fbba` | LGPL-3.0 | Modern Forge renderer reference |
+| Flerovium | `240f08c62745d57bf200440c9932e0c7907bc5f7` | LGPL-3.0-only | Adapted camera-basis particle geometry |
 | Gnetum | `8eb41b5c9399c3bf1864803a96571853674fb475` | LGPL-3.0 | HUD throttling rejected |
 | GPUBooster | `5ed54b4936dac15f1e9f0208037173d241fa428f` | GPL-3.0 | OpenGL lifecycle work deferred |
 | ImmediatelyFast | `ead67a194e5e330d0a410adeec092bd0ca5d19d6` | LGPL-3.0 | Modern branch comparison |

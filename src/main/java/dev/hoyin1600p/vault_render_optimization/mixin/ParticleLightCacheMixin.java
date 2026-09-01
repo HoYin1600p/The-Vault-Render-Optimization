@@ -1,6 +1,8 @@
 package dev.hoyin1600p.vault_render_optimization.mixin;
 
 import dev.hoyin1600p.vault_render_optimization.config.ClientOptimizationConfig;
+import dev.hoyin1600p.vault_render_optimization.client.particle.ParticleDiagnostics;
+import dev.hoyin1600p.vault_render_optimization.client.particle.ParticleSharedLightCache;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.particle.Particle;
 import net.minecraft.client.renderer.LevelRenderer;
@@ -49,12 +51,21 @@ public abstract class ParticleLightCacheMixin {
         long position = BlockPos.asLong(blockX, blockY, blockZ);
         long tick = this.level.getGameTime();
         if (tick == this.vro$lightCacheTick && position == this.vro$lightCachePosition) {
+            ParticleDiagnostics.recordParticleLightHit();
             cir.setReturnValue(this.vro$lightCacheValue);
             return;
         }
 
-        BlockPos blockPos = new BlockPos(blockX, blockY, blockZ);
-        int light = this.level.hasChunkAt(blockPos) ? LevelRenderer.getLightColor(this.level, blockPos) : 0;
+        int light;
+        if (ClientOptimizationConfig.particleSharedLightCache) {
+            light = ParticleSharedLightCache.get(this.level, tick, blockX, blockY, blockZ);
+        } else {
+            BlockPos blockPos = new BlockPos(blockX, blockY, blockZ);
+            light = this.level.hasChunkAt(blockPos)
+                    ? LevelRenderer.getLightColor(this.level, blockPos)
+                    : 0;
+            ParticleDiagnostics.recordLightLookup();
+        }
         this.vro$lightCacheTick = tick;
         this.vro$lightCachePosition = position;
         this.vro$lightCacheValue = light;

@@ -32,6 +32,27 @@ ModernFix's STB atlas stitcher adapts work from GTNewHorizons/lwjgl3ify:
 
 VRO preserves that transitive source and license attribution.
 
+### Flerovium particle billboard geometry
+
+VRO's particle geometry helper and ordinary-particle render injections adapt
+Flerovium's camera-basis billboard calculation.
+
+- Project: Flerovium by MoePus and contributors
+- Source: https://github.com/MoePus/Flerovium
+- Source commit: `240f08c62745d57bf200440c9932e0c7907bc5f7`
+- Source path:
+  `src/main/java/com/moepus/flerovium/mixins/Particle/SingleQuadParticleMixin.java`
+- License: LGPL-3.0-only
+- Adaptation: reusable allocation-free geometry, a renderer-neutral
+  `VertexConsumer` fallback, Rubidium/Embeddium packed-writer integration, hot
+  ownership and configuration, Compare Mode, and diagnostics.
+
+VRO does not include Flerovium's native-memory writer, entity writer, particle
+culling, or other mixins. Flerovium wins ownership when installed. VRO's
+project license remains AGPL-3.0-or-later, and the complete upstream LGPL text
+is retained at `docs/licenses/flerovium-LGPL-3.0.txt` and embedded in the
+runnable jar.
+
 ### Forge Update Notifier
 
 VRO's client update-notification unit under `client/update` is a
@@ -131,7 +152,7 @@ rules.
 - Inspected revision: `1151fe6aca4e1c3b62459de3e3a99ec32af2ac99`
 - License observed at inspection: MIT
 - Design influence: reuse repeated particle light lookups while position and
-  client tick are unchanged.
+  client tick are unchanged and share identical same-tick block-light results.
 
 VRO does not port Particle Core's particle suppression, distance limits,
 asynchronous ticking, movement cache, or renderer implementation. Forge 1.18.2

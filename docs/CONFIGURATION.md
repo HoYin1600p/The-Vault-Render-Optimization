@@ -84,13 +84,25 @@ source provenance and ownership rules.
 | Key | Default | Purpose |
 | --- | --- | --- |
 | `render_fast_paths.particle_light_cache` | `true` | Reuses unchanged particle light during one client tick |
+| `render_fast_paths.particle_shared_light_cache` | `true` | Shares a bounded light result among particles in the same block and tick |
+| `render_fast_paths.particle_billboard_fast_path` | `true` | Builds ordinary particle corners from the camera left/up basis |
+| `render_fast_paths.particle_billboard_owner` | `AUTO` | Chooses `AUTO`, `RENDERER`, or `VRO` ownership for ordinary billboards |
+| `render_fast_paths.particle_diagnostics` | `false` | Collects queue classes, render/tick timing, writer, and light-cache counters |
 | `render_fast_paths.skip_empty_particle_render` | `true` | Avoids particle renderer setup when all queues are empty |
 | `render_fast_paths.skip_empty_toast_render` | `true` | Avoids toast renderer work when no toast is active |
 | `render_fast_paths.skip_empty_debug_render` | `true` | Avoids debug renderer work when supported overlays are inactive |
 
-Particle lighting subclasses that replace the normal light method retain their
-own behavior. VRO does not reduce particle counts or move particle work to
-another thread.
+`AUTO` selects VRO's geometry and uses Rubidium/Embeddium's packed writer when
+available. `RENDERER` yields the complete render call to Rubidium/Embeddium;
+without a compatible renderer it safely falls back to VRO. `VRO` explicitly
+selects VRO. Flerovium remains the external owner whenever it is installed.
+
+The billboard, owner, shared-light, and diagnostics settings are hot through
+`/vro particles`. Particle subclasses that replace the normal render or light
+method retain their own behavior. VRO does not reduce particle counts, cull
+on-screen particles, or move particle work to another thread. Diagnostics are
+off by default because class-level queue accounting is intended for profiling,
+not everyday play.
 
 ## Client tick fast paths
 

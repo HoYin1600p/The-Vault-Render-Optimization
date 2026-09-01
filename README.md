@@ -20,8 +20,9 @@ modify server gameplay. The remote server does not need the mod.
 - Caches expensive Vault gear, armor, tool-model, ability HUD, and event
   lookups that would otherwise repeat during rendering.
 - Avoids client-only entity collision work in crowded mob-processing areas.
-- Reuses safe particle-light and renderer lookups and skips renderer setup when
-  there is nothing to draw.
+- Builds ordinary particle billboards from the camera basis, reuses packed
+  Rubidium/Embeddium output when available, shares safe same-tick light
+  results, and skips renderer setup when there is nothing to draw.
 - Reduces retained block-state and baked-model memory beyond FerriteCore 4.2.2.
 - Adds eleven ModernFix-derived render/model improvements with per-feature
   ownership, compatibility gates, and safe coexistence with ModernFix and the
@@ -96,6 +97,10 @@ VRO also applies conservative optimizations outside Vault-specific code:
 
 - reuse a particle's block-light value while it remains in the same block and
   client tick;
+- share bounded block-light results among particles occupying the same block
+  during that tick;
+- build ordinary particle corners directly from the camera's left/up basis,
+  avoiding four quaternion rotations while retaining roll and visible output;
 - skip particle renderer setup when every retained queue is empty;
 - skip toast rendering when no toast is queued, visible, or transitioning;
 - skip the completed tutorial's empty tick when no timed tutorial toast exists;
@@ -299,6 +304,11 @@ for upgrades, removal, optional-mod coexistence, and issue isolation.
 | `/vro updates` | Reports whether update checks are enabled and which update types may be shown. |
 | `/vro updates on\|off` | Enables or disables update checks immediately and saves the setting. |
 | `/vro updates critical\|all` | Shows only critical updates, or opts into all update notices. |
+| `/vro particles` | Reports particle ownership, hot options, and diagnostics. |
+| `/vro particles billboards on\|off` | Hot-enables or disables VRO's camera-basis billboard geometry. |
+| `/vro particles owner auto\|renderer\|vro` | Hot-selects VRO or renderer ownership; `renderer` yields to Rubidium/Embeddium when present. |
+| `/vro particles shared_light on\|off` | Hot-controls the bounded same-tick shared light cache. |
+| `/vro particles diagnostics on\|off\|reset` | Controls queue, timing, writer, and light-cache measurement. |
 | `/vro culling` | Reports vertical and horizontal terrain-culling settings. |
 | `/vro culling vertical on\|off\|<distance>` | Changes vertical section culling immediately. |
 | `/vro culling horizontal on\|off\|<distance>` | Changes horizontal section culling immediately. |
@@ -339,6 +349,8 @@ The complete option and coexistence reference is in
 - Player renderer lookup behavior is not replaced.
 - Renderer caches are discarded on resource reload.
 - Particle subclasses with custom or full-bright lighting keep their own path.
+- Ordinary particle billboard options and ownership can be changed without a
+  client restart. Flerovium retains ownership when installed.
 - No asynchronous rendering or particle ticking is introduced.
 - Network packets, server gameplay, and server collision decisions are not
   modified. Create contraption meshes may be divided into equivalent render
@@ -351,6 +363,7 @@ The complete option and coexistence reference is in
 | --- | --- |
 | [Installation](docs/INSTALLATION.md) | Install, upgrade, coexistence, removal, and reporting |
 | [Configuration](docs/CONFIGURATION.md) | Every option, default, command, and immediate behavior |
+| [Particle optimizations](docs/PARTICLE_OPTIMIZATIONS.md) | Billboard ownership, light caches, diagnostics, and safety boundaries |
 | [Testing](docs/TESTING.md) | Compare Mode and repeatable benchmark procedure |
 | [Performance validation](docs/PERFORMANCE_VALIDATION.md) | Four-client measured results and limitations |
 | [Release notes 0.4.0](docs/releases/0.4.0.md) | Current release, including configurable update notices |

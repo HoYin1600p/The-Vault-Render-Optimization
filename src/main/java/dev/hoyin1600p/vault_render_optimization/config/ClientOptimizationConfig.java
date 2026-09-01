@@ -6,6 +6,7 @@ import dev.hoyin1600p.vault_render_optimization.cache.VaultGearRenderCache;
 import dev.hoyin1600p.vault_render_optimization.cache.VaultToolRenderCache;
 import dev.hoyin1600p.vault_render_optimization.client.update.UpdateNoticeFilter;
 import dev.hoyin1600p.vault_render_optimization.client.update.UpdateNoticeService;
+import dev.hoyin1600p.vault_render_optimization.client.particle.ParticleBillboardOwner;
 import java.util.EnumMap;
 import java.util.Map;
 import net.minecraftforge.common.ForgeConfigSpec;
@@ -22,6 +23,10 @@ public final class ClientOptimizationConfig {
     private static final ForgeConfigSpec.BooleanValue UPDATE_CHECKS;
     private static final ForgeConfigSpec.EnumValue<UpdateNoticeFilter> UPDATE_NOTICE_FILTER;
     private static final ForgeConfigSpec.BooleanValue PARTICLE_LIGHT_CACHE;
+    private static final ForgeConfigSpec.BooleanValue PARTICLE_SHARED_LIGHT_CACHE;
+    private static final ForgeConfigSpec.BooleanValue PARTICLE_BILLBOARD_FAST_PATH;
+    private static final ForgeConfigSpec.EnumValue<ParticleBillboardOwner> PARTICLE_BILLBOARD_OWNER;
+    private static final ForgeConfigSpec.BooleanValue PARTICLE_DIAGNOSTICS;
     private static final ForgeConfigSpec.BooleanValue EMPTY_PARTICLE_RENDER_SKIP;
     private static final ForgeConfigSpec.BooleanValue EMPTY_TOAST_RENDER_SKIP;
     private static final ForgeConfigSpec.BooleanValue INACTIVE_TUTORIAL_SKIP;
@@ -53,6 +58,10 @@ public final class ClientOptimizationConfig {
     private static volatile UpdateNoticeFilter updateFilter = UpdateNoticeFilter.CRITICAL;
 
     public static volatile boolean particleLightCache = true;
+    public static volatile boolean particleSharedLightCache = true;
+    public static volatile boolean particleBillboardFastPath = true;
+    public static volatile ParticleBillboardOwner particleBillboardOwner = ParticleBillboardOwner.AUTO;
+    public static volatile boolean particleDiagnostics = false;
     public static volatile boolean emptyParticleRenderSkip = true;
     public static volatile boolean emptyToastRenderSkip = true;
     public static volatile boolean inactiveTutorialSkip = true;
@@ -121,6 +130,31 @@ public final class ClientOptimizationConfig {
         PARTICLE_LIGHT_CACHE = builder
                 .comment("Cache unchanged particle light lookups for one client tick.")
                 .define("particle_light_cache", true);
+        PARTICLE_SHARED_LIGHT_CACHE = builder
+                .comment(
+                        "Share light results between particles occupying the same block during one client tick.",
+                        "This remains bounded and is cleared when the client level or game tick changes."
+                )
+                .define("particle_shared_light_cache", true);
+        PARTICLE_BILLBOARD_FAST_PATH = builder
+                .comment(
+                        "Build ordinary particle billboards from the camera's left/up basis instead of rotating four corners.",
+                        "Particles with custom render methods are unchanged. This option can be changed while the game is running."
+                )
+                .define("particle_billboard_fast_path", true);
+        PARTICLE_BILLBOARD_OWNER = builder
+                .comment(
+                        "Select who renders ordinary particle billboards: AUTO, RENDERER, or VRO.",
+                        "AUTO selects VRO's geometry and uses an installed renderer's packed writer.",
+                        "RENDERER yields to Rubidium/Embeddium when available; VRO forces VRO's compatible path."
+                )
+                .defineEnum("particle_billboard_owner", ParticleBillboardOwner.AUTO);
+        PARTICLE_DIAGNOSTICS = builder
+                .comment(
+                        "Collect particle queue, render/tick timing, writer, and light-cache counters.",
+                        "Disabled by default because class-level diagnostics add measurement overhead."
+                )
+                .define("particle_diagnostics", false);
         EMPTY_PARTICLE_RENDER_SKIP = builder
                 .comment("Skip particle renderer setup when every particle queue is empty.")
                 .define("skip_empty_particle_render", true);
@@ -323,6 +357,30 @@ public final class ClientOptimizationConfig {
         horizontalSectionDistance = distance;
     }
 
+    public static void setParticleBillboardFastPath(boolean enabled) {
+        PARTICLE_BILLBOARD_FAST_PATH.set(enabled);
+        PARTICLE_BILLBOARD_FAST_PATH.save();
+        particleBillboardFastPath = enabled;
+    }
+
+    public static void setParticleBillboardOwner(ParticleBillboardOwner owner) {
+        PARTICLE_BILLBOARD_OWNER.set(owner);
+        PARTICLE_BILLBOARD_OWNER.save();
+        particleBillboardOwner = owner;
+    }
+
+    public static void setParticleSharedLightCache(boolean enabled) {
+        PARTICLE_SHARED_LIGHT_CACHE.set(enabled);
+        PARTICLE_SHARED_LIGHT_CACHE.save();
+        particleSharedLightCache = enabled;
+    }
+
+    public static void setParticleDiagnostics(boolean enabled) {
+        PARTICLE_DIAGNOSTICS.set(enabled);
+        PARTICLE_DIAGNOSTICS.save();
+        particleDiagnostics = enabled;
+    }
+
     public static void setDynamicLights(boolean enabled) {
         DYNAMIC_LIGHTS.set(enabled);
         DYNAMIC_LIGHTS.save();
@@ -396,6 +454,10 @@ public final class ClientOptimizationConfig {
         UpdateNoticeService.setEnabled(updateChecks);
         UpdateNoticeService.setFilter(updateFilter);
         particleLightCache = PARTICLE_LIGHT_CACHE.get();
+        particleSharedLightCache = PARTICLE_SHARED_LIGHT_CACHE.get();
+        particleBillboardFastPath = PARTICLE_BILLBOARD_FAST_PATH.get();
+        particleBillboardOwner = PARTICLE_BILLBOARD_OWNER.get();
+        particleDiagnostics = PARTICLE_DIAGNOSTICS.get();
         emptyParticleRenderSkip = EMPTY_PARTICLE_RENDER_SKIP.get();
         emptyToastRenderSkip = EMPTY_TOAST_RENDER_SKIP.get();
         inactiveTutorialSkip = INACTIVE_TUTORIAL_SKIP.get();

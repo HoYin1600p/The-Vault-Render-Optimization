@@ -1,6 +1,6 @@
 # Source provenance audit
 
-Audit date: August 28, 2026
+Audit date: August 31, 2026
 
 This audit answers whether VRO's released behavior was copied, adapted,
 independently implemented after research, or written from profiling and
@@ -8,13 +8,17 @@ compatibility work inside this project.
 
 ## Conclusion
 
-VRO is not wholly clean-room code. Four groups are explicit adaptations:
+VRO is not wholly clean-room code. Seven groups are explicit adaptations:
 
 1. the client update-notification unit adapts the MIT Forge Update Notifier;
-2. the learned-ability list cache adapts Unobtanium's AGPL implementation;
-3. the client collision mixins adapt Entity Collision FPS Fix's CC0
+2. eleven render and graphics backports adapt ModernFix's LGPL implementation;
+3. particle billboard geometry adapts Flerovium's LGPL implementation;
+4. the Flywheel/Oculus bridge adapts Iris & Oculus Flywheel Compat's MIT
    implementation;
-4. simple-model face-list compaction and block-state `faceSturdy` array
+5. the learned-ability list cache adapts Unobtanium's AGPL implementation;
+6. the client collision mixins adapt Entity Collision FPS Fix's CC0
+   implementation;
+7. simple-model face-list compaction and block-state `faceSturdy` array
    canonicalization adapt later FerriteCore MIT implementations to the
    Minecraft 1.18.2 data layouts not covered by FerriteCore 4.2.2.
 
@@ -22,12 +26,14 @@ The Unobtanium adaptation is why VRO is distributed under
 AGPL-3.0-or-later. Attribution alone would not have been sufficient while the
 project remained marked All Rights Reserved.
 
-The generic particle and render fast paths were independently written after
-studying Particle Core and BadOptimizations. The world cleanup was independently
-written after Unobtanium identified the affected static maps. Section-distance
-culling and dynamic lighting were independently implemented after studying
-Better Fps - Render Distance and Dynamic Lights Reforged respectively. No
-No third-party mod jar, decompiled class, or Vault Hunters class is bundled in
+The particle light caches and empty render fast paths were independently
+written after studying Particle Core and BadOptimizations; the billboard
+geometry is the separately documented Flerovium adaptation. The world cleanup
+was independently written after Unobtanium identified the affected static
+maps. Section-distance culling and dynamic lighting were independently
+implemented after studying Better Fps - Render Distance and Dynamic Lights
+Reforged respectively. No third-party mod jar, decompiled class, or Vault
+Hunters class is bundled in
 VRO. The notifier is a documented package-relocated source adaptation from its
 MIT integration repository.
 
@@ -43,6 +49,8 @@ MIT integration repository.
 | Learned ability-list cache | Adapted code | Unobtanium `7bf6a658`, contributor `radimous`, AGPL-3.0-or-later |
 | Damage-number formatter reuse | Original VRO implementation | Client allocation profile and Vault's existing formatter |
 | Elixir-orb number render-state isolation | Original VRO compatibility fix | In-game visual regression and installed Vault particle API |
+| Ordinary particle billboard geometry | Adapted code | Flerovium `240f08c`, LGPL-3.0-only; VRO adds portable/packed writers and hot ownership |
+| Shared same-tick particle-light cache | Independent design adaptation | Particle Core `1151fe6`, MIT; bounded VRO-owned primitive cache |
 | Vault event-listener snapshot | Original VRO implementation | Initial VRO commit `bd9bd73`; invalidation refined in later VRO commits |
 | Biome listener cache in HoYin Unobtanium fork | Downstream from VRO | Unobtanium fork commit `00d1837` postdates VRO's implementation |
 | Client wall/push skips | Adapted code | Entity Collision FPS Fix `cc16e184`, CC0-1.0 |
@@ -64,6 +72,8 @@ MIT integration repository.
 | Xaero stale cache-write crash guard | Original VRO compatibility fix | Client crash trace and installed Xaero cache lifecycle behavior |
 | Compare Mode, configuration, coexistence plugin | Original VRO implementation | VRO benchmark and compatibility requirements |
 | Four-pack compatibility build | Original VRO build tooling | Locally installed supported Vault API baselines |
+| ModernFix render/graphics backports | Adapted code | Exact per-feature provenance in `docs/MODERNFIX_RENDER_BACKPORTS.md`, LGPL-3.0-or-later |
+| Flywheel/Oculus shader bridge | Adapted code | Iris & Oculus Flywheel Compat `7a981f9`, MIT |
 
 ## Forge Update Notifier adaptation
 
@@ -146,6 +156,8 @@ describe a shipped relationship.
 - Keep `LICENSE`, `CREDITS.md`, and `THIRD_PARTY_NOTICES.md` in the source
   release.
 - Keep `LICENSE` and `THIRD_PARTY_NOTICES.md` embedded in the runnable jar.
+- Keep the exact Flerovium, ModernFix, Forge Update Notifier, and Iris/Flywheel
+  compatibility license texts embedded in the runnable jar.
 - Publish complete corresponding source for every distributed VRO build under
   AGPL-3.0-or-later.
 - Preserve exact source revisions and contributor names in future release

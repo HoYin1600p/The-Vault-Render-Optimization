@@ -6,6 +6,8 @@ import dev.hoyin1600p.vault_render_optimization.backport.ModernFixOwnership;
 import dev.hoyin1600p.vault_render_optimization.backport.RenderBackportFeature;
 import dev.hoyin1600p.vault_render_optimization.backport.RenderBackportCompatibility;
 import dev.hoyin1600p.vault_render_optimization.backport.RenderBackportOwnershipRegistry;
+import dev.hoyin1600p.vault_render_optimization.client.particle.ParticleOptimizationState;
+import dev.hoyin1600p.vault_render_optimization.client.particle.ParticleMixinSelection;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import net.minecraftforge.fml.loading.FMLLoader;
@@ -109,6 +111,8 @@ public final class VaultRenderOptimizationMixinPlugin implements IMixinConfigPlu
     private boolean witherStormModLoaded;
     private boolean rubidiumLoaded;
     private boolean embeddiumLoaded;
+    private boolean sodiumLoaded;
+    private boolean fleroviumLoaded;
     private boolean ctmCompatible;
 
     @Override
@@ -122,6 +126,8 @@ public final class VaultRenderOptimizationMixinPlugin implements IMixinConfigPlu
             witherStormModLoaded = isModLoaded("witherstormmod");
             rubidiumLoaded = isModLoaded("rubidium");
             embeddiumLoaded = isModLoaded("embeddium");
+            sodiumLoaded = isModLoaded("sodium");
+            fleroviumLoaded = isModLoaded("flerovium");
             ctmCompatible = hasVersion("ctm", "1.18.2-1.1.5+5");
         } catch (RuntimeException | LinkageError failure) {
             modDiscoveryFailed = true;
@@ -131,6 +137,11 @@ public final class VaultRenderOptimizationMixinPlugin implements IMixinConfigPlu
                     failure
             );
         }
+
+        ParticleOptimizationState.configureEnvironment(
+                !modDiscoveryFailed && (rubidiumLoaded || embeddiumLoaded || sodiumLoaded),
+                !modDiscoveryFailed && fleroviumLoaded
+        );
 
         BootstrapRenderBackportConfig.capture();
         RenderBackportOwnershipRegistry.initialize(
@@ -172,6 +183,22 @@ public final class VaultRenderOptimizationMixinPlugin implements IMixinConfigPlu
         if (simpleName.equals("ParticleLightCacheMixin")
                 && PARTICLE_LIGHT_CACHE_MOD_IDS.stream().anyMatch(this::isModLoaded)) {
             return false;
+        }
+
+        if (simpleName.equals("SodiumSingleQuadParticleMixin")) {
+            return ParticleMixinSelection.rendererPath(
+                    modDiscoveryFailed,
+                    rubidiumLoaded || embeddiumLoaded || sodiumLoaded,
+                    fleroviumLoaded
+            );
+        }
+
+        if (simpleName.equals("SingleQuadParticleMixin")) {
+            return ParticleMixinSelection.portablePath(
+                    modDiscoveryFailed,
+                    rubidiumLoaded || embeddiumLoaded || sodiumLoaded,
+                    fleroviumLoaded
+            );
         }
 
         if (SECTION_CULLING_MIXINS.contains(simpleName)) {

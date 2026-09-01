@@ -41,7 +41,7 @@ VRO automatically avoids duplicate mixins when these mods are present:
 | Entity Collision FPS Fix | Leaves client collision work to the standalone mod |
 | BadOptimizations | Leaves equivalent empty-work and renderer lookup paths to it |
 | Particle Core | Leaves particle-light caching to it |
-| Flerovium | Leaves particle-light caching to it |
+| Flerovium | Leaves particle-light caching and ordinary billboard rendering to it |
 | Better Fps - Render Distance | Leaves terrain-distance culling to it |
 | Dynamic Lights Reforged | Leaves all dynamic-light behavior to it |
 

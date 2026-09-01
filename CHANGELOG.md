@@ -19,6 +19,16 @@ and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
   diagnostics with immutable owner/reason reporting.
 - Added a repository-owned provenance ledger and embedded the complete
   ModernFix LGPL-3.0-or-later license in the runnable jar.
+- Added Flerovium-derived camera-basis particle billboard geometry with a
+  portable vanilla writer and a packed Rubidium/Embeddium writer. Ordinary
+  visible particles retain their four vertices, UVs, colors, light, and roll.
+- Added a bounded per-tick light cache shared by particles in the same block.
+  This sits behind the existing subclass-safe per-particle light cache.
+- Added hot `/vro particles` billboard, renderer-ownership, shared-light, and
+  diagnostics controls. Diagnostics report queue classes, particle render/tick
+  timings, writer ownership, cache hits, actual light lookups, and empty work.
+- Added focused particle geometry and ownership tests, exact Flerovium source
+  provenance, and the complete LGPL-3.0 license in the runnable jar.
 
 ### Compatibility
 
@@ -29,6 +39,9 @@ and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 - Preserved the Fluidlogged chunk-meshing exclusion; Isometric Renders and
   Cracker's Wither Storm Mod BufferBuilder exclusions; legacy Rubidium versus
   Embeddium model-data gate; and the exact CTM `1.18.2-1.1.5+5` layout gate.
+- Particle billboard ownership can hot-yield to Rubidium/Embeddium. VRO yields
+  automatically to Flerovium, leaves custom particle render overrides intact,
+  and does not cull visible particles or tick them asynchronously.
 
 ### Verification
 
