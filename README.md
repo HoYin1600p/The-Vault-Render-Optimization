@@ -317,6 +317,8 @@ for upgrades, removal, optional-mod coexistence, and issue isolation.
 | `/vro particles diagnostics on\|off\|reset` | Controls queue, timing, writer, and light-cache measurement. |
 | `/vro mana_stealer` | Reports the isolated Mana Stealer visual prototype state and quality targets. |
 | `/vro mana_stealer on\|off` | Hot-enables or disables the prototype particle replacement. |
+| `/vro mana_stealer preview <ticks> [x y z]` | Simulates the complete client-only visual/audio effect at the targeted block or an explicit center. |
+| `/vro mana_stealer preview stop` | Stops preview replenishment; already-live orbs finish naturally. |
 | `/vro mana_stealer sigil on\|off` | Retains or replaces Vault's legacy ground sigil. |
 | `/vro culling` | Reports vertical and horizontal terrain-culling settings. |
 | `/vro culling vertical on\|off\|<distance>` | Changes vertical section culling immediately. |

@@ -34,6 +34,11 @@ and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
   synchronized spherical radius, with bounded 80/52/20 particle-quality
   targets, ordinary culling/depth behavior, a separate config, hot controls,
   two narrow Vault-only mixins, and focused kinematics/population tests.
+- Added `/vro mana_stealer preview <ticks> [x y z]` for a variable-duration,
+  client-only radius-6 simulation of the complete replacement visuals and
+  audio, with targeted-block, relative-coordinate, and early-stop support.
+- Packaged the isolated Mana Stealer mixin configuration in the production JAR
+  manifest so the real-trap visual replacement can activate.
 
 ### Compatibility
 

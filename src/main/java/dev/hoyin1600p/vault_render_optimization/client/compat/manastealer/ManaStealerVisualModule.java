@@ -35,6 +35,7 @@ public final class ManaStealerVisualModule {
         modEventBus.addListener(ManaStealerVisualConfig::onReloading);
         modEventBus.addListener(ManaStealerVisualModule::onParticleFactories);
         MinecraftForge.EVENT_BUS.addListener(ManaStealerVisualController::onClientTick);
+        MinecraftForge.EVENT_BUS.addListener(ManaStealerPreviewController::onClientTick);
     }
 
     private static void onParticleFactories(ParticleFactoryRegisterEvent event) {

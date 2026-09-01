@@ -83,6 +83,11 @@ particle range, configured radius, duration, mana drain, server targeting, or
 sound. See [Mana Stealer visual prototype](MANA_STEALER_VISUAL_PROTOTYPE.md)
 for the exact removal boundary and required in-game checks.
 
+Use `/vro mana_stealer preview <ticks> [x y z]` to render a client-only
+radius-6 visual/audio simulation at the targeted block or an exact coordinate.
+Use `/vro mana_stealer preview stop` to stop replenishing it. The command never
+creates a trap entity or applies mana drain.
+
 ## ModernFix render backports
 
 These restart-bound options default on. VRO applies one only when its exact

@@ -21,14 +21,43 @@ public final class ManaStealerVisualController {
         return ManaStealerVisualConfig.active() && ManaStealerOrbParticle.spritesReady();
     }
 
+    public static boolean canPreview() {
+        return ManaStealerOrbParticle.spritesReady();
+    }
+
     public static void maintain(Entity entity, float configuredRadius) {
         if (!(entity.level instanceof ClientLevel level) || configuredRadius <= 0.0F) {
             return;
         }
 
-        Tracker tracker = TRACKERS.compute(entity.getId(), (id, existing) -> {
+        maintain(entity.getId(), level, entity.getX(), entity.getY(), entity.getZ(), configuredRadius);
+    }
+
+    static void maintainPreview(
+            int sourceId,
+            ClientLevel level,
+            double centerX,
+            double centerY,
+            double centerZ,
+            float configuredRadius
+    ) {
+        if (configuredRadius <= 0.0F || !canPreview()) {
+            return;
+        }
+        maintain(sourceId, level, centerX, centerY, centerZ, configuredRadius);
+    }
+
+    private static void maintain(
+            int sourceId,
+            ClientLevel level,
+            double centerX,
+            double centerY,
+            double centerZ,
+            float configuredRadius
+    ) {
+        Tracker tracker = TRACKERS.compute(sourceId, (id, existing) -> {
             if (existing == null || existing.level != level) {
-                return new Tracker(level, entity.getId());
+                return new Tracker(level, sourceId);
             }
             return existing;
         });
@@ -39,7 +68,7 @@ public final class ManaStealerVisualController {
         int missing = target - tracker.live.size();
         int spawnCount = Math.min(Math.max(0, missing), ManaStealerVisualConfig.maxSpawnsPerTick());
         for (int index = 0; index < spawnCount; index++) {
-            spawn(entity, configuredRadius, tracker);
+            spawn(centerX, centerY, centerZ, configuredRadius, tracker);
         }
     }
 
@@ -95,7 +124,13 @@ public final class ManaStealerVisualController {
         );
     }
 
-    private static void spawn(Entity entity, float radius, Tracker tracker) {
+    private static void spawn(
+            double centerX,
+            double centerY,
+            double centerZ,
+            float radius,
+            Tracker tracker
+    ) {
         long sequence = tracker.sequence++;
         long seed = ((long) tracker.entityId << 32) ^ sequence;
         ManaStealerOrbKinematics.Sample sample = ManaStealerOrbKinematics.sample(
@@ -103,9 +138,6 @@ public final class ManaStealerVisualController {
                 ManaStealerVisualConfig.minimumSpeed(),
                 ManaStealerVisualConfig.maximumSpeed()
         );
-        double centerX = entity.getX();
-        double centerY = entity.getY();
-        double centerZ = entity.getZ();
         double startX = Math.fma(sample.x(), radius, centerX);
         double startY = Math.fma(sample.y(), radius, centerY);
         double startZ = Math.fma(sample.z(), radius, centerZ);

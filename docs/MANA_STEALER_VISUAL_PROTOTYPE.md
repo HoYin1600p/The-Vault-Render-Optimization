@@ -76,6 +76,27 @@ config/vault_render_optimization-mana-stealer-client.toml
 apply immediately. Existing composite orbs finish their current trips after
 the module is disabled.
 
+The client-only preview command simulates the complete replacement visual and
+its beacon activation/ambient audio without creating a Vault entity, draining
+mana, or changing the world:
+
+```text
+/vro mana_stealer preview <ticks>
+/vro mana_stealer preview <ticks> <x> <y> <z>
+/vro mana_stealer preview stop
+```
+
+Without coordinates, the center is one block above the center of the targeted
+block, matching the real chest trap. If no block is targeted, it is four blocks
+ahead of the player's eyes. Explicit coordinates are the exact sphere center
+and support normal Minecraft relative-coordinate syntax such as `~ ~2 ~`.
+Preview duration is caller-selected, while its radius remains the real 6.0
+blocks. The preview intentionally works even when replacement ownership is off
+so it can be used for visual testing; it still honors particle quality and the
+prototype's population, speed, size, and refill configuration. Starting a new
+preview replaces the active replenishment source. Stopping or reaching the
+requested duration lets already-live orbs finish naturally.
+
 ## Removal boundary
 
 The module can be removed by deleting its `client.compat.manastealer` and
