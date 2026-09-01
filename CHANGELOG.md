@@ -29,6 +29,11 @@ and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
   timings, writer ownership, cache hits, actual light lookups, and empty work.
 - Added focused particle geometry and ownership tests, exact Flerovium source
   provenance, and the complete LGPL-3.0 license in the runnable jar.
+- Added an isolated development-only Mana Stealer visual prototype: one
+  composite object draws pale-blue and navy inward-moving orbs across the
+  synchronized spherical radius, with bounded 80/52/20 particle-quality
+  targets, ordinary culling/depth behavior, a separate config, hot controls,
+  two narrow Vault-only mixins, and focused kinematics/population tests.
 
 ### Compatibility
 

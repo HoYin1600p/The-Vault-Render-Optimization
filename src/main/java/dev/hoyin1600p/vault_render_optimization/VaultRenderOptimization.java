@@ -1,6 +1,7 @@
 package dev.hoyin1600p.vault_render_optimization;
 
 import dev.hoyin1600p.vault_render_optimization.client.VaultRenderOptimizationCommand;
+import dev.hoyin1600p.vault_render_optimization.client.compat.manastealer.ManaStealerVisualModule;
 import dev.hoyin1600p.vault_render_optimization.client.create.FlywheelBackendManager;
 import dev.hoyin1600p.vault_render_optimization.client.lighting.DynamicLightEngine;
 import dev.hoyin1600p.vault_render_optimization.client.lighting.DynamicLightResourceLoader;
@@ -16,6 +17,8 @@ import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.config.ModConfig;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
+import net.minecraftforge.fml.loading.FMLEnvironment;
+import net.minecraftforge.api.distmarker.Dist;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -32,6 +35,9 @@ public final class VaultRenderOptimization {
         );
 
         IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
+        if (FMLEnvironment.dist == Dist.CLIENT) {
+            ManaStealerVisualModule.register(modEventBus);
+        }
         modEventBus.addListener(ClientOptimizationConfig::onLoading);
         modEventBus.addListener(ClientOptimizationConfig::onReloading);
         modEventBus.addListener(this::onClientSetup);

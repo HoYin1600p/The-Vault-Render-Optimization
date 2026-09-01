@@ -63,6 +63,7 @@ mixin {
     config "mixins.${mod_id}.flywheel.json"
     config "mixins.${mod_id}.oculus.json"
     config "mixins.${mod_id}.flywheel_forge.json"
+    config "mixins.${mod_id}.mana_stealer.json"
 }
 
 repositories {

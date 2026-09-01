@@ -1,0 +1,15 @@
+{
+  "required": false,
+  "minVersion": "0.8",
+  "package": "dev.hoyin1600p.vault_render_optimization.mixin.manastealer",
+  "plugin": "dev.hoyin1600p.vault_render_optimization.mixin.manastealer.ManaStealerMixinPlugin",
+  "compatibilityLevel": "JAVA_17",
+  "refmap": "mixins.vault_render_optimization.refmap.json",
+  "client": [
+    "ManaStealerEntityParticlesMixin",
+    "ManaStealerRendererMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

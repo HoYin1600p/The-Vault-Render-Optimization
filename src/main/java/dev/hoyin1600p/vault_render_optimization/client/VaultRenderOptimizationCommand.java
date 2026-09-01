@@ -5,6 +5,7 @@ import com.mojang.brigadier.arguments.IntegerArgumentType;
 import dev.hoyin1600p.vault_render_optimization.backport.RenderBackportOwnershipRegistry;
 import dev.hoyin1600p.vault_render_optimization.client.lighting.DynamicLightEngine;
 import dev.hoyin1600p.vault_render_optimization.client.particle.ParticleCommand;
+import dev.hoyin1600p.vault_render_optimization.client.compat.manastealer.ManaStealerCommand;
 import dev.hoyin1600p.vault_render_optimization.client.create.CreateDiagnostics;
 import dev.hoyin1600p.vault_render_optimization.client.update.UpdateNoticeFilter;
 import dev.hoyin1600p.vault_render_optimization.compat.flywheelshader.FlywheelShaderCompatState;
@@ -49,6 +50,7 @@ public final class VaultRenderOptimizationCommand {
                         .then(Commands.literal("backports")
                                 .executes(context -> reportBackports(context.getSource())))
                         .then(ParticleCommand.build())
+                        .then(ManaStealerCommand.build())
                         .then(Commands.literal("culling")
                                 .executes(context -> reportCulling(context.getSource()))
                                 .then(Commands.literal("vertical")

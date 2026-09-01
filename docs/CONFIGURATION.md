@@ -6,6 +6,12 @@ VRO stores client settings in:
 config/vault_render_optimization-client.toml
 ```
 
+The removable Mana Stealer visual prototype deliberately uses a separate file:
+
+```text
+config/vault_render_optimization-mana-stealer-client.toml
+```
+
 All release fast paths are enabled by default. Forge reloads changes made by
 VRO's command immediately. For manual file edits, stop Minecraft first.
 
@@ -52,6 +58,30 @@ mesh is rebuilt for the newly selected condition.
 The ModernFix-derived startup backports below read Compare Mode before mixin
 selection and stay disabled for that entire JVM launch. Restart after changing
 Compare Mode when those paths are part of a comparison.
+
+The Mana Stealer visual prototype is runtime-owned rather than startup-owned.
+Compare Mode immediately restores Vault's original dust and ground sigil; its
+already-live composite orbs finish without replenishment.
+
+## Mana Stealer visual prototype
+
+| Key | Default | Purpose |
+| --- | ---: | --- |
+| `mana_stealer_visual_prototype.enabled` | `true` | Replaces the legacy dust with composite inward-moving orbs |
+| `mana_stealer_visual_prototype.replace_ground_sigil` | `true` | Hides the legacy line sigil while the replacement is active |
+| `mana_stealer_visual_prototype.all_population` | `80` | Live object target on All particles |
+| `mana_stealer_visual_prototype.decreased_population` | `52` | Live object target on Decreased particles |
+| `mana_stealer_visual_prototype.minimal_population` | `20` | Live object target on Minimal particles |
+| `mana_stealer_visual_prototype.max_spawns_per_tick` | `8` | Maximum population deficit filled per tick |
+| `mana_stealer_visual_prototype.minimum_speed` | `0.125` | Minimum inward speed in blocks/tick |
+| `mana_stealer_visual_prototype.maximum_speed` | `0.2` | Maximum inward speed in blocks/tick |
+| `mana_stealer_visual_prototype.outer_diameter` | `0.3` | Initial outer diameter in blocks |
+| `mana_stealer_visual_prototype.inner_diameter_ratio` | `0.46` | Inner navy diameter divided by outer diameter |
+
+This development module changes one Vault trap's visuals but not its gameplay,
+particle range, configured radius, duration, mana drain, server targeting, or
+sound. See [Mana Stealer visual prototype](MANA_STEALER_VISUAL_PROTOTYPE.md)
+for the exact removal boundary and required in-game checks.
 
 ## ModernFix render backports
 
