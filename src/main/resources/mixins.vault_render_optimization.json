@@ -7,6 +7,7 @@
   "refmap": "mixins.vault_render_optimization.refmap.json",
   "client": [
     "backport.embeddium.occlusion.BlockOcclusionCacheMixin",
+    "backport.embeddium.buffer.BufferBuilderVertexSinkMixin",
     "backport.modernfix.client.buffer.RenderBuffersMixin",
     "backport.modernfix.client.ctm.ResourceUtilMixin",
     "backport.modernfix.client.entity.CubeDefinitionMixin",
