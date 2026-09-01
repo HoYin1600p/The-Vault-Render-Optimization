@@ -10,6 +10,8 @@ class RendererTransferOwnershipResolverTest {
         assertStatus(RendererTransferStatus.APPLIED, RendererTransferFeature.ADJACENT_BLOCK_OCCLUSION,
                 false, true, RendererFamily.EMBEDDIUM, "0.3.18+mc1.18.2", null);
         assertStatus(RendererTransferStatus.APPLIED, RendererTransferFeature.ADJACENT_BLOCK_OCCLUSION,
+                false, true, RendererFamily.EMBEDDIUM, "0.3.19+mc1.18.2", null);
+        assertStatus(RendererTransferStatus.APPLIED, RendererTransferFeature.ADJACENT_BLOCK_OCCLUSION,
                 false, true, RendererFamily.RUBIDIUM, "0.5.6", null);
     }
 
@@ -17,6 +19,8 @@ class RendererTransferOwnershipResolverTest {
     void unknownVersionsAndAmbiguousRenderersFailClosed() {
         assertStatus(RendererTransferStatus.BLOCKED, RendererTransferFeature.ADJACENT_BLOCK_OCCLUSION,
                 false, true, RendererFamily.EMBEDDIUM, "0.3.19", null);
+        assertStatus(RendererTransferStatus.BLOCKED, RendererTransferFeature.ADJACENT_BLOCK_OCCLUSION,
+                false, true, RendererFamily.EMBEDDIUM, "0.3.20+mc1.18.2", null);
         assertStatus(RendererTransferStatus.BLOCKED, RendererTransferFeature.ADJACENT_BLOCK_OCCLUSION,
                 false, true, RendererFamily.AMBIGUOUS, null, null);
     }
