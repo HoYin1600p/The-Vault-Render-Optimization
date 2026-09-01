@@ -8,6 +8,10 @@ import dev.hoyin1600p.vault_render_optimization.backport.RenderBackportCompatibi
 import dev.hoyin1600p.vault_render_optimization.backport.RenderBackportOwnershipRegistry;
 import dev.hoyin1600p.vault_render_optimization.client.particle.ParticleOptimizationState;
 import dev.hoyin1600p.vault_render_optimization.client.particle.ParticleMixinSelection;
+import dev.hoyin1600p.vault_render_optimization.renderertransfer.BootstrapRendererTransferConfig;
+import dev.hoyin1600p.vault_render_optimization.renderertransfer.RendererFamily;
+import dev.hoyin1600p.vault_render_optimization.renderertransfer.RendererTransferFeature;
+import dev.hoyin1600p.vault_render_optimization.renderertransfer.RendererTransferOwnershipRegistry;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import net.minecraftforge.fml.loading.FMLLoader;
@@ -114,6 +118,9 @@ public final class VaultRenderOptimizationMixinPlugin implements IMixinConfigPlu
     private boolean sodiumLoaded;
     private boolean fleroviumLoaded;
     private boolean ctmCompatible;
+    private boolean codeChickenLibLoaded;
+    private RendererFamily rendererFamily = RendererFamily.NONE;
+    private String rendererVersion;
 
     @Override
     public void onLoad(String mixinPackage) {
@@ -129,6 +136,11 @@ public final class VaultRenderOptimizationMixinPlugin implements IMixinConfigPlu
             sodiumLoaded = isModLoaded("sodium");
             fleroviumLoaded = isModLoaded("flerovium");
             ctmCompatible = hasVersion("ctm", "1.18.2-1.1.5+5");
+            codeChickenLibLoaded = isModLoaded("codechickenlib");
+            rendererFamily = resolveRendererFamily();
+            rendererVersion = rendererFamily == RendererFamily.EMBEDDIUM
+                    ? modVersion("embeddium")
+                    : rendererFamily == RendererFamily.RUBIDIUM ? modVersion("rubidium") : null;
         } catch (RuntimeException | LinkageError failure) {
             modDiscoveryFailed = true;
             loadingModList = null;
@@ -156,6 +168,22 @@ public final class VaultRenderOptimizationMixinPlugin implements IMixinConfigPlu
                 "ModernFix render-backport ownership: {}",
                 RenderBackportOwnershipRegistry.summary()
         );
+        BootstrapRendererTransferConfig.capture();
+        RendererTransferOwnershipRegistry.initialize(
+                physicalClient,
+                BootstrapRenderBackportConfig.compareMode(),
+                BootstrapRendererTransferConfig::enabled,
+                rendererFamily,
+                rendererVersion,
+                this::probeRendererTransferCompatibility
+        );
+        VaultRenderOptimization.LOGGER.info(
+                "Renderer-transfer ownership: {}",
+                RendererTransferOwnershipRegistry.summary()
+        );
+        RendererTransferOwnershipRegistry.reportLines().forEach(
+                line -> VaultRenderOptimization.LOGGER.info("Renderer-transfer decision: {}", line)
+        );
     }
 
     @Override
@@ -165,6 +193,11 @@ public final class VaultRenderOptimizationMixinPlugin implements IMixinConfigPlu
 
     @Override
     public boolean shouldApplyMixin(String targetClassName, String mixinClassName) {
+        RendererTransferFeature rendererTransfer = RendererTransferFeature.forMixin(mixinClassName);
+        if (rendererTransfer != null) {
+            return RendererTransferOwnershipRegistry.applies(rendererTransfer, mixinClassName);
+        }
+
         RenderBackportFeature renderBackport = RenderBackportFeature.forMixin(mixinClassName);
         if (renderBackport != null) {
             return RenderBackportOwnershipRegistry.vroOwns(renderBackport);
@@ -323,6 +356,55 @@ public final class VaultRenderOptimizationMixinPlugin implements IMixinConfigPlu
                 embeddiumLoaded,
                 ctmCompatible
         );
+    }
+
+    private String probeRendererTransferCompatibility(RendererTransferFeature feature) {
+        if (modDiscoveryFailed || loadingModList == null) {
+            return "renderer discovery failed";
+        }
+        if (feature == RendererTransferFeature.DIRECT_CCL_RENDERER_LOOKUP) {
+            if (!codeChickenLibLoaded) {
+                return "CodeChickenLib is not installed";
+            }
+            if (!resourceExists("org.embeddedt.embeddium.compat.ccl.CCLCompat")) {
+                return "the validated Embeddium CodeChickenLib bridge is absent";
+            }
+        }
+        return null;
+    }
+
+    private RendererFamily resolveRendererFamily() {
+        if (embeddiumLoaded && rubidiumLoaded) {
+            return RendererFamily.AMBIGUOUS;
+        }
+        if (embeddiumLoaded) {
+            return RendererFamily.EMBEDDIUM;
+        }
+        if (rubidiumLoaded) {
+            return RendererFamily.RUBIDIUM;
+        }
+        return RendererFamily.NONE;
+    }
+
+    private String modVersion(String modId) {
+        if (loadingModList == null) {
+            return null;
+        }
+        return loadingModList.getMods().stream()
+                .filter(mod -> modId.equals(mod.getModId()))
+                .map(mod -> mod.getVersion().toString())
+                .findFirst()
+                .orElse(null);
+    }
+
+    private boolean resourceExists(String className) {
+        try {
+            return loadingModList != null
+                    && loadingModList.findResource(className.replace('.', '/') + ".class") != null;
+        } catch (RuntimeException | LinkageError failure) {
+            VaultRenderOptimization.LOGGER.debug("Could not probe optional renderer class {}", className, failure);
+            return false;
+        }
     }
 
     private boolean hasVersion(String modId, String expectedVersion) {
