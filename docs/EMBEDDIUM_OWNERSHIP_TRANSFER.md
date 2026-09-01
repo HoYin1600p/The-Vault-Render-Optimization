@@ -25,11 +25,11 @@ Mode while narrow correctness guards remain active. Startup diagnostics report
 |---|---|---|---|---|---|
 | VRO-EMB-04 | Adjacent-position block occlusion | `1021ad6` | Unit ownership/config tests; stock renderer layouts; five-pack build; live stock-Embeddium startup/rebuild pressure; operator-confirmed custom-block and Cake-room behavior | None before source-removal control | No |
 | VRO-EMB-05 | Null-buffer vertex sink | `782542d` | Guard unit test; stock renderer layouts; five-pack build; live Create/Flywheel startup, reload, dimension, and flight smoke tests; inherited stable-fork gameplay | None before source-removal control | No |
-| VRO-EMB-10 | Direct CCL renderer lookup | `4f26ac5` | Embeddium-only ownership gate; CCL lambda layout; five-pack build; inherited stable-fork behavior | Guarded VRO load check with CCL | No |
+| VRO-EMB-10 | Direct CCL renderer lookup | `4f26ac5` | Embeddium-only ownership gate; CCL lambda layout; five-pack build; CCL-present empty-registry pack scan | A CCL renderer consumer or deterministic fixture | No |
 | VRO-EMB-02 | Bounded vertex-buffer retention | `332d75d` | Growth/overflow/retention unit tests; stock layouts; five-pack build; live rebuild/flight pressure; inherited gameplay sessions up to 12 hours | None before source-removal control | No |
 | VRO-EMB-03 | Preemptive async arena growth | `7d88682` | Required/headroom/ceiling unit tests; stock layouts; five-pack build; live causal isolation and fixed-increment regression; inherited gameplay sessions up to 12 hours | None before source-removal control | No |
 | VRO-EMB-06 | Smooth non-luminous fluid lighting | `2f1f320` | Lighting policy and reload-cache tests; stock layouts; five-pack build; resource reload and dimension cycle; operator-confirmed fluid behavior | None before source-removal control | No |
-| VRO-EMB-08 | Chunk-layer shader-color reset | `b0f9d8b` | Compare-mode ownership test; stock layouts; five-pack build; shader reload with Oculus, Create/Flywheel, and Botania loaded; inherited stable-fork behavior | Guarded VRO load check with DH | No |
+| VRO-EMB-08 | Chunk-layer shader-color reset | `b0f9d8b` | Compare-mode ownership test; stock layouts; five-pack build; shader reload with Oculus, Create/Flywheel, and Botania loaded; more than one month of stable-fork DH use | Post-removal VRO/DH load control | No |
 | VRO-EMB-01 | Chunk rebuild de-duplication | `06273e4` | Pending strength/task-state tests; separate renderer layouts; five-pack build; 49,152 block mutations, block entities, fluids, and mass mob-kill pressure; operator-confirmed Cake-room and stable-fork gameplay | None before source-removal control | No |
 
 Source provenance is the repository ledger at
@@ -102,9 +102,10 @@ Minecraft `1.18.2`:
   modification, failed buffer upload, or out-of-memory error.
 
 CodeChickenLib and Distant Horizons were not installed in this instance, and
-fullscreen mode prevented CMA's windowed-only resize action. Those paths remain
-for a compatible guarded-load check. The prior full Create/Flywheel and stable-
-fork campaigns do not need to be repeated.
+fullscreen mode prevented CMA's windowed-only resize action. The prior full
+Create/Flywheel and stable-fork campaigns do not need to be repeated. Distant
+Horizons is coupled to the custom Embeddium build, so its VRO load control must
+follow removal of the transferred implementation from that fork.
 
 ## Inherited long-session validation
 
@@ -122,3 +123,21 @@ room behavior from the stable fork. Those behaviors are accepted together with
 VRO's source-equivalence, guarded-load, structural, and live startup checks.
 Rows remain `No` under source removal only because the required control run
 after the original fork implementations are removed has not yet occurred.
+
+## CodeChickenLib lookup scope
+
+VRO-EMB-10 is not a particle optimization. It was added to the Embeddium fork
+on 2026-06-15 in source commit `25e57646` and transferred to VRO in `4f26ac5`.
+It affects only CodeChickenLib custom block and fluid renderers. The original
+compatibility path scanned every registered block or fluid renderer entry for
+each lookup; the transferred path retrieves the renderer directly from the
+registry-delegate map, then preserves the same `canHandleBlock` check and bridge
+render call. Global renderers retain their required ordered scan.
+
+The local Wolds Vaults 0.33.0 pack contains CodeChickenLib, but a bytecode-
+reference scan found no other installed JAR referencing `ICCBlockRenderer` or
+`BlockRenderingRegistry`. The compatibility layer can therefore load while the
+optimized registries remain empty. That proves dormant startup compatibility,
+not rendering behavior. VRO-EMB-10 remains the only transferred path needing a
+specific consumer or deterministic fixture before its source implementation is
+eligible for removal.
