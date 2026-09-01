@@ -35,7 +35,10 @@ public enum RendererTransferFeature {
     CHUNK_REBUILD_DEDUPLICATION(
             "VRO-EMB-01", "chunkRebuildDeduplication", "Chunk rebuild de-duplication",
             false, true, true,
-            List.of("EmbeddiumRenderSectionMixin", "RubidiumRenderSectionMixin", "RenderSectionManagerMixin")
+            List.of(
+                    "EmbeddiumRenderSectionMixin", "EmbeddiumWrappedTaskAccess",
+                    "RubidiumRenderSectionMixin", "RenderSectionManagerMixin"
+            )
     );
 
     private final String id;

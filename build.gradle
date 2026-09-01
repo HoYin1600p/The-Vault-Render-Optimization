@@ -177,8 +177,8 @@ dependencies {
     annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
 
     compileOnly files(vaultModJarFile)
-    compileOnly files(renderModJarFile)
     compileOnly files(embeddiumCompileJarFile)
+    compileOnly files(renderModJarFile)
     compileOnly files(vaultLootBeamsJarFile)
     compileOnly files(iSpawnerJarFile)
     compileOnly files(architecturyJarFile)
