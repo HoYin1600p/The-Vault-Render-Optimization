@@ -13,6 +13,7 @@
     "backport.embeddium.ccl.CCLCompatMixin",
     "backport.embeddium.fluid.FluidRendererMixin",
     "backport.embeddium.fluid.FluidLightingReloadMixin",
+    "backport.embeddium.state.SodiumWorldRendererColorResetMixin",
     "backport.modernfix.client.buffer.RenderBuffersMixin",
     "backport.modernfix.client.ctm.ResourceUtilMixin",
     "backport.modernfix.client.entity.CubeDefinitionMixin",
