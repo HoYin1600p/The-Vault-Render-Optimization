@@ -12,6 +12,8 @@
 - Coalesce equivalent chunk rebuild requests without losing important updates.
 - Recognize Embeddium's same-JAR Rubidium compatibility identity without
   misclassifying stock Embeddium as two installed renderers.
+- Apply the adjacent-position face-hiding correction with the exact stock
+  Embeddium and Rubidium invocation signature.
 
 All entries remain unreleased and require the compatibility and in-game checks
 recorded in `docs/EMBEDDIUM_OWNERSHIP_TRANSFER.md`.

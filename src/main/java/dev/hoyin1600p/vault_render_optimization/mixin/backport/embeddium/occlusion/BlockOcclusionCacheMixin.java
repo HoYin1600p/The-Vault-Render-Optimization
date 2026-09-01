@@ -7,9 +7,6 @@ package dev.hoyin1600p.vault_render_optimization.mixin.backport.embeddium.occlus
 
 import me.jellysquid.mods.sodium.client.render.occlusion.BlockOcclusionCache;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
-import net.minecraft.world.level.BlockGetter;
-import net.minecraft.world.level.block.state.BlockState;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -31,13 +28,7 @@ public abstract class BlockOcclusionCacheMixin {
             index = 1,
             require = 1
     )
-    private BlockPos vro$useAdjacentPosition(
-            BlockPos ignored,
-            BlockState selfState,
-            BlockGetter view,
-            BlockPos pos,
-            Direction facing
-    ) {
+    private BlockPos vro$useAdjacentPosition(BlockPos ignored) {
         return this.cpos;
     }
 }
