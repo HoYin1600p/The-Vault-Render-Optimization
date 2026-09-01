@@ -14,6 +14,12 @@
   misclassifying stock Embeddium as two installed renderers.
 - Apply the adjacent-position face-hiding correction with the exact stock
   Embeddium and Rubidium invocation signature.
+- Select smooth fluid lighting through a render-entry state capture and the
+  exact one-argument stock renderer invocation signature.
+- Apply bounded async arena growth through the exact one-argument stock resize
+  invocation signature while retaining the requested upload size.
+- Keep async arena headroom as a fixed, capped increment derived from initial
+  capacity, avoiding unsafe compounding growth during heavy chunk uploads.
 
 All entries remain unreleased and require the compatibility and in-game checks
 recorded in `docs/EMBEDDIUM_OWNERSHIP_TRANSFER.md`.

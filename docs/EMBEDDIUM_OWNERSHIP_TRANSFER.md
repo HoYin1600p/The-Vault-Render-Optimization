@@ -40,7 +40,7 @@ plus the per-feature source commits recorded in the table and source headers.
 
 Completed on 2026-09-01 without installing into a Prism instance:
 
-- `gradlew clean build`: 92 tests, 0 failures, 0 errors, 0 skipped.
+- `gradlew clean build`: 97 tests, 0 failures, 0 errors, 0 skipped.
 - `scripts/verify-renderer-transfer-layouts.ps1`: PASS against stock Embeddium
   `0.3.18+mc1.18.2` and Rubidium `0.5.6`, including their distinct active-task
   fields and the Embeddium-only CodeChickenLib bridge.
@@ -48,7 +48,7 @@ Completed on 2026-09-01 without installing into a Prism instance:
   Asgard-SMP, Wolds Vaults 0.32.2, Wolds Vaults 0.33.0, and Vault Hunters
   Third Edition, followed by a clean universal build and all unit tests.
 - Built artifact: `build/libs/vault_render_optimization.0.4.0.jar`, SHA-256
-  `5274DDD2E7F219CFDD585B21C8BC118BD7036CE42A8909881D9DE3B73670F75B`.
+  `33D4BDA755BDB143DA258BA572A71FCCE585B05470DE3F0BBE6FBC18E050F2E2`.
 - JAR inspection confirmed every renderer-transfer mixin/helper plus
   `META-INF/LICENSE`, `META-INF/THIRD_PARTY_NOTICES.md`, and the retained LGPL
   text. The JAR was not copied into tracked `libs`.

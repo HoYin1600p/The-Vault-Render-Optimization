@@ -276,7 +276,10 @@ larger one-off allocation is trimmed at the next build start and `destroy()`
 continues to free it deterministically.
 
 `embeddium_transfers.asyncArenaGrowthDivisor` defaults to `6`; a smaller value
-reserves more VRAM headroom and reduces repeated arena compactions.
+reserves more VRAM headroom and reduces repeated arena compactions. The
+increment is derived once from each arena's initial capacity, matching the
+source fork's fixed-increment behavior instead of compounding with every
+resize.
 `asyncArenaMaxHeadroomMib` defaults to `64` and caps only speculative headroom,
 never bytes required by the current upload. This control is independent of
 vertex-buffer retention.

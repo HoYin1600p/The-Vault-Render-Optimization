@@ -20,13 +20,32 @@ import net.minecraft.core.Direction;
 import net.minecraft.world.level.BlockAndTintGetter;
 import net.minecraft.world.level.material.FluidState;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyArg;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(value = FluidRenderer.class, remap = false)
 public abstract class FluidRendererMixin {
+    @Unique
+    private LightMode vro$fluidLightingMode = LightMode.FLAT;
+
+    @Inject(method = "render", at = @At("HEAD"), require = 1)
+    private void vro$prepareFluidLighting(
+            BlockAndTintGetter world,
+            FluidState fluidState,
+            BlockPos pos,
+            BlockPos offset,
+            ChunkModelBuilder buffers,
+            CallbackInfoReturnable<Boolean> callback
+    ) {
+        this.vro$fluidLightingMode = SmoothFluidLightingCache.usesSmoothLighting(
+                fluidState.getType(), Minecraft.useAmbientOcclusion()
+        ) ? LightMode.SMOOTH : LightMode.FLAT;
+    }
+
     @ModifyArg(
             method = "render",
             at = @At(
@@ -36,17 +55,8 @@ public abstract class FluidRendererMixin {
             index = 0,
             require = 1
     )
-    private LightMode vro$selectFluidLighting(
-            LightMode original,
-            BlockAndTintGetter world,
-            FluidState fluidState,
-            BlockPos pos,
-            BlockPos offset,
-            ChunkModelBuilder buffers
-    ) {
-        return SmoothFluidLightingCache.usesSmoothLighting(
-                fluidState.getType(), Minecraft.useAmbientOcclusion()
-        ) ? LightMode.SMOOTH : LightMode.FLAT;
+    private LightMode vro$selectFluidLighting(LightMode original) {
+        return this.vro$fluidLightingMode;
     }
 
     @Inject(method = "calculateQuadColors", at = @At("HEAD"), require = 1)
