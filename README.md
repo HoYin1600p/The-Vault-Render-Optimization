@@ -4,7 +4,7 @@
 [![Forge](https://img.shields.io/badge/Forge-40.3.11%2B-e04e39)](https://files.minecraftforge.net/net/minecraftforge/forge/index_1.18.2.html)
 [![Environment](https://img.shields.io/badge/Environment-Client-4b8bbe)](#requirements-and-support)
 [![License](https://img.shields.io/badge/License-AGPL--3.0--or--later-blue.svg)](LICENSE)
-[![Release](https://img.shields.io/badge/Release-0.4.0-7b68ee)](docs/releases/0.4.0.md)
+[![Release](https://img.shields.io/badge/Release-0.4.1--candidate-7b68ee)](docs/releases/0.4.1.md)
 
 The Vault Render Optimization (VRO) is a client-side Minecraft Forge 1.18.2
 mod that reduces repeated rendering and client simulation work in Vault
@@ -33,6 +33,9 @@ bounded composite orbs. The remote server does not need the mod.
 - Adds eleven ModernFix-derived render/model improvements with per-feature
   ownership, compatibility gates, and safe coexistence with ModernFix and the
   temporary VH Accelerator overlap.
+- Carries eight guarded Embeddium/Rubidium renderer corrections for chunk
+  rebuild scheduling, bounded native buffers, arena growth, custom face
+  hiding, fluid lighting, shader color, vertex sinks, and CodeChickenLib.
 - Skips terrain sections beyond a configurable vertical render range without
   changing chunk loading or Distant Horizons storage.
 - Releases stale Create Addition and Powah world references after unloads.
@@ -140,6 +143,24 @@ behavior. Use `/vro backports` for the selected owner and reason.
 Exact source commits, upstream copyrights, license terms, and behavioral
 adaptations are documented in
 [ModernFix render-backport provenance](docs/MODERNFIX_RENDER_BACKPORTS.md).
+
+### Embeddium and Rubidium renderer corrections
+
+VRO owns eight independently gated corrections transferred from the supported
+Embeddium stability fork: adjacent-position face hiding, null-buffer vertex
+sinks, direct CodeChickenLib renderer lookup, bounded vertex-buffer retention,
+preemptive but capped arena growth, cached smooth lighting for non-luminous
+fluids, chunk-layer shader-color reset, and equivalent chunk-rebuild
+coalescing.
+
+The corrections target stock Embeddium `0.3.18+mc1.18.2` and Rubidium `0.5.6`.
+Unknown or ambiguous renderer layouts fail closed. Compare Mode yields the
+performance-sensitive paths while retaining narrow correctness fixes. The
+source implementations were removed from the private Embeddium fork after VRO
+completed its single-owner validation, so a supported stack applies each path
+only once. See the
+[ownership-transfer ledger](docs/EMBEDDIUM_OWNERSHIP_TRANSFER.md) for the exact
+features, gates, tests, and accepted compatibility evidence.
 
 ### Memory and terrain distance
 
@@ -290,7 +311,7 @@ different pack files together.
 
 1. Stop Minecraft.
 2. Remove or disable every older VRO jar.
-3. Place `vault_render_optimization.0.4.0.jar` in the instance's `mods`
+3. Place `vault_render_optimization.0.4.1.jar` in the instance's `mods`
    directory.
 4. Keep only one active VRO jar.
 5. Remove Entity Collision FPS Fix only if you want VRO to own that same
@@ -379,7 +400,8 @@ The complete option and coexistence reference is in
 | [Mana Stealer prototype](docs/MANA_STEALER_VISUAL_PROTOTYPE.md) | Removable visual-replacement module, tuning, and validation boundary |
 | [Testing](docs/TESTING.md) | Compare Mode and repeatable benchmark procedure |
 | [Performance validation](docs/PERFORMANCE_VALIDATION.md) | Four-client measured results and limitations |
-| [Release notes 0.4.0](docs/releases/0.4.0.md) | Current release, including configurable update notices |
+| [Release notes 0.4.1](docs/releases/0.4.1.md) | Current release candidate: renderer, model, particle, and Mana Stealer work |
+| [Release notes 0.4.0](docs/releases/0.4.0.md) | Previous published release with configurable update notices |
 | [Release notes 0.3.5](docs/releases/0.3.5.md) | Previous release with dedicated Flywheel shader-pack programs |
 | [Release notes 0.3.4](docs/releases/0.3.4.md) | Create contraption and Flywheel shader rendering |
 | [Release notes 0.3.3](docs/releases/0.3.3.md) | Dynamic-light crash correction |

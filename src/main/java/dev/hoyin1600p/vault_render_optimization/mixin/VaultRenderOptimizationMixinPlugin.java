@@ -101,6 +101,7 @@ public final class VaultRenderOptimizationMixinPlugin implements IMixinConfigPlu
             Map.entry("VaultDamageNumberRendererMixin", "the_vault"),
             Map.entry("VaultEventMixin", "the_vault"),
             Map.entry("VaultMapKeybindMixin", "the_vault"),
+            Map.entry("VaultNativeShaderUniformMixin", "the_vault"),
             Map.entry("VaultLootBeamsCacheAccessor", "vaultlootbeams"),
             Map.entry("VaultLootBeamsLazyTooltipMixin", "vaultlootbeams"),
             Map.entry("XaeroLeveledRegionAccess", "xaeroworldmap"),

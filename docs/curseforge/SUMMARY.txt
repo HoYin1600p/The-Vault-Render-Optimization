@@ -1,1 +1,1 @@
-Client-side Vault Hunters and Create performance with smoother rendering, contraption culling, Flywheel shader support, stability fixes, and configurable update notices.
+Client-side Vault Hunters and Create performance: faster particles, models, chunk rendering, contraption culling, shader support, and stability fixes.

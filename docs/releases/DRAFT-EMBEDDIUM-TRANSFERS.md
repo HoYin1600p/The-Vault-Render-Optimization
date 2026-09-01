@@ -1,4 +1,4 @@
-# Draft changelog: renderer stability transfers
+# Renderer stability transfers included in the 0.4.1 candidate
 
 - Correct custom block face hiding to evaluate the adjacent block at its real
   world position.
@@ -21,5 +21,7 @@
 - Keep async arena headroom as a fixed, capped increment derived from initial
   capacity, avoiding unsafe compounding growth during heavy chunk uploads.
 
-All entries remain unreleased and require the compatibility and in-game checks
-recorded in `docs/EMBEDDIUM_OWNERSHIP_TRANSFER.md`.
+All compatibility, in-game, source-removal, and post-removal single-owner
+checks are complete. The player-facing summary is incorporated into
+`docs/releases/0.4.1.md`; the complete evidence remains in
+`docs/EMBEDDIUM_OWNERSHIP_TRANSFER.md`.

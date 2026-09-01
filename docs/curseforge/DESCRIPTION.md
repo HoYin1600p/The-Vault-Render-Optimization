@@ -16,6 +16,7 @@ VRO can check its raw GitHub update manifest asynchronously and show an update r
 *   Reduces iSpawner display-item work without changing its animation or configured viewing distance.
 *   Resolves the Vault map and Xaero's World Map `M`\-key conflict.
 *   Isolates Vault elixir number rendering so it cannot corrupt later particle colors.
+*   Includes an isolated, hot-toggleable Mana Stealer visual prototype for Remastered: pale-blue/navy orbs move through the real spherical radius and a matching stream connects affected players to the trap. Server drain behavior is unchanged.
 
 ## Create and shader improvements
 
@@ -32,9 +33,17 @@ Use `/vro create status` to see the active Flywheel backend, shader path, and co
 
 *   Reduces client collision work around dense mob farms and rapid kill systems.
 *   Builds ordinary particle billboards from the camera basis, reuses Rubidium/Embeddium packed output, shares same-tick light results, and skips empty particle, toast, tutorial, debug, and renderer setup work without hiding visible effects.
+*   Adapts eleven later ModernFix render/model improvements for chunk meshing, model caches, profile textures, texture stitching, and Forge/CTM concurrency.
+*   Carries eight guarded Embeddium/Rubidium corrections for chunk rebuilds, bounded native buffers, arena growth, custom block faces, fluid lighting, shader color, vertex writers, and optional CodeChickenLib rendering.
 *   Compacts baked-model and block-state data beyond the reductions already present in FerriteCore 4.2.2.
 *   Adds separate vertical and horizontal terrain-section culling. Vertical culling is enabled by default; horizontal culling is optional.
 *   Cleans up retained Create Addition, Powah, Vault Loot Beams, and empty-item references during long sessions and world changes.
+
+## Renderer ownership and safe fallback
+
+VRO applies each backport only when its exact supported target is present and no validated owner is already handling that path. It yields to genuinely active ModernFix features, recognizes Embeddium's same-JAR Rubidium compatibility identity, and blocks unknown or ambiguous renderer layouts instead of guessing.
+
+The supported renderer-transfer baselines are Embeddium `0.3.18+mc1.18.2` and Rubidium `0.5.6`. Compare Mode yields performance-sensitive work while narrow correctness guards remain active. Use `/vro backports` for ModernFix ownership details; renderer-transfer decisions are also reported in the startup log.
 
 ## Stability fixes
 
@@ -55,6 +64,7 @@ Update checks are enabled by default, while displayed update types default to cr
 *   **Environment:** Client only
 *   **Vault Hunters:** Official Third Edition, Remastered, Wolds Vaults, and selected custom 1.18.2 baselines
 *   **Create shader path:** Create 0.5.1.i, Flywheel 0.6.11, Oculus 1.6.x, and supported Rubidium or Embeddium releases
+*   **Renderer-transfer baselines:** Embeddium 0.3.18 and Rubidium 0.5.6
 
 Optional integrations load only when their target mod is present. VRO yields overlapping work when Entity Collision FPS Fix, BadOptimizations, Particle Core, Flerovium, Better Fps - Render Distance, or Dynamic Lights Reforged is installed.
 
@@ -74,7 +84,9 @@ No server installation, world migration, cache deletion, or settings reset is re
 | <code>/vro</code>                       |Show the current Compare Mode state.                           |
 | <code>/vro compare on|off|status</code> |Compare VRO optimizations without restarting Minecraft.        |
 | <code>/vro updates on|off|status|critical|all</code> |Control update checks and choose critical-only or all notices. |
+| <code>/vro backports</code>             |Show the startup owner and reason for each ModernFix-derived backport. |
 | <code>/vro particles</code>             |Control hot billboard ownership, shared light caching, and particle diagnostics. |
+| <code>/vro mana_stealer</code>          |Control or preview the isolated Remastered Mana Stealer visual replacement. |
 | <code>/vro culling</code>               |View or change vertical and horizontal terrain culling.        |
 | <code>/vro lights</code>                |View or change the optional dynamic-light engine.              |
 | <code>/vro create status</code>         |Show Create, Flywheel, shader-path, and culling status.        |
@@ -88,6 +100,9 @@ Crash guards, world cleanup, and map-key compatibility remain active in Compare 
 *   [Issue tracker](https://github.com/HoYin1600p/The-Vault-Render-Optimization/issues)
 *   [Installation and compatibility](https://github.com/HoYin1600p/The-Vault-Render-Optimization/blob/main/docs/INSTALLATION.md)
 *   [Create shader compatibility](https://github.com/HoYin1600p/The-Vault-Render-Optimization/blob/main/docs/FLYWHEEL_SHADER_COMPAT.md)
+*   [ModernFix backports](https://github.com/HoYin1600p/The-Vault-Render-Optimization/blob/main/docs/MODERNFIX_RENDER_BACKPORTS.md)
+*   [Embeddium/Rubidium ownership transfers](https://github.com/HoYin1600p/The-Vault-Render-Optimization/blob/main/docs/EMBEDDIUM_OWNERSHIP_TRANSFER.md)
+*   [Particle optimizations](https://github.com/HoYin1600p/The-Vault-Render-Optimization/blob/main/docs/PARTICLE_OPTIMIZATIONS.md)
 *   [Complete changelog](https://github.com/HoYin1600p/The-Vault-Render-Optimization/blob/main/CHANGELOG.md)
 *   [Credits](https://github.com/HoYin1600p/The-Vault-Render-Optimization/blob/main/CREDITS.md)
 *   [Third-party notices](https://github.com/HoYin1600p/The-Vault-Render-Optimization/blob/main/THIRD_PARTY_NOTICES.md)

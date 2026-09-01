@@ -50,6 +50,14 @@ and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 - Separated each Mana Stealer orb's navy core toward the camera by only 1/4096
   of a block, preventing coplanar translucent-layer depth fighting without a
   perceptible gap between the two layers.
+- Added eight independently gated Embeddium/Rubidium renderer corrections:
+  adjacent-position face hiding, null-buffer vertex sinks, direct
+  CodeChickenLib renderer lookup, bounded vertex-buffer retention, capped
+  asynchronous arena growth, cached smooth lighting for non-luminous fluids,
+  chunk-layer shader-color reset, and equivalent chunk-rebuild coalescing.
+- Added renderer-family ownership diagnostics and restart-bound
+  `[embeddium_transfers]` controls. Supported stock Embeddium and Rubidium
+  layouts are selected explicitly; unknown or ambiguous stacks fail closed.
 
 ### Compatibility
 
@@ -63,11 +71,33 @@ and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 - Particle billboard ownership can hot-yield to Rubidium/Embeddium. VRO yields
   automatically to Flerovium, leaves custom particle render overrides intact,
   and does not cull visible particles or tick them asynchronously.
+- Correctly recognizes Embeddium's same-JAR Rubidium compatibility identity as
+  one renderer while continuing to block genuinely separate renderer mods.
+- Preserves the distinct stock Embeddium and Rubidium method/field layouts for
+  face hiding, fluid lighting, arena growth, and active rebuild tasks.
+
+### Fixed
+
+- Bound The Vault's native grayscale shader only while its startup values are
+  uploaded, then restored the previously active OpenGL program. This removes
+  the two `No active program` errors without changing normal shader ownership.
+- Fixed the adjacent-position face-hiding call used by custom blocks.
+- Prevented optimized vertex sinks from dereferencing a missing backing buffer
+  during loading transitions.
+- Bounded retained native vertex buffers and speculative renderer-arena
+  headroom so long sessions cannot retain or compound pathological peaks.
+- Preserved smooth lighting for non-luminous fluids, reset leaked shader color
+  after chunk layers, and suppressed duplicate non-sort chunk rebuilds without
+  losing stronger updates.
 
 ### Verification
 
 - Ported the focused traversal, duplicate-allocation, cube-cache, and
   profile-texture cache tests and added ownership/config bootstrap coverage.
+- Completed the renderer-transfer unit and structural suite, five-pack build
+  matrix, stock Embeddium live pressure tests, accepted long-session evidence,
+  and post-removal single-owner control recorded in
+  `docs/EMBEDDIUM_OWNERSHIP_TRANSFER.md`.
 
 ## [0.4.0] - 2026-08-28
 
