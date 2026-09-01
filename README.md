@@ -320,6 +320,7 @@ for upgrades, removal, optional-mod coexistence, and issue isolation.
 | `/vro mana_stealer preview <ticks> [x y z]` | Simulates the complete client-only visual/audio effect at the targeted block or an explicit center. |
 | `/vro mana_stealer preview stop` | Stops preview replenishment; already-live orbs finish naturally. |
 | `/vro mana_stealer sigil on\|off` | Retains or replaces Vault's legacy ground sigil. |
+| `/vro mana_stealer stream on\|off` | Hot-controls the affected-player blue-orb stream to the trap. |
 | `/vro culling` | Reports vertical and horizontal terrain-culling settings. |
 | `/vro culling vertical on\|off\|<distance>` | Changes vertical section culling immediately. |
 | `/vro culling horizontal on\|off\|<distance>` | Changes horizontal section culling immediately. |

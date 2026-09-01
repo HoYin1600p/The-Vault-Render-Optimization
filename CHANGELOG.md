@@ -39,6 +39,17 @@ and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
   audio, with targeted-block, relative-coordinate, and early-stop support.
 - Packaged the isolated Mana Stealer mixin configuration in the production JAR
   manifest so the real-trap visual replacement can activate.
+- Increased the Mana Stealer prototype's blue saturation and layer opacity so
+  its full-bright outer shell and navy core remain visibly blue at distance.
+- Doubled the revised Mana Stealer orb size at the outer spawn radius, increased
+  its near-center size by 25 percent, and accelerated inward travel by 30 percent.
+- Added a batched Mana Drain stream of matching pale-blue/navy composite orbs
+  from each affected player's upper torso to the trap. It mirrors the spherical
+  radius boundary, targets approximately half of Vault Arcane's original live
+  density, scales with particle quality, and can be hot-toggled independently.
+- Separated each Mana Stealer orb's navy core toward the camera by only 1/4096
+  of a block, preventing coplanar translucent-layer depth fighting without a
+  perceptible gap between the two layers.
 
 ### Compatibility
 

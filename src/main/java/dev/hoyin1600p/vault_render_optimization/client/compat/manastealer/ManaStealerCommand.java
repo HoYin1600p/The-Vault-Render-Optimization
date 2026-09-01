@@ -36,7 +36,13 @@ public final class ManaStealerCommand {
                         .then(Commands.literal("on")
                                 .executes(context -> setSigil(context.getSource(), false)))
                         .then(Commands.literal("off")
-                                .executes(context -> setSigil(context.getSource(), true))));
+                                .executes(context -> setSigil(context.getSource(), true))))
+                .then(Commands.literal("stream")
+                        .executes(context -> report(context.getSource()))
+                        .then(Commands.literal("on")
+                                .executes(context -> setStream(context.getSource(), true)))
+                        .then(Commands.literal("off")
+                                .executes(context -> setStream(context.getSource(), false))));
     }
 
     private static int setEnabled(CommandSourceStack source, boolean enabled) {
@@ -46,6 +52,11 @@ public final class ManaStealerCommand {
 
     private static int setSigil(CommandSourceStack source, boolean replace) {
         ManaStealerVisualConfig.setReplaceGroundSigil(replace);
+        return report(source);
+    }
+
+    private static int setStream(CommandSourceStack source, boolean enabled) {
+        ManaStealerVisualConfig.setDrainStreamEnabled(enabled);
         return report(source);
     }
 
@@ -108,6 +119,11 @@ public final class ManaStealerCommand {
                                 + ", active " + state(ManaStealerVisualController.canReplace())
                                 + ", legacy sigil "
                                 + (ManaStealerVisualConfig.replaceGroundSigil() ? "replaced" : "retained")
+                                + ", player drain stream " + state(ManaStealerVisualConfig.drainStreamEnabled())
+                                + ", stream targets at 6 blocks All/Decreased/Minimal "
+                                + streamTarget(ManaStealerDrainStreamPolicy.ALL) + "/"
+                                + streamTarget(ManaStealerDrainStreamPolicy.DECREASED) + "/"
+                                + streamTarget(ManaStealerDrainStreamPolicy.MINIMAL)
                                 + ", live targets All/Decreased/Minimal "
                                 + ManaStealerVisualConfig.allPopulation() + "/"
                                 + ManaStealerVisualConfig.decreasedPopulation() + "/"
@@ -121,5 +137,15 @@ public final class ManaStealerCommand {
 
     private static String state(boolean enabled) {
         return enabled ? "ON" : "OFF";
+    }
+
+    private static int streamTarget(int quality) {
+        return ManaStealerDrainStreamPolicy.visibleOrbCount(
+                6.0D,
+                ManaStealerVisualConfig.drainStreamDensity(),
+                ManaStealerVisualConfig.drainStreamMinimumOrbs(),
+                ManaStealerVisualConfig.drainStreamMaximumOrbs(),
+                quality
+        );
     }
 }

@@ -32,7 +32,7 @@ public final class ManaStealerOrbKinematics {
 
     public static float scale(float progress) {
         float bounded = Math.max(0.0F, Math.min(1.0F, progress));
-        return Math.fma(-0.9F, bounded, 1.0F);
+        return Math.fma(-2.375F, bounded, 2.5F);
     }
 
     private static double unit(long value) {

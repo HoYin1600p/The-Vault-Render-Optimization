@@ -30,7 +30,7 @@ public final class ManaStealerVisualController {
             return;
         }
 
-        maintain(entity.getId(), level, entity.getX(), entity.getY(), entity.getZ(), configuredRadius);
+        maintain(entity.getId(), level, entity.getX(), entity.getY(), entity.getZ(), configuredRadius, false);
     }
 
     static void maintainPreview(
@@ -44,7 +44,7 @@ public final class ManaStealerVisualController {
         if (configuredRadius <= 0.0F || !canPreview()) {
             return;
         }
-        maintain(sourceId, level, centerX, centerY, centerZ, configuredRadius);
+        maintain(sourceId, level, centerX, centerY, centerZ, configuredRadius, true);
     }
 
     private static void maintain(
@@ -53,8 +53,18 @@ public final class ManaStealerVisualController {
             double centerX,
             double centerY,
             double centerZ,
-            float configuredRadius
+            float configuredRadius,
+            boolean preview
     ) {
+        ManaStealerDrainStreamController.maintain(
+                sourceId,
+                level,
+                centerX,
+                centerY,
+                centerZ,
+                configuredRadius,
+                preview
+        );
         Tracker tracker = TRACKERS.compute(sourceId, (id, existing) -> {
             if (existing == null || existing.level != level) {
                 return new Tracker(level, sourceId);

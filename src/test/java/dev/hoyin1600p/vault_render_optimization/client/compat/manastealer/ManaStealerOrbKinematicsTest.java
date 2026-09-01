@@ -41,11 +41,11 @@ class ManaStealerOrbKinematicsTest {
     }
 
     @Test
-    void scaleShrinksContinuouslyToTenPercent() {
-        assertEquals(1.0F, ManaStealerOrbKinematics.scale(0.0F), 1.0E-6F);
-        assertEquals(0.55F, ManaStealerOrbKinematics.scale(0.5F), 1.0E-6F);
-        assertEquals(0.1F, ManaStealerOrbKinematics.scale(1.0F), 1.0E-6F);
-        assertEquals(1.0F, ManaStealerOrbKinematics.scale(-1.0F), 1.0E-6F);
-        assertEquals(0.1F, ManaStealerOrbKinematics.scale(2.0F), 1.0E-6F);
+    void scaleDoublesOuterSizeAndIncreasesCenterSizeByTwentyFivePercent() {
+        assertEquals(2.5F, ManaStealerOrbKinematics.scale(0.0F), 1.0E-6F);
+        assertEquals(1.3125F, ManaStealerOrbKinematics.scale(0.5F), 1.0E-6F);
+        assertEquals(0.125F, ManaStealerOrbKinematics.scale(1.0F), 1.0E-6F);
+        assertEquals(2.5F, ManaStealerOrbKinematics.scale(-1.0F), 1.0E-6F);
+        assertEquals(0.125F, ManaStealerOrbKinematics.scale(2.0F), 1.0E-6F);
     }
 }

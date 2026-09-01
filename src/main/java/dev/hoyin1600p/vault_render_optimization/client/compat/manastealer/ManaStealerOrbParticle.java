@@ -9,19 +9,21 @@ import net.minecraft.client.particle.ParticleRenderType;
 import net.minecraft.client.particle.SpriteSet;
 import net.minecraft.client.particle.TextureSheetParticle;
 import net.minecraft.client.renderer.LightTexture;
+import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.util.Mth;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
 final class ManaStealerOrbParticle extends TextureSheetParticle {
-    private static final float OUTER_RED = 0.84F;
-    private static final float OUTER_GREEN = 0.96F;
-    private static final float OUTER_BLUE = 1.0F;
-    private static final float OUTER_ALPHA = 0.78F;
-    private static final float INNER_RED = 0.035F;
-    private static final float INNER_GREEN = 0.12F;
-    private static final float INNER_BLUE = 0.34F;
-    private static final float INNER_ALPHA = 0.94F;
+    static final float OUTER_RED = 0.39F;
+    static final float OUTER_GREEN = 0.78F;
+    static final float OUTER_BLUE = 1.0F;
+    static final float OUTER_ALPHA = 0.88F;
+    static final float INNER_RED = 0.04F;
+    static final float INNER_GREEN = 0.17F;
+    static final float INNER_BLUE = 0.50F;
+    static final float INNER_ALPHA = 0.98F;
+    static final float INNER_DEPTH_BIAS = 1.0F / 4096.0F;
 
     private static volatile SpriteSet sprites;
 
@@ -68,7 +70,7 @@ final class ManaStealerOrbParticle extends TextureSheetParticle {
         this.yd = 0.0D;
         this.zd = 0.0D;
         this.pickSprite(sprites);
-        this.updateBounds(initialDiameter);
+        this.updateBounds(initialDiameter * ManaStealerOrbKinematics.scale(0.0F));
     }
 
     static void bindSprites(SpriteSet value) {
@@ -77,6 +79,11 @@ final class ManaStealerOrbParticle extends TextureSheetParticle {
 
     static boolean spritesReady() {
         return sprites != null;
+    }
+
+    static TextureAtlasSprite streamSprite() {
+        SpriteSet current = sprites;
+        return current == null ? null : current.get(0, 1);
     }
 
     boolean tickedRecently(long gameTime) {
@@ -113,6 +120,7 @@ final class ManaStealerOrbParticle extends TextureSheetParticle {
         float positionZ = (float) (Mth.lerp(partialTick, this.zo, this.z) - cameraPosition.z());
         Vector3f left = camera.getLeftVector();
         Vector3f up = camera.getUpVector();
+        Vector3f look = camera.getLookVector();
         float progress = Math.min(1.0F, (this.age + partialTick) / (float) this.lifetime);
         float outerRadius = this.initialDiameter * 0.5F * ManaStealerOrbKinematics.scale(progress);
         int light = this.getLightColor(partialTick);
@@ -122,7 +130,10 @@ final class ManaStealerOrbParticle extends TextureSheetParticle {
                 OUTER_RED, OUTER_GREEN, OUTER_BLUE, OUTER_ALPHA, light
         );
         this.writeLayer(
-                consumer, left, up, outerRadius * this.innerRatio, positionX, positionY, positionZ,
+                consumer, left, up, outerRadius * this.innerRatio,
+                positionX - look.x() * INNER_DEPTH_BIAS,
+                positionY - look.y() * INNER_DEPTH_BIAS,
+                positionZ - look.z() * INNER_DEPTH_BIAS,
                 INNER_RED, INNER_GREEN, INNER_BLUE, INNER_ALPHA, light
         );
     }

@@ -35,6 +35,8 @@ public final class ManaStealerVisualModule {
         modEventBus.addListener(ManaStealerVisualConfig::onReloading);
         modEventBus.addListener(ManaStealerVisualModule::onParticleFactories);
         MinecraftForge.EVENT_BUS.addListener(ManaStealerVisualController::onClientTick);
+        MinecraftForge.EVENT_BUS.addListener(ManaStealerDrainStreamController::onClientTick);
+        MinecraftForge.EVENT_BUS.addListener(ManaStealerDrainStreamRenderer::onRenderLevelStage);
         MinecraftForge.EVENT_BUS.addListener(ManaStealerPreviewController::onClientTick);
     }
 
