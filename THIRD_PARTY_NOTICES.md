@@ -6,6 +6,19 @@ mechanism can be reconstructed.
 
 ## Shipped adaptations
 
+### Embeddium stability-fork renderer corrections
+
+VRO contains fresh, optional mixin adaptations of eight renderer corrections
+from HoYin1600p's Embeddium stability fork at transfer-ledger revision
+`7b085088`. Embeddium derives from Sodium and is licensed under LGPL-3.0.
+Each VRO source file records its exact behavioral source commit. The complete
+LGPL terms already retained in `docs/licenses/modernfix-LGPL-3.0-or-later.txt`
+cover LGPL-3.0 redistribution and are embedded in the runnable jar. VRO as a
+whole remains AGPL-3.0-or-later.
+
+Complete implementation and validation status is recorded in
+`docs/EMBEDDIUM_OWNERSHIP_TRANSFER.md`.
+
 ### ModernFix render and graphics backports
 
 VRO contains selected source adapted from ModernFix for Minecraft Forge 1.18.2.

@@ -7,6 +7,19 @@ relationships are intentionally separated below.
 
 ## Shipped adapted implementations
 
+### Embeddium stability fork - embeddedt, JellySquid, HoYin1600p, and contributors
+
+- Upstream: [embeddedt/Embeddium](https://github.com/embeddedt/embeddium)
+- Transfer ledger revision: `7b085088`
+- License: LGPL-3.0
+
+VRO independently packages guarded 1.18.2 mixins implementing eight renderer
+corrections first developed or assembled in HoYin1600p's Embeddium stability
+fork. Exact source commits, supported renderer layouts, ownership controls,
+tests, and removal gates are recorded in
+[`docs/EMBEDDIUM_OWNERSHIP_TRANSFER.md`](docs/EMBEDDIUM_OWNERSHIP_TRANSFER.md).
+The original fork remains untouched until every removal gate passes.
+
 ### ModernFix - embeddedt, Fury_Phoenix, and contributors
 
 - Source: [embeddedt/ModernFix](https://github.com/embeddedt/ModernFix)

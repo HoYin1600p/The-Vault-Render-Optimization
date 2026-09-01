@@ -261,3 +261,25 @@ are optional and are omitted automatically when Create is absent.
 Coexistence is decided during client startup. When an overlapping standalone
 mod is detected, VRO leaves that feature to the standalone mod regardless of
 the VRO config value. Restart after adding or removing an overlap mod.
+# Embeddium/Rubidium transfers
+
+The `[embeddium_transfers]` group contains independent restart-bound controls
+for the eight VRO-owned renderer-fork corrections. VRO enables them only on
+validated Embeddium `0.3.18` or Rubidium `0.5.6` class layouts. An unknown or
+ambiguous renderer stack is blocked rather than guessed. Compare Mode disables
+performance-sensitive transfers but retains the adjacent-position occlusion,
+null-buffer, and shader-color correctness guards.
+
+`embeddium_transfers.vertexBufferMaxRetainedMib` defaults to `16`. It bounds
+the native capacity retained by each reusable chunk-build vertex buffer; a
+larger one-off allocation is trimmed at the next build start and `destroy()`
+continues to free it deterministically.
+
+`embeddium_transfers.asyncArenaGrowthDivisor` defaults to `6`; a smaller value
+reserves more VRAM headroom and reduces repeated arena compactions. The
+increment is derived once from each arena's initial capacity, matching the
+source fork's fixed-increment behavior instead of compounding with every
+resize.
+`asyncArenaMaxHeadroomMib` defaults to `64` and caps only speculative headroom,
+never bytes required by the current upload. This control is independent of
+vertex-buffer retention.

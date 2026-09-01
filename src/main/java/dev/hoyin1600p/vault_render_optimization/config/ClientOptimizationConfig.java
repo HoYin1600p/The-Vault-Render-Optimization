@@ -2,6 +2,7 @@ package dev.hoyin1600p.vault_render_optimization.config;
 
 import dev.hoyin1600p.vault_render_optimization.VaultRenderOptimization;
 import dev.hoyin1600p.vault_render_optimization.backport.RenderBackportFeature;
+import dev.hoyin1600p.vault_render_optimization.renderertransfer.RendererTransferFeature;
 import dev.hoyin1600p.vault_render_optimization.cache.VaultGearRenderCache;
 import dev.hoyin1600p.vault_render_optimization.cache.VaultToolRenderCache;
 import dev.hoyin1600p.vault_render_optimization.client.update.UpdateNoticeFilter;
@@ -20,6 +21,11 @@ public final class ClientOptimizationConfig {
     private static final ForgeConfigSpec.BooleanValue COMPARE_MODE;
     private static final EnumMap<RenderBackportFeature, ForgeConfigSpec.BooleanValue>
             RENDER_BACKPORT_OPTIONS = new EnumMap<>(RenderBackportFeature.class);
+    private static final EnumMap<RendererTransferFeature, ForgeConfigSpec.BooleanValue>
+            RENDERER_TRANSFER_OPTIONS = new EnumMap<>(RendererTransferFeature.class);
+    private static final ForgeConfigSpec.IntValue VERTEX_BUFFER_MAX_RETAINED_MIB;
+    private static final ForgeConfigSpec.IntValue ASYNC_ARENA_GROWTH_DIVISOR;
+    private static final ForgeConfigSpec.IntValue ASYNC_ARENA_MAX_HEADROOM_MIB;
     private static final ForgeConfigSpec.BooleanValue UPDATE_CHECKS;
     private static final ForgeConfigSpec.EnumValue<UpdateNoticeFilter> UPDATE_NOTICE_FILTER;
     private static final ForgeConfigSpec.BooleanValue PARTICLE_LIGHT_CACHE;
@@ -54,6 +60,8 @@ public final class ClientOptimizationConfig {
     private static volatile boolean compareMode;
     private static volatile Map<RenderBackportFeature, Boolean> renderBackportOptions =
             defaultRenderBackportOptions();
+    private static volatile Map<RendererTransferFeature, Boolean> rendererTransferOptions =
+            defaultRendererTransferOptions();
     private static volatile boolean updateChecks = true;
     private static volatile UpdateNoticeFilter updateFilter = UpdateNoticeFilter.CRITICAL;
 
@@ -85,6 +93,9 @@ public final class ClientOptimizationConfig {
     public static volatile boolean createSmartRenderBounds = true;
     public static volatile boolean createFlywheelAutoEnable = true;
     public static volatile boolean createFlywheelShaderCompat = true;
+    public static volatile int vertexBufferMaxRetainedMib = 16;
+    public static volatile int asyncArenaGrowthDivisor = 6;
+    public static volatile int asyncArenaMaxHeadroomMib = 64;
 
     static {
         ForgeConfigSpec.Builder builder = new ForgeConfigSpec.Builder();
@@ -124,6 +135,33 @@ public final class ClientOptimizationConfig {
                     ).define(feature.configKey(), true)
             );
         }
+        builder.pop();
+
+        builder.push("embeddium_transfers");
+        for (RendererTransferFeature feature : RendererTransferFeature.values()) {
+            RENDERER_TRANSFER_OPTIONS.put(
+                    feature,
+                    builder.comment(
+                            "Enable " + feature.id() + ": " + feature.displayName() + ".",
+                            "This startup option requires a client restart.",
+                            feature.activeInCompareMode()
+                                    ? "This correctness guard remains active in Compare Mode."
+                                    : "Compare Mode yields this performance or compatibility-sensitive path."
+                    ).define(feature.configKey(), true)
+            );
+        }
+        VERTEX_BUFFER_MAX_RETAINED_MIB = builder.comment(
+                "Maximum native capacity retained by one renderer vertex buffer between builds.",
+                "Larger one-off buffers are trimmed at the next start; destroy still frees them deterministically."
+        ).defineInRange("vertexBufferMaxRetainedMib", 16, 1, 256);
+        ASYNC_ARENA_GROWTH_DIVISOR = builder.comment(
+                "Reserve roughly current arena capacity divided by this value during a resize.",
+                "Smaller values trade more speculative VRAM for fewer resize/compaction events."
+        ).defineInRange("asyncArenaGrowthDivisor", 6, 2, 64);
+        ASYNC_ARENA_MAX_HEADROOM_MIB = builder.comment(
+                "Maximum speculative VRAM headroom added by one arena growth.",
+                "Memory required by the actual upload is never capped by this value."
+        ).defineInRange("asyncArenaMaxHeadroomMib", 64, 1, 512);
         builder.pop();
 
         builder.push("render_fast_paths");
@@ -276,6 +314,10 @@ public final class ClientOptimizationConfig {
 
     public static boolean renderBackportConfigured(RenderBackportFeature feature) {
         return renderBackportOptions.getOrDefault(feature, true);
+    }
+
+    public static boolean rendererTransferConfigured(RendererTransferFeature feature) {
+        return rendererTransferOptions.getOrDefault(feature, true);
     }
 
     public static boolean updateChecksEnabled() {
@@ -446,6 +488,15 @@ public final class ClientOptimizationConfig {
                 new EnumMap<>(RenderBackportFeature.class);
         RENDER_BACKPORT_OPTIONS.forEach((feature, value) -> backportValues.put(feature, value.get()));
         renderBackportOptions = Map.copyOf(backportValues);
+        EnumMap<RendererTransferFeature, Boolean> rendererTransferValues =
+                new EnumMap<>(RendererTransferFeature.class);
+        RENDERER_TRANSFER_OPTIONS.forEach(
+                (feature, value) -> rendererTransferValues.put(feature, value.get())
+        );
+        rendererTransferOptions = Map.copyOf(rendererTransferValues);
+        vertexBufferMaxRetainedMib = VERTEX_BUFFER_MAX_RETAINED_MIB.get();
+        asyncArenaGrowthDivisor = ASYNC_ARENA_GROWTH_DIVISOR.get();
+        asyncArenaMaxHeadroomMib = ASYNC_ARENA_MAX_HEADROOM_MIB.get();
         updateChecks = UPDATE_CHECKS.get();
         updateFilter = UpdateNoticeFilter.fromConfigValue(
                 UPDATE_NOTICE_FILTER.get(),
@@ -487,6 +538,15 @@ public final class ClientOptimizationConfig {
         EnumMap<RenderBackportFeature, Boolean> defaults =
                 new EnumMap<>(RenderBackportFeature.class);
         for (RenderBackportFeature feature : RenderBackportFeature.values()) {
+            defaults.put(feature, true);
+        }
+        return Map.copyOf(defaults);
+    }
+
+    private static Map<RendererTransferFeature, Boolean> defaultRendererTransferOptions() {
+        EnumMap<RendererTransferFeature, Boolean> defaults =
+                new EnumMap<>(RendererTransferFeature.class);
+        for (RendererTransferFeature feature : RendererTransferFeature.values()) {
             defaults.put(feature, true);
         }
         return Map.copyOf(defaults);

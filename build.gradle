@@ -127,6 +127,19 @@ if (!renderModJarFile.exists()) {
     throw new GradleException("The renderer mod jar was not found at ${renderModJarFile}. Set -Prender_mod_jar if your instance path differs.")
 }
 
+// CCLCompat is Embeddium-only, but the same source set must also compile while
+// the active compatibility target is Rubidium. Keep one validated Embeddium
+// jar on the compile-only classpath; it is never packaged as a dependency.
+def embeddiumCompileJarFile = knownVaultInstances.collect { instance ->
+    def modsDirectory = new File(prismInstancesDirectory, "${instance.folder}/${instance.minecraft}/mods")
+    modsDirectory.listFiles()?.find {
+        it.isFile() && it.name ==~ /^embeddium-0\.3\.18.*\.jar$/
+    }
+}.find { it != null }
+if (embeddiumCompileJarFile == null) {
+    throw new GradleException('A validated Embeddium 0.3.18 jar is required to compile the optional CCL bridge.')
+}
+
 def discoverOptionalModJar = { java.util.regex.Pattern filePattern ->
     knownVaultInstances.collect { instance ->
         def modsDirectory = new File(prismInstancesDirectory, "${instance.folder}/${instance.minecraft}/mods")
@@ -140,11 +153,12 @@ def vaultLootBeamsJarFile = discoverOptionalModJar(~/^VaultLootBeams-.*\.jar$/)
 def iSpawnerJarFile = discoverOptionalModJar(~/^ispawner-.*\.jar$/)
 def architecturyJarFile = discoverOptionalModJar(~/^architectury-.*\.jar$/)
 def createJarFile = discoverOptionalModJar(~/^create-.*\.jar$/)
+def codeChickenLibJarFile = discoverOptionalModJar(~/^CodeChickenLib-.*\.jar$/)
 def configuredOculusModJar = findProperty('oculus_mod_jar') ?: discoverOptionalModJar(~/^oculus-.*\.jar$/)
 def oculusModJarFile = configuredOculusModJar == null ? null : file(configuredOculusModJar)
 
-if (vaultLootBeamsJarFile == null || iSpawnerJarFile == null || architecturyJarFile == null || createJarFile == null || oculusModJarFile == null) {
-    throw new GradleException('Vault Loot Beams, iSpawner, Architectury, Create, and Oculus jars are required to compile their optional VRO integrations.')
+if (vaultLootBeamsJarFile == null || iSpawnerJarFile == null || architecturyJarFile == null || createJarFile == null || codeChickenLibJarFile == null || oculusModJarFile == null) {
+    throw new GradleException('Vault Loot Beams, iSpawner, Architectury, Create, CodeChickenLib, and Oculus jars are required to compile their optional VRO integrations.')
 }
 
 def extractedFlywheelJar = layout.buildDirectory.file('generated-dependencies/flywheel-forge-1.18.2-0.6.11-107.jar')
@@ -163,11 +177,13 @@ dependencies {
     annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
 
     compileOnly files(vaultModJarFile)
+    compileOnly files(embeddiumCompileJarFile)
     compileOnly files(renderModJarFile)
     compileOnly files(vaultLootBeamsJarFile)
     compileOnly files(iSpawnerJarFile)
     compileOnly files(architecturyJarFile)
     compileOnly files(createJarFile)
+    compileOnly files(codeChickenLibJarFile)
     compileOnly files(extractedFlywheelJar)
     compileOnly files(oculusModJarFile)
 
