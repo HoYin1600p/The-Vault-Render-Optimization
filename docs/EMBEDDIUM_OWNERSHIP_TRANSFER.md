@@ -23,14 +23,14 @@ Mode while narrow correctness guards remain active. Startup diagnostics report
 
 | ID | Feature | VRO commit | Automated validation | Manual validation remaining | Source removable? |
 |---|---|---|---|---|---|
-| VRO-EMB-04 | Adjacent-position block occlusion | `1021ad6` | Unit ownership/config tests; stock renderer layouts; five-pack build; live stock-Embeddium startup/rebuild pressure | Framed/custom face hiding; Cake Vault temporary bedrock | No |
-| VRO-EMB-05 | Null-buffer vertex sink | `782542d` | Guard unit test; stock renderer layouts; five-pack build; live Create/Flywheel startup, reload, dimension, and flight smoke tests | Narrow moving-contraption visual smoke test | No |
-| VRO-EMB-10 | Direct CCL renderer lookup | `4f26ac5` | Embeddium-only ownership gate; CCL lambda layout; five-pack build | CCL blocks and fluids | No |
-| VRO-EMB-02 | Bounded vertex-buffer retention | `332d75d` | Growth/overflow/retention unit tests; stock layouts; five-pack build; live rebuild/flight pressure | Long-session native-memory soak | No |
-| VRO-EMB-03 | Preemptive async arena growth | `7d88682` | Required/headroom/ceiling unit tests; stock layouts; five-pack build; live causal isolation and fixed-increment regression | Long-session VRAM soak and windowed resize pressure | No |
-| VRO-EMB-06 | Smooth non-luminous fluid lighting | `2f1f320` | Lighting policy and reload-cache tests; stock layouts; five-pack build; resource reload and dimension cycle | Human comparison of modded luminous/non-luminous fluids | No |
-| VRO-EMB-08 | Chunk-layer shader-color reset | `b0f9d8b` | Compare-mode ownership test; stock layouts; five-pack build; shader reload with Oculus, Create/Flywheel, and Botania loaded | Animated rainbow/gradient text; shader-enabled visual smoke; DH on another instance | No |
-| VRO-EMB-01 | Chunk rebuild de-duplication | `06273e4` | Pending strength/task-state tests; separate renderer layouts; five-pack build; 49,152 block mutations, block entities, fluids, and mass mob-kill pressure | Human stale-geometry check; Cake Vault temporary bedrock | No |
+| VRO-EMB-04 | Adjacent-position block occlusion | `1021ad6` | Unit ownership/config tests; stock renderer layouts; five-pack build; live stock-Embeddium startup/rebuild pressure; operator-confirmed custom-block and Cake-room behavior | None before source-removal control | No |
+| VRO-EMB-05 | Null-buffer vertex sink | `782542d` | Guard unit test; stock renderer layouts; five-pack build; live Create/Flywheel startup, reload, dimension, and flight smoke tests; inherited stable-fork gameplay | None before source-removal control | No |
+| VRO-EMB-10 | Direct CCL renderer lookup | `4f26ac5` | Embeddium-only ownership gate; CCL lambda layout; five-pack build; inherited stable-fork behavior | Guarded VRO load check with CCL | No |
+| VRO-EMB-02 | Bounded vertex-buffer retention | `332d75d` | Growth/overflow/retention unit tests; stock layouts; five-pack build; live rebuild/flight pressure; inherited gameplay sessions up to 12 hours | None before source-removal control | No |
+| VRO-EMB-03 | Preemptive async arena growth | `7d88682` | Required/headroom/ceiling unit tests; stock layouts; five-pack build; live causal isolation and fixed-increment regression; inherited gameplay sessions up to 12 hours | None before source-removal control | No |
+| VRO-EMB-06 | Smooth non-luminous fluid lighting | `2f1f320` | Lighting policy and reload-cache tests; stock layouts; five-pack build; resource reload and dimension cycle; operator-confirmed fluid behavior | None before source-removal control | No |
+| VRO-EMB-08 | Chunk-layer shader-color reset | `b0f9d8b` | Compare-mode ownership test; stock layouts; five-pack build; shader reload with Oculus, Create/Flywheel, and Botania loaded; inherited stable-fork behavior | Guarded VRO load check with DH | No |
+| VRO-EMB-01 | Chunk rebuild de-duplication | `06273e4` | Pending strength/task-state tests; separate renderer layouts; five-pack build; 49,152 block mutations, block entities, fluids, and mass mob-kill pressure; operator-confirmed Cake-room and stable-fork gameplay | None before source-removal control | No |
 
 Source provenance is the repository ledger at
 `VRO_OWNERSHIP_TRANSFER.md` in the Embeddium fork at commit `7b085088`,
@@ -103,6 +103,22 @@ Minecraft `1.18.2`:
 
 CodeChickenLib and Distant Horizons were not installed in this instance, and
 fullscreen mode prevented CMA's windowed-only resize action. Those paths remain
-for a compatible test instance. The prior full Create/Flywheel campaign does
-not need to be repeated; only the narrow moving-contraption visual check listed
-in the table is required for these new paths.
+for a compatible guarded-load check. The prior full Create/Flywheel and stable-
+fork campaigns do not need to be repeated.
+
+## Inherited long-session validation
+
+The operator confirmed on 2026-09-01 that the source Embeddium fork has been
+used routinely for long gameplay sessions, including sessions up to 12 hours,
+without a native-memory or VRAM growth failure. VRO preserves the fork's
+vertex-buffer retention behavior and fixed-increment asynchronous arena growth,
+with additional capacity bounds, deterministic cleanup, unit coverage, and the
+live pressure checks above. This real-world history is accepted as the required
+long-session validation for VRO-EMB-02 and VRO-EMB-03; a separate synthetic
+overnight soak is no longer required.
+
+The operator also confirmed custom-block occlusion, fluid rendering, and Cake
+room behavior from the stable fork. Those behaviors are accepted together with
+VRO's source-equivalence, guarded-load, structural, and live startup checks.
+Rows remain `No` under source removal only because the required control run
+after the original fork implementations are removed has not yet occurred.
