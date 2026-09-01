@@ -8,6 +8,7 @@
   "client": [
     "backport.embeddium.occlusion.BlockOcclusionCacheMixin",
     "backport.embeddium.buffer.BufferBuilderVertexSinkMixin",
+    "backport.embeddium.ccl.CCLCompatMixin",
     "backport.modernfix.client.buffer.RenderBuffersMixin",
     "backport.modernfix.client.ctm.ResourceUtilMixin",
     "backport.modernfix.client.entity.CubeDefinitionMixin",
