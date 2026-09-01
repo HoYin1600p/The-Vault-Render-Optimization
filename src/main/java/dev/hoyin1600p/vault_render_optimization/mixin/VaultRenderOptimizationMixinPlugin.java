@@ -10,6 +10,7 @@ import dev.hoyin1600p.vault_render_optimization.client.particle.ParticleOptimiza
 import dev.hoyin1600p.vault_render_optimization.client.particle.ParticleMixinSelection;
 import dev.hoyin1600p.vault_render_optimization.renderertransfer.BootstrapRendererTransferConfig;
 import dev.hoyin1600p.vault_render_optimization.renderertransfer.RendererFamily;
+import dev.hoyin1600p.vault_render_optimization.renderertransfer.RendererFamilyDetector;
 import dev.hoyin1600p.vault_render_optimization.renderertransfer.RendererTransferFeature;
 import dev.hoyin1600p.vault_render_optimization.renderertransfer.RendererTransferOwnershipRegistry;
 import java.lang.reflect.Field;
@@ -374,16 +375,13 @@ public final class VaultRenderOptimizationMixinPlugin implements IMixinConfigPlu
     }
 
     private RendererFamily resolveRendererFamily() {
-        if (embeddiumLoaded && rubidiumLoaded) {
-            return RendererFamily.AMBIGUOUS;
-        }
-        if (embeddiumLoaded) {
-            return RendererFamily.EMBEDDIUM;
-        }
-        if (rubidiumLoaded) {
-            return RendererFamily.RUBIDIUM;
-        }
-        return RendererFamily.NONE;
+        return RendererFamilyDetector.resolve(
+                embeddiumLoaded,
+                rubidiumLoaded,
+                embeddiumLoaded && rubidiumLoaded
+                        && loadingModList.getModFileById("embeddium")
+                        == loadingModList.getModFileById("rubidium")
+        );
     }
 
     private String modVersion(String modId) {

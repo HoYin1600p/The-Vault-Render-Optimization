@@ -11,6 +11,11 @@ Validated renderer baselines:
 - Embeddium `0.3.18+mc1.18.2`
 - Rubidium `0.5.6`
 
+Embeddium `0.3.18` publishes its own `embeddium` identity and a `rubidium`
+compatibility alias from the same mod file. VRO treats that same-file pair as
+one Embeddium implementation while continuing to fail closed when the two
+renderer identities originate from different mod files.
+
 Unknown versions fail closed. Every feature has an independent startup option
 under `[embeddium_transfers]`; performance-sensitive paths yield in Compare
 Mode while narrow correctness guards remain active. Startup diagnostics report
@@ -35,7 +40,7 @@ plus the per-feature source commits recorded in the table and source headers.
 
 Completed on 2026-09-01 without installing into a Prism instance:
 
-- `gradlew clean test`: 88 tests, 0 failures, 0 errors, 0 skipped.
+- `gradlew clean build`: 91 tests, 0 failures, 0 errors, 0 skipped.
 - `scripts/verify-renderer-transfer-layouts.ps1`: PASS against stock Embeddium
   `0.3.18+mc1.18.2` and Rubidium `0.5.6`, including their distinct active-task
   fields and the Embeddium-only CodeChickenLib bridge.
@@ -43,7 +48,7 @@ Completed on 2026-09-01 without installing into a Prism instance:
   Asgard-SMP, Wolds Vaults 0.32.2, Wolds Vaults 0.33.0, and Vault Hunters
   Third Edition, followed by a clean universal build and all unit tests.
 - Built artifact: `build/libs/vault_render_optimization.0.4.0.jar`, SHA-256
-  `F74FDD139FD2B6AD7683A6D66006DEFF4C697396D64C5F8A586EF0860115112F`.
+  `3F1B93DE4E09D424F72DFA8140FD9783E1145FAEBD80FCA179ABEC3A5BD4F741`.
 - JAR inspection confirmed every renderer-transfer mixin/helper plus
   `META-INF/LICENSE`, `META-INF/THIRD_PARTY_NOTICES.md`, and the retained LGPL
   text. The JAR was not copied into tracked `libs`.

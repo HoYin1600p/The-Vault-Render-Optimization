@@ -23,6 +23,26 @@ function Require-Layout {
     }
 }
 
+function Read-JarTextEntry {
+    param([string]$Jar, [string]$EntryName)
+    Add-Type -AssemblyName System.IO.Compression.FileSystem
+    $archive = [System.IO.Compression.ZipFile]::OpenRead((Resolve-Path -LiteralPath $Jar).Path)
+    try {
+        $entry = $archive.GetEntry($EntryName)
+        if ($null -eq $entry) {
+            throw "Missing $EntryName in $Jar"
+        }
+        $reader = [System.IO.StreamReader]::new($entry.Open())
+        try {
+            return $reader.ReadToEnd()
+        } finally {
+            $reader.Dispose()
+        }
+    } finally {
+        $archive.Dispose()
+    }
+}
+
 foreach ($jar in @($EmbeddiumJar, $RubidiumJar)) {
     if (-not (Test-Path -LiteralPath $jar -PathType Leaf)) {
         throw "Renderer jar does not exist: $jar"
@@ -61,4 +81,8 @@ Require-Layout $rubSection 'CompletableFuture<\?> rebuildTask' 'Rubidium direct 
 $ccl = Read-ClassLayout $EmbeddiumJar 'org.embeddedt.embeddium.compat.ccl.CCLCompat'
 Require-Layout $ccl 'lambda\$onClientSetup\$2\(' 'validated Embeddium CCL populator lambda'
 
-Write-Output 'PASS: validated Embeddium 0.3.18 and Rubidium 0.5.6 renderer-transfer layouts.'
+$embeddiumMetadata = Read-JarTextEntry $EmbeddiumJar 'META-INF/mods.toml'
+Require-Layout $embeddiumMetadata 'modId\s*=\s*"embeddium"' 'Embeddium primary mod identity'
+Require-Layout $embeddiumMetadata 'modId\s*=\s*"rubidium"' 'Embeddium Rubidium compatibility identity'
+
+Write-Output 'PASS: validated Embeddium 0.3.18 and Rubidium 0.5.6 renderer-transfer layouts and Embeddium compatibility identities.'
