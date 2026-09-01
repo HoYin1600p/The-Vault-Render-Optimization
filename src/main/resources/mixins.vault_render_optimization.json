@@ -11,6 +11,8 @@
     "backport.embeddium.buffer.VertexBufferBuilderMixin",
     "backport.embeddium.buffer.AsyncBufferArenaMixin",
     "backport.embeddium.ccl.CCLCompatMixin",
+    "backport.embeddium.fluid.FluidRendererMixin",
+    "backport.embeddium.fluid.FluidLightingReloadMixin",
     "backport.modernfix.client.buffer.RenderBuffersMixin",
     "backport.modernfix.client.ctm.ResourceUtilMixin",
     "backport.modernfix.client.entity.CubeDefinitionMixin",

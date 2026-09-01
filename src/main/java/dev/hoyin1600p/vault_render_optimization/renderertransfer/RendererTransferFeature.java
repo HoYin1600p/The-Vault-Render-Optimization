@@ -26,7 +26,7 @@ public enum RendererTransferFeature {
     ),
     SMOOTH_FLUID_LIGHTING(
             "VRO-EMB-06", "smoothFluidLighting", "Cached smooth-lighting selection for fluids",
-            false, true, true, List.of("FluidRendererMixin")
+            false, true, true, List.of("FluidRendererMixin", "FluidLightingReloadMixin")
     ),
     CHUNK_LAYER_COLOR_RESET(
             "VRO-EMB-08", "chunkLayerColorReset", "Chunk-layer shader-color reset",
