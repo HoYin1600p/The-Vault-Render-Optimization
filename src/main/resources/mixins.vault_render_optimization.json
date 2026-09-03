@@ -6,6 +6,9 @@
   "compatibilityLevel": "JAVA_17",
   "refmap": "mixins.vault_render_optimization.refmap.json",
   "client": [
+    "chunk.VanillaDeferredChunkUpdatesMixin",
+    "chunk.EmbeddiumDeferredChunkUpdatesMixin",
+    "chunk.RubidiumDeferredChunkUpdatesMixin",
     "backport.embeddium.occlusion.BlockOcclusionCacheMixin",
     "backport.embeddium.buffer.BufferBuilderVertexSinkMixin",
     "backport.embeddium.buffer.VertexBufferBuilderMixin",

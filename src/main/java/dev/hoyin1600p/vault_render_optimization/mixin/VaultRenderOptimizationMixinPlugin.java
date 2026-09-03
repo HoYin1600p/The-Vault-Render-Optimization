@@ -8,6 +8,8 @@ import dev.hoyin1600p.vault_render_optimization.backport.RenderBackportCompatibi
 import dev.hoyin1600p.vault_render_optimization.backport.RenderBackportOwnershipRegistry;
 import dev.hoyin1600p.vault_render_optimization.client.particle.ParticleOptimizationState;
 import dev.hoyin1600p.vault_render_optimization.client.particle.ParticleMixinSelection;
+import dev.hoyin1600p.vault_render_optimization.client.chunk.ChunkUpdateBackend;
+import dev.hoyin1600p.vault_render_optimization.client.chunk.ChunkUpdateState;
 import dev.hoyin1600p.vault_render_optimization.renderertransfer.BootstrapRendererTransferConfig;
 import dev.hoyin1600p.vault_render_optimization.renderertransfer.RendererFamily;
 import dev.hoyin1600p.vault_render_optimization.renderertransfer.RendererFamilyDetector;
@@ -123,6 +125,7 @@ public final class VaultRenderOptimizationMixinPlugin implements IMixinConfigPlu
     private boolean codeChickenLibLoaded;
     private RendererFamily rendererFamily = RendererFamily.NONE;
     private String rendererVersion;
+    private ChunkUpdateBackend chunkUpdateBackend = ChunkUpdateBackend.BLOCKED;
 
     @Override
     public void onLoad(String mixinPackage) {
@@ -151,6 +154,16 @@ public final class VaultRenderOptimizationMixinPlugin implements IMixinConfigPlu
                     failure
             );
         }
+
+        chunkUpdateBackend = ChunkUpdateBackend.select(
+                physicalClient, modDiscoveryFailed,
+                sodiumLoaded || resourceExists("net.optifine.Config")
+                        || resourceExists("optifine.OptiFineTransformationService"),
+                rendererFamily, rendererVersion
+        );
+        ChunkUpdateState.configure(chunkUpdateBackend);
+        VaultRenderOptimization.LOGGER.info("Chunk-update deferral backend: {} (runtime config/Compare Mode apply)",
+                chunkUpdateBackend);
 
         ParticleOptimizationState.configureEnvironment(
                 !modDiscoveryFailed && (rubidiumLoaded || embeddiumLoaded || sodiumLoaded),
@@ -195,6 +208,16 @@ public final class VaultRenderOptimizationMixinPlugin implements IMixinConfigPlu
 
     @Override
     public boolean shouldApplyMixin(String targetClassName, String mixinClassName) {
+        if (mixinClassName.endsWith(".chunk.VanillaDeferredChunkUpdatesMixin")) {
+            return chunkUpdateBackend == ChunkUpdateBackend.VANILLA;
+        }
+        if (mixinClassName.endsWith(".chunk.EmbeddiumDeferredChunkUpdatesMixin")) {
+            return chunkUpdateBackend == ChunkUpdateBackend.EMBEDDIUM;
+        }
+        if (mixinClassName.endsWith(".chunk.RubidiumDeferredChunkUpdatesMixin")) {
+            return chunkUpdateBackend == ChunkUpdateBackend.RUBIDIUM;
+        }
+
         RendererTransferFeature rendererTransfer = RendererTransferFeature.forMixin(mixinClassName);
         if (rendererTransfer != null) {
             return RendererTransferOwnershipRegistry.applies(rendererTransfer, mixinClassName);

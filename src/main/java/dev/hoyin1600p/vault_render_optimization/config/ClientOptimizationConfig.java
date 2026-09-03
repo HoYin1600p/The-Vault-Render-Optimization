@@ -19,6 +19,7 @@ public final class ClientOptimizationConfig {
     public static final ForgeConfigSpec SPEC;
 
     private static final ForgeConfigSpec.BooleanValue COMPARE_MODE;
+    private static final ForgeConfigSpec.BooleanValue DEFER_CHUNK_UPDATES;
     private static final EnumMap<RenderBackportFeature, ForgeConfigSpec.BooleanValue>
             RENDER_BACKPORT_OPTIONS = new EnumMap<>(RenderBackportFeature.class);
     private static final EnumMap<RendererTransferFeature, ForgeConfigSpec.BooleanValue>
@@ -58,6 +59,7 @@ public final class ClientOptimizationConfig {
     private static final ForgeConfigSpec.BooleanValue CREATE_FLYWHEEL_SHADER_COMPAT;
 
     private static volatile boolean compareMode;
+    public static volatile boolean deferChunkUpdates = true;
     private static volatile Map<RenderBackportFeature, Boolean> renderBackportOptions =
             defaultRenderBackportOptions();
     private static volatile Map<RendererTransferFeature, Boolean> rendererTransferOptions =
@@ -122,6 +124,16 @@ public final class ClientOptimizationConfig {
                         "The /vro compare command changes and saves this setting."
                 )
                 .define("compare_mode", false);
+        builder.pop();
+
+        builder.push("chunk_updates");
+        DEFER_CHUNK_UPDATES = builder.comment(
+                "Use the renderer's existing asynchronous chunk-update path to reduce render-thread stalls.",
+                "Default-on for vanilla Forge and validated Embeddium/Rubidium versions; no renderer mod is required.",
+                "Visible block changes can be delayed under load. No render distance or world data is changed.",
+                "Does not edit vanilla/renderer settings. Off and Compare Mode yield to those settings.",
+                "The /vro chunks defer on|off command applies immediately to new scheduling decisions."
+        ).define("defer_updates", true);
         builder.pop();
 
         builder.push("modernfix_backports");
@@ -308,6 +320,12 @@ public final class ClientOptimizationConfig {
         return !compareMode;
     }
 
+    public static void setDeferChunkUpdates(boolean enabled) {
+        DEFER_CHUNK_UPDATES.set(enabled);
+        DEFER_CHUNK_UPDATES.save();
+        deferChunkUpdates = enabled;
+    }
+
     public static boolean compareModeEnabled() {
         return compareMode;
     }
@@ -484,6 +502,7 @@ public final class ClientOptimizationConfig {
         }
 
         compareMode = COMPARE_MODE.get();
+        deferChunkUpdates = DEFER_CHUNK_UPDATES.get();
         EnumMap<RenderBackportFeature, Boolean> backportValues =
                 new EnumMap<>(RenderBackportFeature.class);
         RENDER_BACKPORT_OPTIONS.forEach((feature, value) -> backportValues.put(feature, value.get()));

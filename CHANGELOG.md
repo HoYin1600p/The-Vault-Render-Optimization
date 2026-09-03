@@ -9,6 +9,13 @@ and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ### Added
 
+- Added default-on VRO-controlled asynchronous chunk updates for vanilla Forge
+  and validated Embeddium/Rubidium renderers. Uses each renderer's native
+  deferred path without editing its settings or replacing its task lifecycle.
+  `/vro chunks defer on|off` controls the feature immediately; `/vro chunks
+  status` reports selection and observed behavior. Visible block changes may
+  arrive later under load. Off/Compare Mode preserves native preferences.
+
 - Added eleven ModernFix-derived client render and graphics backports: chunk
   meshing traversal, duplicate BufferBuilder allocation prevention,
   reload-safe entity-model cube compaction, bounded profile-texture hashing,

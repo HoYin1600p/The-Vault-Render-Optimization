@@ -278,6 +278,16 @@ same render layers, model data, lighting, and textures. The directional
 machinery bounds are independently calculated from each installed block
 entity's position, facing, extension, or belt chain direction.
 
+## Native chunk-update deferral
+
+VRO's chunk-update deferral is a fresh integration with existing Minecraft
+Forge, Sodium-derived Embeddium, and Rubidium behavior. It changes only the
+effective preference read at validated scheduling sites. The projects retain
+ownership of their queues, scheduling, cancellation, result handling and GPU
+uploads; their code is neither copied nor bundled by this feature. Credits,
+inspected versions and local source revision are in
+`docs/CHUNK_UPDATE_DEFERRAL.md`. Newer Sodium scheduling is research-only.
+
 ## Compatibility behavior inspected
 
 VRO interoperates with Minecraft Forge, SpongePowered Mixin, Vault Hunters,

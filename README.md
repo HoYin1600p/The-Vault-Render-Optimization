@@ -20,6 +20,10 @@ bounded composite orbs. The remote server does not need the mod.
 
 ## Highlights
 
+- Reduces blocking chunk-update stalls through default-on native asynchronous
+  scheduling, with or without a supported renderer mod. No other mod's settings
+  need changing. Visible block updates can lag under load; see
+  [chunk-update controls](docs/CHUNK_UPDATE_DEFERRAL.md).
 - Caches expensive Vault gear, armor, tool-model, ability HUD, and event
   lookups that would otherwise repeat during rendering.
 - Avoids client-only entity collision work in crowded mob-processing areas.
@@ -332,6 +336,8 @@ for upgrades, removal, optional-mod coexistence, and issue isolation.
 | `/vro updates on\|off` | Enables or disables update checks immediately and saves the setting. |
 | `/vro updates critical\|all` | Shows only critical updates, or opts into all update notices. |
 | `/vro particles` | Reports particle ownership, hot options, and diagnostics. |
+| `/vro chunks status` | Reports the selected chunk-update backend and last observed native preference. |
+| `/vro chunks defer on\|off` | Controls native asynchronous chunk scheduling without changing another mod's settings. |
 | `/vro particles billboards on\|off` | Hot-enables or disables VRO's camera-basis billboard geometry. |
 | `/vro particles owner auto\|renderer\|vro` | Hot-selects VRO or renderer ownership; `renderer` yields to Rubidium/Embeddium when present. |
 | `/vro particles shared_light on\|off` | Hot-controls the bounded same-tick shared light cache. |

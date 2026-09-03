@@ -234,6 +234,16 @@ Xaero's World Map exposed a Forge key-consumption conflict with The Vault's
 default `M` binding. VRO changes only when The Vault's key context is active so
 Xaero can receive `M` outside Vaults.
 
+## Native asynchronous chunk updates
+
+Sodium, Embeddium and Rubidium contributors implemented the native deferred
+chunk-update behavior used by VRO's default-on frame-pacing integration.
+Minecraft/Forge provide the vanilla asynchronous compilation path. VRO adds
+independent configuration, guarded field-read mixins and commands, without
+copying or replacing their schedulers. Inspected versions and the exact local
+fork revision are recorded in [the feature notes](docs/CHUNK_UPDATE_DEFERRAL.md).
+No licensing change is required for these fresh VRO integration hooks.
+
 ## Foundations
 
 VRO is built with and interoperates with:

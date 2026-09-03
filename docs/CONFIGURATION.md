@@ -15,6 +15,31 @@ config/vault_render_optimization-mana-stealer-client.toml
 All release fast paths are enabled by default. Forge reloads changes made by
 VRO's command immediately. For manual file edits, stop Minecraft first.
 
+## Chunk-update frame pacing
+
+| Key | Default | Purpose |
+| --- | --- | --- |
+| `chunk_updates.defer_updates` | `true` | Use native asynchronous chunk scheduling to avoid waiting for important chunk work on the render thread |
+
+No renderer mod is required. Vanilla Forge 1.18.2, Embeddium
+`0.3.18+mc1.18.2` / the validated `0.3.19+mc1.18.2` fork, and Rubidium `0.5.6`
+use separate guarded paths. Unsupported/ambiguous renderers are left alone.
+
+`/vro chunks defer on|off` saves the VRO setting and applies to subsequent
+scheduling decisions without restarting. `/vro chunks status` reports the
+backend, whether its scheduling hook has run, and the last observed native
+deferral preference. Existing queued tasks finish through their native path.
+
+Off and Compare Mode **yield to the user's original settings**, not force a
+blocking renderer. If Embeddium's own "Always Defer Chunk Updates" is on,
+updates remain deferred when VRO is off. For an isolated VRO comparison, keep
+the native setting off in both test conditions. VRO never writes that setting.
+
+This can delay visible placement/removal or transparency updates, particularly
+under sustained load. It does not discard dirty updates, change server blocks,
+lower render distance, or cap native upload time. See
+[implementation and testing notes](CHUNK_UPDATE_DEFERRAL.md).
+
 ## Update notices
 
 | Key | Default | Purpose |
