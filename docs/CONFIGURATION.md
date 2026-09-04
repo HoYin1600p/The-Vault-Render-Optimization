@@ -300,9 +300,9 @@ are optional and are omitted automatically when Create is absent.
 
 ## Adaptive deferred chunk budgets
 
-`chunk_updates.adaptive_budget_v2` defaults to `false` (experimental). The old
-`adaptive_budget` key is no longer read, so testing the revision requires fresh
-opt-in. It requires validated
+`chunk_updates.adaptive_budget_v2` defaults to `true` (experimental). Existing
+explicit v2 off settings are preserved. The old `adaptive_budget` key is no
+longer read. No opt-in is required on supported renderers. It requires validated
 Embeddium 0.3.18/0.3.19 and effective deferred updates. `/vro chunks budget
 on|off|status` controls it without restart; it is independent of index-only
 sorting. Each renderer learns its own costs, with no saved calibration from

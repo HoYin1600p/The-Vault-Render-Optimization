@@ -15,7 +15,7 @@ no scheduled work or automatic deployment is requested.
    development PC sets other players' throughput. Budgets are predictive, not
    hard timing or total-native-memory guarantees. The first version delayed cached
    full terrain; disabling it restored loading immediately, including with DH off.
-   Revision 2 is default-off, bypasses initial terrain and yields to native
+   Revision 2 is default-on, bypasses initial terrain and yields to native
    throughput on backlog/wait pressure. It may spend most of a loading session in
    fallback and produce no performance gain. Item 3 remains a separate decision.
 3. **Smarter scheduling/background visibility (deferred).** Consider age,

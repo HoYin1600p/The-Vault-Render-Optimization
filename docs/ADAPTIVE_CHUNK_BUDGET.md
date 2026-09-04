@@ -8,7 +8,7 @@ including with DH off. Bobby and Farsight were installed. A nearly empty
 completed-results queue did not prove healthy throughput; the original display
 omitted requests waiting to be submitted and worker activity.
 
-Revision 2 is a fresh, default-off experiment. It aims to pace updates to terrain
+Revision 2 is a default-on experiment on supported renderers. It aims to pace updates to terrain
 that already has geometry without delaying initial terrain. This is not yet a
 verified runtime fix or a demonstrated performance improvement.
 
@@ -20,9 +20,9 @@ compatibility with later third-party mixin transformations.
 
 ## Controls
 
-- `chunk_updates.adaptive_budget_v2=false` is the new default.
-- The previous `adaptive_budget` key is no longer read. An old experimental
-  opt-in must not silently enable this revision.
+- `chunk_updates.adaptive_budget_v2=true` is the default; no opt-in is required.
+- An existing explicit `adaptive_budget_v2=false` remains off. The retired
+  `adaptive_budget` key is no longer read.
 - `/vro chunks budget on|off|status` controls it without restarting.
 - Effective deferred scheduling is required; VRO does not edit Embeddium's preference.
 - Compare Mode, off, or effective synchronous scheduling restores native behavior.

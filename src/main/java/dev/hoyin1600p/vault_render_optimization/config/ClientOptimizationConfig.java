@@ -63,7 +63,7 @@ public final class ClientOptimizationConfig {
     private static volatile boolean compareMode;
     public static volatile boolean deferChunkUpdates = true;
     public static volatile boolean indexOnlySorting = true;
-    public static volatile boolean adaptiveChunkBudget = false;
+    public static volatile boolean adaptiveChunkBudget = true;
     private static volatile Map<RenderBackportFeature, Boolean> renderBackportOptions =
             defaultRenderBackportOptions();
     private static volatile Map<RendererTransferFeature, Boolean> rendererTransferOptions =
@@ -146,12 +146,12 @@ public final class ClientOptimizationConfig {
         ).define("index_only_sorting", true);
         ADAPTIVE_CHUNK_BUDGET = builder.comment(
                 "Experimental v2: dynamically pace updates to already-built terrain using measured costs.",
-                "Default-off; fresh opt-in required. The retired adaptive_budget key cannot enable v2.",
+                "Default-on on supported renderers; an explicit adaptive_budget_v2=false remains respected.",
                 "Initial terrain and delayed/overloaded queues use native scheduling/draining automatically.",
                 "Requires validated Embeddium and effective asynchronous chunk updates; vanilla/Rubidium unchanged.",
                 "Uses conservative startup budgets, bounded feedback and queue backpressure; not an FPS guarantee.",
                 "Off/Compare Mode restores native draining and scheduling; /vro chunks budget on|off|status is hot."
-        ).define("adaptive_budget_v2", false);
+        ).define("adaptive_budget_v2", true);
         builder.pop();
 
         builder.push("modernfix_backports");

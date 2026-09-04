@@ -20,7 +20,7 @@ bounded composite orbs. The remote server does not need the mod.
 
 ## Highlights
 
-- Offers experimental, default-off pacing for already-built terrain updates on
+- Offers experimental, default-on pacing for already-built terrain updates on
   validated Embeddium, with native loading/backlog fallback and hot controls.
   Revised after a loading regression; [runtime evaluation pending](docs/ADAPTIVE_CHUNK_BUDGET.md).
 

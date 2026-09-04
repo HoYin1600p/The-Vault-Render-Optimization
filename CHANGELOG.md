@@ -14,11 +14,12 @@ and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
   batches, applies queue backpressure and reserves aged update-class admissions.
   Includes `/vro chunks budget on|off|status`, Compare Mode fallback and bounded
   diagnostics. Predictive budgets may be exceeded by indivisible uploads;
-  visual updates can be delayed under load. Revised experiment defaults off
+  visual updates can be delayed under load. Revised experiment defaults on
   under a fresh `chunk_updates.adaptive_budget_v2` key after user testing exposed
   cached-terrain loading delays. Initial builds and their ready results now use
   native scheduling/uploads; queue pressure and waiting work also force native
-  fallback, with a recovery cooldown. Diagnostics expose pending requests,
+  fallback, with a recovery cooldown. Explicit v2 off settings remain respected.
+  Diagnostics expose pending requests,
   queued/active workers and pacing/fallback reasons. Revised runtime validation pending.
 
 - Added independently switchable index-only terrain transparency sorting for
