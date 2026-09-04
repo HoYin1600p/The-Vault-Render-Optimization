@@ -8,12 +8,16 @@ no scheduled work or automatic deployment is requested.
    vertices and replace only drawing-order indices. The older Embeddium path
    copies both buffers and re-uploads vertices on sort-only updates. Preserve
    native sorting, shader vertex formats, cancellation and geometry generations.
-2. **Adaptive build/upload budgets (implemented; in-game evaluation pending).**
+2. **Adaptive build/upload budgets (revised after runtime regression; retest pending).**
    Per-machine feedback, measured worker/upload costs, FIFO batch pacing, queued
    memory backpressure and aged-class admission opportunities. See
    [the design and validation plan](ADAPTIVE_CHUNK_BUDGET.md). No benchmark on the
    development PC sets other players' throughput. Budgets are predictive, not
-   hard timing or total-native-memory guarantees.
+   hard timing or total-native-memory guarantees. The first version delayed cached
+   full terrain; disabling it restored loading immediately, including with DH off.
+   Revision 2 is default-off, bypasses initial terrain and yields to native
+   throughput on backlog/wait pressure. It may spend most of a loading session in
+   fallback and produce no performance gain. Item 3 remains a separate decision.
 3. **Smarter scheduling/background visibility (deferred).** Consider age,
    distance, visibility and task type, then asynchronous visibility processing.
    Much larger compatibility surface: shader/DH integration, teleports and

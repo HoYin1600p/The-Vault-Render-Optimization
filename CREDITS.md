@@ -289,9 +289,14 @@ contributors), and the Rubidium lineage supply the inspected native queue,
 task/future and region upload contracts. This integration was checked against
 stock Embeddium 0.3.18 and HoYin1600p's fork revision
 `d95f90d1edb990943b30663b2e95a02ea5e7c2a8`. The adaptive controller, queue observer,
-fairness policy and tests are fresh VRO work; no newer Sodium scheduler is copied.
+fairness policy, loading guard and tests are fresh VRO work; no newer Sodium scheduler is copied.
 The two lifecycle adapters carry LGPL-3.0-only notices. See
 `THIRD_PARTY_NOTICES.md` and `docs/ADAPTIVE_CHUNK_BUDGET.md`.
+
+Loading compatibility research also inspected Johni0702 and Forge backport
+contributors' Bobby revision `57ea55a9b365dfc2338214746ed3fdb024b34ea2`
+(LGPL-3.0-or-later): fake chunks notify the normal renderer of loaded/dirty
+sections. This is research provenance only; no Bobby implementation is copied.
 
 ## Attribution policy
 

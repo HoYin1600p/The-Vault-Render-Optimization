@@ -20,9 +20,9 @@ bounded composite orbs. The remote server does not need the mod.
 
 ## Highlights
 
-- Dynamically paces deferred chunk builds/uploads on validated Embeddium using
-  each machine's measured costs, with queue backpressure and hot controls.
-  In-game evaluation pending; see [adaptive budgets](docs/ADAPTIVE_CHUNK_BUDGET.md).
+- Offers experimental, default-off pacing for already-built terrain updates on
+  validated Embeddium, with native loading/backlog fallback and hot controls.
+  Revised after a loading regression; [runtime evaluation pending](docs/ADAPTIVE_CHUNK_BUDGET.md).
 
 - Avoids copying and re-uploading unchanged terrain vertices for translucent
   sorting on validated Embeddium builds. Independently switchable; see

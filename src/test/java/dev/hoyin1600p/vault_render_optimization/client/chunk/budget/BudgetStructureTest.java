@@ -52,6 +52,7 @@ class BudgetStructureTest {
         var builder = raw("render/chunk/compile/ChunkBuilder");
         assertTrue(builder.fields.stream().anyMatch(f -> f.name.equals("deferredResultQueue") && f.desc.equals("Ljava/util/Queue;")));
         assertTrue(builder.fields.stream().anyMatch(f -> f.name.equals("limitThreads") && f.desc.equals("I")));
+        assertTrue(builder.fields.stream().anyMatch(f -> f.name.equals("buildQueue") && f.desc.equals("Ljava/util/Deque;")));
     }
 
     @Test void nativeCleanupAndFutureSemanticsRemainAvailable() throws Exception {

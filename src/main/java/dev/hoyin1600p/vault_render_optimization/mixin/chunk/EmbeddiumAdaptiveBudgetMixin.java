@@ -28,6 +28,7 @@ public abstract class EmbeddiumAdaptiveBudgetMixin {
     @Shadow @Final private Map<ChunkUpdateType, PriorityQueue<RenderSection>> rebuildQueues;
     @Shadow private boolean alwaysDeferChunkUpdates;
     @Unique private AdaptiveChunkBudget vro$budget;
+    @Unique private TerrainLoadingGuard vro$loading;
     @Unique private final BudgetResults vro$results = new BudgetResults();
     @Unique private boolean vro$budgetActive;
     @Unique private long vro$lastBudgetReport;
@@ -39,6 +40,7 @@ public abstract class EmbeddiumAdaptiveBudgetMixin {
         if (!enabled) {
             if (vro$budget != null) vro$budget.close();
             vro$budget = null;
+            vro$loading = null;
             vro$results.clear();
             vro$budgetActive = false;
             AdaptiveBudgetState.observe("YIELDED: disabled/Compare Mode or native synchronous scheduling selected");
@@ -46,6 +48,7 @@ public abstract class EmbeddiumAdaptiveBudgetMixin {
         }
         if (vro$budget == null) {
             vro$budget = new AdaptiveChunkBudget(Runtime.getRuntime().maxMemory());
+            vro$loading = new TerrainLoadingGuard(vro$budget.memoryWatermark());
             vro$lastBudgetReport = System.nanoTime() - 500_000_000L;
         }
         vro$budgetActive = true;
@@ -54,16 +57,21 @@ public abstract class EmbeddiumAdaptiveBudgetMixin {
         var pending = vro$results.inspect(access.vro$pendingResults(), now);
         vro$pendingAtStart = pending.count();
         boolean[] waiting = new boolean[5];
+        int[] requestCounts = new int[5];
         for (ChunkUpdateType type : ChunkUpdateType.values()) {
             var queue = rebuildQueues.get(type);
             waiting[type.ordinal()] = queue != null && !queue.isEmpty();
+            requestCounts[type.ordinal()] = queue == null ? 0 : queue.size();
         }
         int workers = access.vro$workerCount();
-        vro$budget.beginFrame(now, workers, workers - builder.getNumAvailableBuilders(),
+        int active = Math.max(0, workers - builder.getNumAvailableBuilders());
+        vro$loading.begin(now, requestCounts, access.vro$queuedTaskCount(), active,
+                pending.count(), pending.bytes(), pending.oldestWait(), pending.unbuiltTerrain());
+        vro$budget.beginFrame(now, workers, active,
                 builder.getSchedulingBudget(), pending.bytes(), pending.count(), pending.oldestWait(), waiting);
         // Text only, at most twice per second; no per-frame logging or retained renderer globals.
         if (now - vro$lastBudgetReport >= 500_000_000L) {
-            AdaptiveBudgetState.observe("APPLIED: " + vro$budget.snapshot());
+            AdaptiveBudgetState.observe(vro$loading.status() + "; " + vro$budget.snapshot());
             vro$lastBudgetReport = now;
         }
     }
@@ -72,16 +80,17 @@ public abstract class EmbeddiumAdaptiveBudgetMixin {
     // Limiting is idempotent and happens before any native queue dequeue.
     @ModifyVariable(method = "submitRebuildTasks", at = @At("STORE"), ordinal = 0, require = 2, allow = 2)
     private int vro$limitAdmissions(int budget, ChunkUpdateType type) {
-        return vro$budgetActive ? vro$budget.limit(budget, type.ordinal(), ChunkUpdateType.isSort(type)) : budget;
+        return vro$budgetActive && vro$loading.mayLimit(type.ordinal())
+                ? vro$budget.limit(budget, type.ordinal(), ChunkUpdateType.isSort(type)) : budget;
     }
 
     @Redirect(method = "submitRebuildTasks", at = @At(value = "INVOKE",
             target = "Lme/jellysquid/mods/sodium/client/render/chunk/compile/ChunkBuilder;scheduleDeferred(Lme/jellysquid/mods/sodium/client/render/chunk/tasks/ChunkRenderBuildTask;)Lme/jellysquid/mods/sodium/client/render/chunk/compile/ChunkBuilder$WrappedTask;"), require = 1, allow = 1)
     private ChunkBuilder.WrappedTask vro$measureAdmittedTask(ChunkBuilder owner, ChunkRenderBuildTask task, ChunkUpdateType type) {
-        if (!vro$budgetActive) return owner.scheduleDeferred(task);
+        if (!vro$budgetActive || type == ChunkUpdateType.INITIAL_BUILD) return owner.scheduleDeferred(task);
         boolean sort = ChunkUpdateType.isSort(type);
         var scheduled = owner.scheduleDeferred(new TimedChunkTask(task, vro$budget, sort));
-        vro$budget.admitted(type.ordinal(), sort);
+        if (vro$loading.pacing()) vro$budget.admitted(type.ordinal(), sort);
         return scheduled;
     }
 
@@ -89,6 +98,13 @@ public abstract class EmbeddiumAdaptiveBudgetMixin {
     private void vro$spreadUploads(CallbackInfoReturnable<Boolean> ci) {
         if (!vro$budgetActive) return;
         var queue = ((BudgetBuilderAccess) builder).vro$pendingResults();
+        if (BudgetResults.needsNativeDrain(queue)) vro$loading.protectReadyTerrain();
+        if (!vro$loading.pacing()) {
+            // Preserve native batch/order/ownership and flush ALL ready work, including zero-byte initial builds.
+            // No capped iterator can strand initial geometry behind a cosmetic sort.
+            vro$results.clear();
+            return;
+        }
         // A bounded count also prevents continuously completing producers from extending this frame forever.
         var drain = new BudgetedDrain<ChunkBuildResult>(queue, BudgetResults::bytes, vro$results::forget,
                 vro$budget.uploadByteAllowance(), Math.max(1, vro$pendingAtStart));
@@ -106,6 +122,7 @@ public abstract class EmbeddiumAdaptiveBudgetMixin {
     private void vro$releaseBudget(CallbackInfo ci) {
         if (vro$budget != null) vro$budget.close();
         vro$budget = null;
+        vro$loading = null;
         vro$budgetActive = false;
         vro$results.clear();
         AdaptiveBudgetState.observe("renderer closed; no active budget");

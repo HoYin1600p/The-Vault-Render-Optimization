@@ -300,12 +300,18 @@ are optional and are omitted automatically when Create is absent.
 
 ## Adaptive deferred chunk budgets
 
-`chunk_updates.adaptive_budget` defaults to `true`. It requires validated
+`chunk_updates.adaptive_budget_v2` defaults to `false` (experimental). The old
+`adaptive_budget` key is no longer read, so testing the revision requires fresh
+opt-in. It requires validated
 Embeddium 0.3.18/0.3.19 and effective deferred updates. `/vro chunks budget
 on|off|status` controls it without restart; it is independent of index-only
 sorting. Each renderer learns its own costs, with no saved calibration from
 another PC. Compare Mode/off uses native scheduling and drains remaining native
-results; switching off during a backlog can cause a catch-up hitch. See
+results; switching off during a backlog can cause a catch-up hitch. Initial terrain,
+loading workers and ready initial geometry use native throughput. Backlog pressure
+or 250ms of continuous pending-class activity/observed result waiting also yields
+to native behavior, followed by a 500ms recovery cooldown. Status distinguishes
+`PACING` from `NATIVE FALLBACK` and includes pending requests and worker counts. See
 [design, soft limits and test requirements](ADAPTIVE_CHUNK_BUDGET.md).
 
 ## Optional-mod ownership

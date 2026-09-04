@@ -8,6 +8,7 @@ import java.util.Map;
 import me.jellysquid.mods.sodium.client.gl.buffer.IndexedVertexData;
 import me.jellysquid.mods.sodium.client.gl.compile.ChunkBuildContext;
 import me.jellysquid.mods.sodium.client.render.chunk.compile.ChunkBuildResult;
+import me.jellysquid.mods.sodium.client.render.chunk.RenderSection;
 import me.jellysquid.mods.sodium.client.render.chunk.data.ChunkMeshData;
 import me.jellysquid.mods.sodium.client.render.chunk.passes.BlockRenderPass;
 import me.jellysquid.mods.sodium.client.render.chunk.tasks.ChunkRenderBuildTask;
@@ -16,6 +17,56 @@ import me.jellysquid.mods.sodium.client.util.task.CancellationSource;
 import org.junit.jupiter.api.Test;
 
 class BudgetAdaptersTest {
+    @Test void uploadHookLeavesNativeCallbackAndInitialQueueUntouched() throws Exception {
+        var adapter = new dev.hoyin1600p.vault_render_optimization.mixin.chunk.EmbeddiumAdaptiveBudgetMixin() {};
+        var guard = new TerrainLoadingGuard(64 * AdaptiveChunkBudget.MIB);
+        guard.begin(0, new int[5], 0, 0, 0, 0, 0, false);
+        guard.begin(500_000_000L, new int[5], 0, 0, 0, 0, 0, false);
+        assertTrue(guard.pacing());
+        var queue = new ArrayDeque<ChunkBuildResult>();
+        var unbuilt = mock(RenderSection.class);
+        queue.add(new ChunkBuildResult(unbuilt, null, Map.of(), 2));
+        var builder = mock(me.jellysquid.mods.sodium.client.render.chunk.compile.ChunkBuilder.class,
+                withSettings().extraInterfaces(BudgetBuilderAccess.class));
+        when(((BudgetBuilderAccess) builder).vro$pendingResults()).thenReturn(queue);
+        var type = adapter.getClass().getSuperclass();
+        for (var entry : Map.<String, Object>of("builder", builder, "vro$budgetActive", true,
+                "vro$loading", guard).entrySet()) {
+            var field = type.getDeclaredField(entry.getKey());
+            field.setAccessible(true);
+            field.set(adapter, entry.getValue());
+        }
+        var limit = type.getDeclaredMethod("vro$limitAdmissions", int.class,
+                me.jellysquid.mods.sodium.client.render.chunk.ChunkUpdateType.class);
+        limit.setAccessible(true);
+        assertEquals(64, limit.invoke(adapter, 64,
+                me.jellysquid.mods.sodium.client.render.chunk.ChunkUpdateType.INITIAL_BUILD));
+        var callback = new org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable<Boolean>("upload", true);
+        var upload = type.getDeclaredMethod("vro$spreadUploads", callback.getClass());
+        upload.setAccessible(true);
+        upload.invoke(adapter, callback);
+        assertFalse(callback.isCancelled()); // Native uploader must run, with its entire original queue.
+        assertEquals(1, queue.size());
+        assertFalse(guard.pacing());
+    }
+
+    @Test void cachedInitialResultBehindSortsRequestsNativeDrainWithoutTakingOwnership() {
+        var built = mock(RenderSection.class);
+        when(built.isBuilt()).thenReturn(true);
+        var unbuilt = mock(RenderSection.class);
+        when(unbuilt.isBuilt()).thenReturn(false);
+        var queue = new ArrayDeque<ChunkBuildResult>();
+        var sort = new IndexOnlySortResult(built, 1, Map.of());
+        queue.add(sort);
+        assertFalse(BudgetResults.needsNativeDrain(queue));
+        var initial = new ChunkBuildResult(unbuilt, null, Map.of(), 2);
+        queue.add(initial);
+        assertTrue(BudgetResults.needsNativeDrain(queue));
+        assertTrue(new BudgetResults().inspect(queue, 1).unbuiltTerrain());
+        assertSame(sort, queue.remove());
+        assertSame(initial, queue.remove()); // neither reordered, consumed nor deleted by inspection
+    }
+
     @Test void ordinaryRebuildCountsBothNativeBuffersAcrossPasses() {
         var solid = new IndexedVertexData(null, new NativeBuffer(1024), new NativeBuffer(96));
         var translucent = new IndexedVertexData(null, new NativeBuffer(512), new NativeBuffer(48));

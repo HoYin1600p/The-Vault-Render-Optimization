@@ -1,124 +1,133 @@
-# Adaptive deferred chunk budgets
+# Adaptive deferred chunk budgets: loading-safe experiment
 
-## Scope
+## Status and scope
 
-Task 2 implements a VRO-owned feedback controller, not a benchmark-derived
-allowance calibrated on one PC. Each renderer instance starts conservatively,
-learns from its own successful worker jobs and CPU-side upload durations, and
-adjusts during play. No learned state is shared across machines or saved to disk.
+The first implementation passed offline tests but failed user terrain-loading
+evaluation: cached full chunks appeared immediately when budgeting was disabled,
+including with DH off. Bobby and Farsight were installed. A nearly empty
+completed-results queue did not prove healthy throughput; the original display
+omitted requests waiting to be submitted and worker activity.
+
+Revision 2 is a fresh, default-off experiment. It aims to pace updates to terrain
+that already has geometry without delaying initial terrain. This is not yet a
+verified runtime fix or a demonstrated performance improvement.
 
 Supported: exact inspected Embeddium 0.3.18 and HoYin1600p's 0.3.19 fork.
-Eleven input classes are fingerprinted: the nine shared index-sorting contracts
-plus the update-type enum and base task. Unknown bytecode, Rubidium, vanilla and
-ambiguous renderers do not select the hooks. These are input-JAR gates, not a
-guarantee against later third-party mixin changes. Index-only sorting has an
-independent toggle; the budget supports both ordinary and index-only results.
+Eleven input classes are fingerprinted: nine shared index-sort contracts plus
+the update-type enum and base task. Unknown bytecode, Rubidium, vanilla and
+ambiguous renderers do not select these hooks. Input-JAR gates cannot guarantee
+compatibility with later third-party mixin transformations.
 
-## Controls and fallback
+## Controls
 
-- `chunk_updates.adaptive_budget=true` is the default in VRO's client TOML.
-- `/vro chunks budget on|off|status` applies at the next renderer update.
+- `chunk_updates.adaptive_budget_v2=false` is the new default.
+- The previous `adaptive_budget` key is no longer read. An old experimental
+  opt-in must not silently enable this revision.
+- `/vro chunks budget on|off|status` controls it without restarting.
+- Effective deferred scheduling is required; VRO does not edit Embeddium's preference.
 - Compare Mode, off, or effective synchronous scheduling restores native behavior.
-- Effective deferral may come from VRO's deferral option or the renderer's own
-  preference. This feature does not edit that preference or force deferral.
-- Off closes the controller, clears only observation metadata, and lets the
-  original uploader drain its own remaining results. A large backlog may cause
-  a one-time catch-up hitch. On starts a fresh conservative controller.
+- Off clears only controller/observation state. The native uploader retains all
+  results and drains them normally; catch-up can produce a one-time hitch.
+- Index-only sorting and native chunk-update deferral are independent features.
 
-No worker count, visibility, render distance, model detail, block invalidation,
-native task/future semantics, or native full-rebuild upload algorithm is changed.
-Task 3 remains deferred. World destruction keeps native cancellation and native
-buffer cleanup; no queue payload is owned or freed by the observer/controller.
+## Loading and backlog guard
 
-## Feedback and limits
+1. INITIAL_BUILD admissions always retain the original native budget, and their
+   tasks are not wrapped for budget timing.
+2. Initial requests or completed results whose section is not built disable pacing.
+   Zero-byte initial results count too: accepting them changes section state.
+3. Startup and detected loading latch a conservative barrier until queued workers,
+   active workers and ready results drain. Already-running jobs may have unknown
+   origins, so this intentionally includes non-initial jobs.
+4. Before upload, recheck for unbuilt sections. If found, leave the original
+   native upload method untouched: the full queue retains its order, batching,
+   acceptance checks and ownership. Initial results are not extracted or reordered.
+5. Native fallback also applies at 128 pending requests, 128 completed results,
+   the controller's payload watermark, 250ms of continuous pending-class activity,
+   or 250ms of observed completed-result waiting.
+6. When pressure clears, wait 500ms before resuming pacing. This prevents rapid
+   alternation between modes. Native fallback may itself reintroduce hitches.
 
-Initial estimated upload allowance is 0.75ms. It is bounded to 0.25-1.5ms and
-at most 10% of the observed update interval, subject to that 0.25ms floor.
-Intervals slower than approximately 60fps never raise the 1.5ms ceiling.
-An upload overrun, or worsening intervals accompanied by material upload work,
-reduces the allowance by 20%. Eight qualifying cheap-upload cycles permit 2%
-recovery. Pauses over 250ms do not train higher allowances.
+A continuously busy loading session may stay entirely in native fallback and
+yield no performance benefit. The guard prefers native throughput over delayed
+visible terrain. The 250ms criterion is a fallback trigger, not a promised
+maximum visible-update delay. Requests are raw native queue entries, including
+entries the renderer may later discard; class-busy time is not an individual
+request's age. A worker result appended after the upload recheck may be noticed
+on the next update.
 
-Measured nanoseconds per native payload byte translate the time target into a
-batch byte allowance (4KiB-8MiB). Cost increases are learned quickly; decreases
-slowly. A batch is a FIFO prefix of the existing completed-results queue and
-still uses native region batching. A single indivisible oversized result always
-progresses, and zero-byte results are limited by a 128-result maximum. Work
-finishing continuously cannot extend the batch without bound.
+There is no Bobby, Farsight or DH cache modification, invalidation or deletion.
+The loading distinction follows the renderer's built/unbuilt section state,
+not a mod-name assumption. Actual cache-mod integration still needs testing.
 
-**This is a predictive soft budget, not a hard timer or GPU time measurement.**
-An upload cannot safely be interrupted midway. Native staging/allocation,
-driver stalls, and one large section can exceed the target. Actual CPU-side
-upload duration feeds the following cycles, including allocation overhead.
-Submitted-byte measurements can include stale results the native uploader drops,
-so they are conservative workload counters, not exact GPU traffic measurements.
+## Pacing when safe
 
-Build and sort durations/output sizes have separate estimates. New admissions
-respect native queue capacity, worker-duration estimates, estimated upload cost,
-and reserved output space for queued and active workers. The native important
-queues no longer receive unlimited submissions while this controller is active.
-All priority classes share one cycle allowance (at most 32 new jobs), including
-the native sorting minimum. No native pending entry is consumed just to defer it.
+Each renderer learns local successful worker costs and CPU upload costs; nothing
+is calibrated to the development PC or persisted. The predicted upload target
+starts at 0.75ms, bounded to 0.25-1.5ms and 10% of update interval subject to the
+floor. Overrun pressure reduces it by 20%; eight qualifying cheap uploads allow
+2% recovery. Pauses over 250ms do not train a higher allowance.
 
-Completed-result backpressure starts at 128 results or a native payload watermark
-of heap/128, clamped to 16-64MiB. Existing active jobs reserve estimated output
-space. The observer tracks at most 4096 result identities; saturation reports
-overload and stops new admissions. Bytes exclude cached heap snapshots, builder
-scratch buffers, staging buffers and VRAM. **This is not a hard process/native
-memory cap:** estimates, existing jobs, external producers and indivisible large
-results can exceed it. The renderer continues draining instead of dropping data.
+Measured cost per byte determines a 4KiB-8MiB FIFO batch allowance. At least one
+indivisible oversized result progresses; consumption is bounded by 128 results
+and the observed starting queue size. Native region upload still owns cleanup.
+Build/sort estimates remain separate, with native queue capacity, worker capacity,
+estimated output space, aged-class admission opportunities and at most 32 paced
+admissions per cycle. Initial terrain never enters this admission cap.
 
-An update class waiting 250ms receives the next admission opportunity before
-earlier classes can spend its allowance. This prevents cheap sorts from starving
-aged rebuilds; it does not guarantee an absolute visual-update deadline. Within
-each class, native ordering is unchanged. Completed results remain FIFO, with
-at least one result progressing per update when the queue is nonempty. A machine
-that cannot keep up must trade some visual update delay for frame consistency.
+This is a predictive soft budget, not a timer interrupt or GPU measurement.
+Native allocation, staging, driver stalls and individual large sections may
+exceed it. The payload watermark is heap/128 clamped to 16-64MiB, not a cap on
+process native memory or VRAM. Observer metadata is capped at 4096 results;
+inspection saturation forces native fallback. No queue payload is owned or
+freed by the observer. Destroy/off retain native cancellation and cleanup.
 
 ## Diagnostics
 
-The status command reports the current allowance, observed queued native bytes,
-result count, oldest observed result wait and peak, admissions, consumed results,
-aggregate upload CPU time, budget overruns, recent update-interval p95/p99 and
-upload CPU p95. Text snapshots refresh at most twice per second without logging
-each frame. Percentiles use fixed 256-sample rings. The controller retains no
-global world/renderer references; only a text snapshot is globally visible.
+Status reports `PACING` or `NATIVE FALLBACK` with a reason, the five pending
+request classes, queued and active workers, completed results, longest
+continuous pending-class busy time, and paced/native cycle counts.
 
-Queue ages begin when a result is first observed, not necessarily when the
-worker completed. Update intervals include other game/driver/VSync work and are
-not GPU-present frame times. Neither these statistics nor an APPLIED label proves
-a performance improvement. APPLIED indicates the active deferred budget path.
+The existing controller snapshot reports predicted allowance, observed native
+payload, completed-result age/peak, paced admissions/uploads, upload CPU time,
+overshoots and recent update-interval p95/p99 plus upload CPU p95. Upload timing
+and counters cover paced interceptions, not the native fallback batches.
+Already-built worker estimates can learn during fallback; initial jobs are
+excluded. A mode change therefore changes the sample population.
 
-## Verification and remaining runtime work
+Text refresh is at most twice per second; percentile rings hold 256 samples.
+Result age starts on first observation, not necessarily worker completion.
+Update intervals include game/driver/VSync work; they are not GPU-present times.
+Neither a healthy-looking queue nor a PACING label proves an FPS improvement.
 
-Completed offline validation: 154 tests passed against both stock Embeddium
-0.3.18 and the inspected custom 0.3.19 JAR, including a 2000-cycle simulated
-transition from cheap to expensive worker/upload load. All five pack compatibility
-compiles and the final clean production build passed (six existing annotation
-processor warnings). Production JAR inspection confirmed the new helpers/mixins
-and upstream license, with no renderer classes or test dependencies bundled.
+## Verification and runtime acceptance
 
-Automated tests exercise fast/slow upload learning, low-FPS feedback, gradual
-recovery, pause handling, memory-pressure admission stops, in-flight reservations,
-aged-class fairness, FIFO and oversized-result progress, bounded batch consumption,
-off/unload ownership, native/index-only payload accounting, cancellation and
-failure pass-through, bytecode gates and exact injection contracts.
+Revision 2 offline validation: 165 tests passed against both stock Embeddium
+0.3.18 and the inspected custom 0.3.19 JAR. All five pack compatibility compiles
+and the final clean production build passed (six existing annotation-processor
+warnings). JAR inspection verified the new guard/adapters, current embedded
+third-party notices and upstream license, with no bundled renderer or test code.
 
-The standalone tests use the real renderer classes where possible, with mocked
-world/GL boundaries and the existing test-only render-pass enum. They do not
-validate actual Forge mixin transformation or graphics-driver behavior.
+Offline regression tests cover initial request bursts with no completed results,
+startup/in-flight loading, zero-byte unbuilt results, late ready initial results,
+native callback/queue preservation, backlog/wait fallback, recovery cooldown,
+and continued eligibility of stable already-built updates. Existing tests cover
+controller feedback, queue ownership, cancellation, bytecode gates and injection
+contracts. Tests use real renderer contracts with mocked world/GL boundaries;
+they do not apply the actual Forge mixins or validate a graphics driver.
 
-Before claiming runtime readiness, explicitly authorize installation, then check:
+Before claiming runtime success, install only with authorization and check:
 
-1. Startup gate/mixin success, status APPLIED, increasing admissions/uploads.
-2. Same-route on/off captures with deferral and sorting unchanged; compare frame
-   tails, queued bytes/wait and visible update delay, not maximum FPS alone.
-3. Sustained place/break, fluids, cake-room/temporary Vault Bedrock removal,
-   teleport/dimension changes, world unload and hot off/on with work queued.
-4. Shader changes/reloads, DH and Create where installed; inspect native-memory
-   behavior and stale geometry. No shader/DH compatibility claim from mocks.
-5. Repeat on lower-end hardware when available. Simulated slow costs test the
-   controller but cannot substitute for actual driver/memory/CPU combinations.
+1. With budgeting off, revisit a cached route and record terrain appearance.
+2. Enable it and repeat with Bobby/Farsight unchanged, first with DH off, then on.
+   Loading should report native fallback and terrain must not wait for toggling off.
+3. Let loading settle. PACING should become eligible during ordinary updates;
+   persistent fallback is safe but may mean the optimization offers no benefit.
+4. Compare same-route frame tails and visual delay, not peak FPS alone. Keep
+   shaders, deferral and index sorting constant between paired captures.
+5. Place/break rapidly, run fluids and cake-room/temporary Vault Bedrock changes,
+   teleport, change dimensions, reload shaders, unload, and toggle off/on with work.
+6. Watch stale geometry, native memory and driver stalls; test slower hardware
+   when available. Mocks and this workstation cannot establish universal benefit.
 
-No installation, renderer-fork edit, public push, version bump or publication
-is part of this implementation.
+No installation, public push, version bump or publication is included in this revision.

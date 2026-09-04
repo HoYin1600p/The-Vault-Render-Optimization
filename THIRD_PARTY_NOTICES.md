@@ -313,7 +313,10 @@ Upstream authors: embeddedt, JellySquid, the Rubidium lineage and contributors.
 
 `TimedChunkTask` and `EmbeddiumAdaptiveBudgetMixin` are fresh VRO adaptations
 of those lifecycle contracts, marked LGPL-3.0-only. The feedback policy,
-bounded observer/drain, compatibility checks, diagnostics and tests are VRO-owned.
+bounded observer/drain, native loading safety gate, compatibility checks,
+diagnostics and tests are VRO-owned. The loading revision additionally inspected
+`RenderSection.isBuilt()` and native initial-build/result acceptance behavior at
+the same revision; it does not replace native scheduling or reorder results.
 No full renderer or newer Sodium code is shipped. Full upstream LGPLv3/GPLv3
 texts are already included in `docs/licenses/embeddium-LGPL-3.0-only.txt` and
 embedded in the JAR. VRO remains AGPL-3.0-or-later overall.
@@ -329,6 +332,12 @@ inspected versions and local source revision are in
 `docs/CHUNK_UPDATE_DEFERRAL.md`. Newer Sodium scheduling is research-only.
 
 ## Compatibility behavior inspected
+
+Bobby (Johni0702 and Forge backport contributors), LGPL-3.0-or-later, revision
+`57ea55a9b365dfc2338214746ed3fdb024b34ea2`: inspected `FakeChunk`,
+`FakeChunkManager` and its Sodium chunk-status listener for normal
+loaded/dirty-section notifications. Research only for the adaptive budget
+loading guard; no Bobby source is copied, bundled or modified.
 
 VRO interoperates with Minecraft Forge, SpongePowered Mixin, Vault Hunters,
 Vault Integrations, Powah, Create Crafts & Additions, Xaero's World Map,
