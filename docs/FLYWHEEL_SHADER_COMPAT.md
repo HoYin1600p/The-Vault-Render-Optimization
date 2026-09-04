@@ -40,6 +40,8 @@ version lines are rejected instead of attempting uncertain injections.
 - Solid, cutout-mipped, and cutout render-layer ordering
 - Shader shadow-pass rendering
 - Shader reload and pipeline cache cleanup
+- Buffer-local format selection and deferred instanced model ticks during an
+  Oculus pipeline gap, including a DH-ready reload before login
 - Automatic fallback to Create's standard renderer after a compile failure
 
 The implementation is adapted from the MIT-licensed Iris & Oculus Flywheel
@@ -105,3 +107,6 @@ renderer on the next frame.
 11. Verify no stale frames, black geometry, missing contraptions, or GL errors.
 12. Disable compatibility in-game and confirm Create returns to its standard path.
 13. Repeat once with the startup recovery argument to verify a clean no-mixin launch.
+14. With DH and shaders enabled, restart at a base with moving contraptions;
+    verify login and the first rendered frames, then repeat shader reloads.
+    See `FLYWHEEL_STARTUP_FORMAT_FIX.md` for the targeted regression evidence.

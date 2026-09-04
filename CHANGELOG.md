@@ -105,6 +105,12 @@ and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ### Fixed
 
+- Fixed Create/Flywheel block-model format handling during Oculus pipeline
+  transitions, including the DH-ready reload before world login. Model readers
+  now follow each buffer's actual format; instanced model ticks wait while the
+  extended format remains enabled without a pipeline. Removed an unreachable
+  format-forcing fallback and released both native copies owned by extended
+  readers. Offline regression coverage added; in-game confirmation pending.
 - Bound The Vault's native grayscale shader only while its startup values are
   uploaded, then restored the previously active OpenGL program. This removes
   the two `No active program` errors without changing normal shader ownership.

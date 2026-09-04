@@ -102,6 +102,14 @@ VRO's optional Create shader-instancing bridge under
 This is adapted source code. The complete upstream MIT license is retained at
 `docs/licenses/iris-flw-compat-MIT.txt` and embedded in the runnable jar.
 
+The startup-format fix and reader regression tests are VRO-owned additions.
+The test-only mapped `IrisVertexFormats` boundary describes the public terrain
+buffer layout (element order, widths, and offsets) observed in the local
+Oculus-xhfp-backport revision `bb9e122629084c0f1a60c7a73eb10645330547f5`.
+It does not reproduce shader pipeline or OpenGL attribute-binding behavior,
+and neither this fixture nor Oculus classes are included in the runnable jar.
+Oculus/Iris contributors retain credit for that external shader interface.
+
 ### Unobtanium learned-ability cache
 
 VRO's `ClientAbilityDataMixin` is adapted from Unobtanium's

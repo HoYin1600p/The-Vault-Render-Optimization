@@ -84,6 +84,12 @@ runtime configuration and diagnostics, Compare Mode ownership, automatic
 fallback, and a VRO-owned shader-uniform accessor. The upstream copyright and
 full MIT license are retained in the repository and release jar.
 
+VRO's startup-format correction adds actual-buffer reader selection, a narrow
+pipeline-gap model-build guard, and complete extended-reader cleanup. Offline
+tests describe the 52-byte Oculus terrain interface observed in
+HoYin1600p's Oculus-xhfp-backport revision
+`bb9e122629084c0f1a60c7a73eb10645330547f5`; no Oculus implementation is bundled.
+
 ### Unobtanium - iwolfking, radimous, and contributors
 
 - Source: [iwolfking/unobtanium](https://github.com/iwolfking/unobtanium)

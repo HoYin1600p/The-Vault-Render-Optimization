@@ -193,11 +193,13 @@ dependencies {
     testImplementation 'org.mockito:mockito-core:5.11.0'
     // Exercise the actual optional renderer contracts without packaging it into VRO.
     testImplementation files(indexSortTestSource)
+    testImplementation files(extractedFlywheelJar, oculusModJarFile)
 }
 
 tasks.named('test') {
     useJUnitPlatform()
     systemProperty 'vro.indexSort.rawRenderer', indexSortTestSource.absolutePath
+    systemProperty 'vro.flywheel.rawCreate', createJarFile.absolutePath
 }
 
 tasks.register('printVaultCompatibilityTargets') {

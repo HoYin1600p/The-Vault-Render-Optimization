@@ -18,6 +18,11 @@ public class IrisBlockVertexListUnsafe extends BlockVertexListUnsafe implements 
     }
 
     @Override
+    public void delete() {
+        try { impl.delete(); } finally { super.delete(); }
+    }
+
+    @Override
     public float getX(int index) { // 4 bytes
         return impl.getX(index);
     }
@@ -124,6 +129,11 @@ public class IrisBlockVertexListUnsafe extends BlockVertexListUnsafe implements 
         public Shaded(ByteBuffer buffer, int vertexCount, int unshadedStartVertex) {
             super(buffer, vertexCount, unshadedStartVertex);
             impl = new IrisBlockVertexReaderImpl(buffer,vertexCount);
+        }
+
+        @Override
+        public void delete() {
+            try { impl.delete(); } finally { super.delete(); }
         }
 
         @Override

@@ -1,6 +1,7 @@
 package dev.hoyin1600p.vault_render_optimization.compat.flywheelshader;
 
 import com.jozufozu.flywheel.backend.Backend;
+import net.coderbot.iris.block_rendering.BlockRenderingSettings;
 import dev.hoyin1600p.vault_render_optimization.config.ClientOptimizationConfig;
 
 public final class FlywheelShaderCompatState {
@@ -55,6 +56,13 @@ public final class FlywheelShaderCompatState {
 
     public static synchronized boolean hasPipeline() {
         return pipeline != null;
+    }
+
+    public static synchronized boolean deferModelBuilds() {
+        // Oculus retains its vertex-format setting across a DH-triggered pipeline destruction.
+        // Do not consume Create/Flywheel model work in that gap; rendering recreates the pipeline.
+        return ModelBuildReadiness.defer(
+                BlockRenderingSettings.INSTANCE.shouldUseExtendedVertexFormat(), pipeline != null);
     }
 
     public static synchronized boolean hasFailed() {
