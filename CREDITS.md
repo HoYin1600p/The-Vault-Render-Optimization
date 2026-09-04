@@ -234,6 +234,20 @@ Xaero's World Map exposed a Forge key-consumption conflict with The Vault's
 default `M` binding. VRO changes only when The Vault's key context is active so
 Xaero can receive `M` outside Vaults.
 
+## Index-only terrain transparency sorting
+
+Embeddium's embeddedt, Rubidium's NanoLive, Sodium/CaffeineMC and contributors
+provide the original 1.18.2 sorting and GPU arena contracts. VRO's index-only
+task/result/upload adapter was developed against HoYin1600p's fork at
+`d95f90d1edb990943b30663b2e95a02ea5e7c2a8` and stock Embeddium 0.3.18.
+The adapter files retain LGPL-3.0-only notices; the complete upstream LGPL/GPL
+texts are included in `docs/licenses/embeddium-LGPL-3.0-only.txt` and the JAR.
+VRO's overall project license remains AGPL-3.0-or-later.
+
+Newer Sodium's separate index uploads inspired the optimization direction;
+no newer Sodium implementation was copied. The native 1.18.2 sorter is called
+unchanged. See `docs/INDEX_ONLY_SORTING.md` for precise inspected source paths.
+
 ## Native asynchronous chunk updates
 
 Sodium, Embeddium and Rubidium contributors implemented the native deferred

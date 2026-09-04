@@ -10,6 +10,8 @@ import dev.hoyin1600p.vault_render_optimization.client.particle.ParticleOptimiza
 import dev.hoyin1600p.vault_render_optimization.client.particle.ParticleMixinSelection;
 import dev.hoyin1600p.vault_render_optimization.client.chunk.ChunkUpdateBackend;
 import dev.hoyin1600p.vault_render_optimization.client.chunk.ChunkUpdateState;
+import dev.hoyin1600p.vault_render_optimization.client.chunk.sorting.IndexSortCompatibility;
+import dev.hoyin1600p.vault_render_optimization.client.chunk.sorting.IndexSortState;
 import dev.hoyin1600p.vault_render_optimization.renderertransfer.BootstrapRendererTransferConfig;
 import dev.hoyin1600p.vault_render_optimization.renderertransfer.RendererFamily;
 import dev.hoyin1600p.vault_render_optimization.renderertransfer.RendererFamilyDetector;
@@ -126,6 +128,7 @@ public final class VaultRenderOptimizationMixinPlugin implements IMixinConfigPlu
     private RendererFamily rendererFamily = RendererFamily.NONE;
     private String rendererVersion;
     private ChunkUpdateBackend chunkUpdateBackend = ChunkUpdateBackend.BLOCKED;
+    private boolean indexSortCompatible;
 
     @Override
     public void onLoad(String mixinPackage) {
@@ -162,6 +165,19 @@ public final class VaultRenderOptimizationMixinPlugin implements IMixinConfigPlu
                 rendererFamily, rendererVersion
         );
         ChunkUpdateState.configure(chunkUpdateBackend);
+        String indexSortBlocker = IndexSortCompatibility.blocker(chunkUpdateBackend, path -> {
+            try {
+                var resource = loadingModList.findResource(path);
+                return resource == null ? null : java.nio.file.Files.readAllBytes(resource);
+            } catch (java.io.IOException failure) {
+                throw new java.io.UncheckedIOException(failure);
+            }
+        });
+        indexSortCompatible = indexSortBlocker == null;
+        IndexSortState.configure(indexSortCompatible, indexSortCompatible
+                ? "validated Embeddium index-only path; runtime config/Compare Mode apply" : indexSortBlocker);
+        VaultRenderOptimization.LOGGER.info("Index-only sorting hooks: {} - {}",
+                indexSortCompatible ? "AVAILABLE" : "BLOCKED", indexSortBlocker == null ? "bytecode verified" : indexSortBlocker);
         VaultRenderOptimization.LOGGER.info("Chunk-update deferral backend: {} (runtime config/Compare Mode apply)",
                 chunkUpdateBackend);
 
@@ -208,6 +224,10 @@ public final class VaultRenderOptimizationMixinPlugin implements IMixinConfigPlu
 
     @Override
     public boolean shouldApplyMixin(String targetClassName, String mixinClassName) {
+        if (mixinClassName.endsWith(".chunk.EmbeddiumIndexSortTaskMixin")
+                || mixinClassName.endsWith(".chunk.EmbeddiumIndexSortUploadMixin")) {
+            return indexSortCompatible;
+        }
         if (mixinClassName.endsWith(".chunk.VanillaDeferredChunkUpdatesMixin")) {
             return chunkUpdateBackend == ChunkUpdateBackend.VANILLA;
         }

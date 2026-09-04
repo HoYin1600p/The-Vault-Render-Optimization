@@ -40,6 +40,23 @@ under sustained load. It does not discard dirty updates, change server blocks,
 lower render distance, or cap native upload time. See
 [implementation and testing notes](CHUNK_UPDATE_DEFERRAL.md).
 
+## Index-only terrain transparency sorting
+
+`chunk_updates.index_only_sorting=true` enables VRO's index-only sorting path
+on validated Embeddium `0.3.18+mc1.18.2` / `0.3.19+mc1.18.2`. Startup checks
+the inspected renderer bytecode; changed/unknown implementations are blocked.
+Vanilla and Rubidium 0.5.6 do not expose this path and are left unchanged.
+
+- `/vro chunks sorting on|off` saves the toggle without a restart.
+- `/vro chunks sorting status` reports applied/yielded/blocked status, scheduled
+  and applied jobs, stale/fallback counts, and avoided vertex copy/upload bytes.
+- Off/Compare Mode restores native creation of new sort jobs. Existing VRO
+  jobs still finish and release their resources. The renderer's own translucent
+  sorting option is respected and is never changed by VRO.
+
+No new queue, worker, sorting algorithm, GPU format or visibility reduction is
+introduced. See [implementation and validation](INDEX_ONLY_SORTING.md).
+
 ## Update notices
 
 | Key | Default | Purpose |

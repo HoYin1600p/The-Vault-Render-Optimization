@@ -278,6 +278,29 @@ same render layers, model data, lighting, and textures. The directional
 machinery bounds are independently calculated from each installed block
 entity's position, facing, extension, or belt chain direction.
 
+## Index-only terrain transparency sorting
+
+- Behavioral source: Embeddium 0.3.18 and HoYin1600p's Embeddium fork at
+  `d95f90d1edb990943b30663b2e95a02ea5e7c2a8` (Minecraft 1.18.2).
+- Upstream authors: embeddedt, NanoLive, JellySquid/CaffeineMC and contributors.
+- Source project: https://github.com/embeddedt/embeddium
+- Source license as declared in that branch's `mods.toml`: LGPL-3.0-only.
+- Source paths under `me/jellysquid/mods/sodium/client/`:
+  `render/chunk/tasks/ChunkRenderSortTask.java`,
+  `render/chunk/compile/ChunkBufferSorter.java`,
+  `render/chunk/compile/ChunkBuildResult.java`,
+  `render/chunk/region/RenderRegionManager.java`, and
+  `render/chunk/ChunkGraphicsState.java`.
+
+VRO's `IndexOnlySortTask`, `IndexOnlySortResult` and `IndexOnlyUploads` adapt
+these contracts with explicit LGPL-3.0-only source notices. They reuse the
+installed native sorter, retain geometry, and own only replacement index
+results. The new policy, generation checks, controls and tests are VRO-owned.
+No complete renderer or newer Sodium code is bundled. The complete LGPLv3
+and GPLv3 texts from the source repository are retained together at
+`docs/licenses/embeddium-LGPL-3.0-only.txt` and embedded in the production JAR.
+VRO's overall project license remains AGPL-3.0-or-later.
+
 ## Native chunk-update deferral
 
 VRO's chunk-update deferral is a fresh integration with existing Minecraft

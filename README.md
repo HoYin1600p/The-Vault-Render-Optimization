@@ -20,6 +20,10 @@ bounded composite orbs. The remote server does not need the mod.
 
 ## Highlights
 
+- Avoids copying and re-uploading unchanged terrain vertices for translucent
+  sorting on validated Embeddium builds. Independently switchable; see
+  [index-only sorting](docs/INDEX_ONLY_SORTING.md).
+
 - Reduces blocking chunk-update stalls through default-on native asynchronous
   scheduling, with or without a supported renderer mod. No other mod's settings
   need changing. Visible block updates can lag under load; see
@@ -338,6 +342,7 @@ for upgrades, removal, optional-mod coexistence, and issue isolation.
 | `/vro particles` | Reports particle ownership, hot options, and diagnostics. |
 | `/vro chunks status` | Reports the selected chunk-update backend and last observed native preference. |
 | `/vro chunks defer on\|off` | Controls native asynchronous chunk scheduling without changing another mod's settings. |
+| `/vro chunks sorting on\|off\|status` | Controls index-only transparency updates and reports avoided vertex copies/uploads. |
 | `/vro particles billboards on\|off` | Hot-enables or disables VRO's camera-basis billboard geometry. |
 | `/vro particles owner auto\|renderer\|vro` | Hot-selects VRO or renderer ownership; `renderer` yields to Rubidium/Embeddium when present. |
 | `/vro particles shared_light on\|off` | Hot-controls the bounded same-tick shared light cache. |

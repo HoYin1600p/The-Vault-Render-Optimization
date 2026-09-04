@@ -9,6 +9,13 @@ and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ### Added
 
+- Added independently switchable index-only terrain transparency sorting for
+  bytecode-validated Embeddium 0.3.18/0.3.19. Retains unchanged vertices,
+  shares immutable heap snapshots, and batches drawing-order uploads. Stale
+  sorting results cannot replace rebuilt/unloaded geometry. Includes hot
+  `/vro chunks sorting on|off|status` controls, Compare Mode support and counters.
+  Vanilla and Rubidium 0.5.6 are unchanged by this feature.
+
 - Added default-on VRO-controlled asynchronous chunk updates for vanilla Forge
   and validated Embeddium/Rubidium renderers. Uses each renderer's native
   deferred path without editing its settings or replacing its task lifecycle.

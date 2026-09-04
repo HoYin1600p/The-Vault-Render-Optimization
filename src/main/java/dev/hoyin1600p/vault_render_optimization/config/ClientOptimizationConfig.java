@@ -20,6 +20,7 @@ public final class ClientOptimizationConfig {
 
     private static final ForgeConfigSpec.BooleanValue COMPARE_MODE;
     private static final ForgeConfigSpec.BooleanValue DEFER_CHUNK_UPDATES;
+    private static final ForgeConfigSpec.BooleanValue INDEX_ONLY_SORTING;
     private static final EnumMap<RenderBackportFeature, ForgeConfigSpec.BooleanValue>
             RENDER_BACKPORT_OPTIONS = new EnumMap<>(RenderBackportFeature.class);
     private static final EnumMap<RendererTransferFeature, ForgeConfigSpec.BooleanValue>
@@ -60,6 +61,7 @@ public final class ClientOptimizationConfig {
 
     private static volatile boolean compareMode;
     public static volatile boolean deferChunkUpdates = true;
+    public static volatile boolean indexOnlySorting = true;
     private static volatile Map<RenderBackportFeature, Boolean> renderBackportOptions =
             defaultRenderBackportOptions();
     private static volatile Map<RendererTransferFeature, Boolean> rendererTransferOptions =
@@ -134,6 +136,12 @@ public final class ClientOptimizationConfig {
                 "Does not edit vanilla/renderer settings. Off and Compare Mode yield to those settings.",
                 "The /vro chunks defer on|off command applies immediately to new scheduling decisions."
         ).define("defer_updates", true);
+        INDEX_ONLY_SORTING = builder.comment(
+                "Reuse unchanged terrain vertices during translucent sorting on validated Embeddium builds.",
+                "Only drawing-order indices are uploaded. Vanilla and Rubidium 0.5.6 are unchanged.",
+                "Off/Compare Mode affects new jobs; already queued index-only jobs finish safely.",
+                "Use /vro chunks sorting on|off|status without a restart."
+        ).define("index_only_sorting", true);
         builder.pop();
 
         builder.push("modernfix_backports");
@@ -326,6 +334,12 @@ public final class ClientOptimizationConfig {
         deferChunkUpdates = enabled;
     }
 
+    public static void setIndexOnlySorting(boolean enabled) {
+        INDEX_ONLY_SORTING.set(enabled);
+        INDEX_ONLY_SORTING.save();
+        indexOnlySorting = enabled;
+    }
+
     public static boolean compareModeEnabled() {
         return compareMode;
     }
@@ -503,6 +517,7 @@ public final class ClientOptimizationConfig {
 
         compareMode = COMPARE_MODE.get();
         deferChunkUpdates = DEFER_CHUNK_UPDATES.get();
+        indexOnlySorting = INDEX_ONLY_SORTING.get();
         EnumMap<RenderBackportFeature, Boolean> backportValues =
                 new EnumMap<>(RenderBackportFeature.class);
         RENDER_BACKPORT_OPTIONS.forEach((feature, value) -> backportValues.put(feature, value.get()));
