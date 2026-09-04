@@ -9,6 +9,13 @@ and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ### Added
 
+- Added dynamic deferred chunk build/upload budgets for bytecode-validated
+  Embeddium 0.3.18/0.3.19. Learns per-machine costs during play, limits upload
+  batches, applies queue backpressure and reserves aged update-class admissions.
+  Includes `/vro chunks budget on|off|status`, Compare Mode fallback and bounded
+  diagnostics. Predictive budgets may be exceeded by indivisible uploads;
+  visual updates can be delayed under load. Runtime validation pending.
+
 - Added independently switchable index-only terrain transparency sorting for
   bytecode-validated Embeddium 0.3.18/0.3.19. Retains unchanged vertices,
   shares immutable heap snapshots, and batches drawing-order uploads. Stale

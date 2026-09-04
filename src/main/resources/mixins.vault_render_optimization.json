@@ -11,6 +11,8 @@
     "chunk.RubidiumDeferredChunkUpdatesMixin",
     "chunk.EmbeddiumIndexSortTaskMixin",
     "chunk.EmbeddiumIndexSortUploadMixin",
+    "chunk.EmbeddiumBudgetBuilderMixin",
+    "chunk.EmbeddiumAdaptiveBudgetMixin",
     "backport.embeddium.occlusion.BlockOcclusionCacheMixin",
     "backport.embeddium.buffer.BufferBuilderVertexSinkMixin",
     "backport.embeddium.buffer.VertexBufferBuilderMixin",

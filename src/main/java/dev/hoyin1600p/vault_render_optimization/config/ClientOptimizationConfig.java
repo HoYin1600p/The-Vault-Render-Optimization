@@ -21,6 +21,7 @@ public final class ClientOptimizationConfig {
     private static final ForgeConfigSpec.BooleanValue COMPARE_MODE;
     private static final ForgeConfigSpec.BooleanValue DEFER_CHUNK_UPDATES;
     private static final ForgeConfigSpec.BooleanValue INDEX_ONLY_SORTING;
+    private static final ForgeConfigSpec.BooleanValue ADAPTIVE_CHUNK_BUDGET;
     private static final EnumMap<RenderBackportFeature, ForgeConfigSpec.BooleanValue>
             RENDER_BACKPORT_OPTIONS = new EnumMap<>(RenderBackportFeature.class);
     private static final EnumMap<RendererTransferFeature, ForgeConfigSpec.BooleanValue>
@@ -62,6 +63,7 @@ public final class ClientOptimizationConfig {
     private static volatile boolean compareMode;
     public static volatile boolean deferChunkUpdates = true;
     public static volatile boolean indexOnlySorting = true;
+    public static volatile boolean adaptiveChunkBudget = true;
     private static volatile Map<RenderBackportFeature, Boolean> renderBackportOptions =
             defaultRenderBackportOptions();
     private static volatile Map<RendererTransferFeature, Boolean> rendererTransferOptions =
@@ -142,6 +144,12 @@ public final class ClientOptimizationConfig {
                 "Off/Compare Mode affects new jobs; already queued index-only jobs finish safely.",
                 "Use /vro chunks sorting on|off|status without a restart."
         ).define("index_only_sorting", true);
+        ADAPTIVE_CHUNK_BUDGET = builder.comment(
+                "Dynamically pace deferred chunk builds/uploads using this machine's measured costs.",
+                "Requires validated Embeddium and effective asynchronous chunk updates; vanilla/Rubidium unchanged.",
+                "Uses conservative startup budgets, bounded feedback and queue backpressure; not an FPS guarantee.",
+                "Off/Compare Mode restores native draining and scheduling; /vro chunks budget on|off|status is hot."
+        ).define("adaptive_budget", true);
         builder.pop();
 
         builder.push("modernfix_backports");
@@ -340,6 +348,12 @@ public final class ClientOptimizationConfig {
         indexOnlySorting = enabled;
     }
 
+    public static void setAdaptiveChunkBudget(boolean enabled) {
+        ADAPTIVE_CHUNK_BUDGET.set(enabled);
+        ADAPTIVE_CHUNK_BUDGET.save();
+        adaptiveChunkBudget = enabled;
+    }
+
     public static boolean compareModeEnabled() {
         return compareMode;
     }
@@ -518,6 +532,7 @@ public final class ClientOptimizationConfig {
         compareMode = COMPARE_MODE.get();
         deferChunkUpdates = DEFER_CHUNK_UPDATES.get();
         indexOnlySorting = INDEX_ONLY_SORTING.get();
+        adaptiveChunkBudget = ADAPTIVE_CHUNK_BUDGET.get();
         EnumMap<RenderBackportFeature, Boolean> backportValues =
                 new EnumMap<>(RenderBackportFeature.class);
         RENDER_BACKPORT_OPTIONS.forEach((feature, value) -> backportValues.put(feature, value.get()));

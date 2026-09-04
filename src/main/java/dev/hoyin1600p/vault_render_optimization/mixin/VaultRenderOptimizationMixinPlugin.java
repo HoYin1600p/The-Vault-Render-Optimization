@@ -12,6 +12,8 @@ import dev.hoyin1600p.vault_render_optimization.client.chunk.ChunkUpdateBackend;
 import dev.hoyin1600p.vault_render_optimization.client.chunk.ChunkUpdateState;
 import dev.hoyin1600p.vault_render_optimization.client.chunk.sorting.IndexSortCompatibility;
 import dev.hoyin1600p.vault_render_optimization.client.chunk.sorting.IndexSortState;
+import dev.hoyin1600p.vault_render_optimization.client.chunk.budget.AdaptiveBudgetState;
+import dev.hoyin1600p.vault_render_optimization.client.chunk.budget.AdaptiveBudgetCompatibility;
 import dev.hoyin1600p.vault_render_optimization.renderertransfer.BootstrapRendererTransferConfig;
 import dev.hoyin1600p.vault_render_optimization.renderertransfer.RendererFamily;
 import dev.hoyin1600p.vault_render_optimization.renderertransfer.RendererFamilyDetector;
@@ -129,6 +131,7 @@ public final class VaultRenderOptimizationMixinPlugin implements IMixinConfigPlu
     private String rendererVersion;
     private ChunkUpdateBackend chunkUpdateBackend = ChunkUpdateBackend.BLOCKED;
     private boolean indexSortCompatible;
+    private boolean adaptiveBudgetCompatible;
 
     @Override
     public void onLoad(String mixinPackage) {
@@ -174,6 +177,20 @@ public final class VaultRenderOptimizationMixinPlugin implements IMixinConfigPlu
             }
         });
         indexSortCompatible = indexSortBlocker == null;
+        String budgetBlocker = AdaptiveBudgetCompatibility.blocker(indexSortBlocker, path -> {
+            try {
+                var resource = loadingModList.findResource(path);
+                return resource == null ? null : java.nio.file.Files.readAllBytes(resource);
+            } catch (java.io.IOException failure) {
+                throw new java.io.UncheckedIOException(failure);
+            }
+        });
+        adaptiveBudgetCompatible = budgetBlocker == null;
+        AdaptiveBudgetState.configure(adaptiveBudgetCompatible, adaptiveBudgetCompatible
+                ? "validated Embeddium; requires effective deferred updates" : budgetBlocker);
+        VaultRenderOptimization.LOGGER.info("Adaptive chunk budget hooks: {} - {}",
+                adaptiveBudgetCompatible ? "AVAILABLE" : "BLOCKED",
+                adaptiveBudgetCompatible ? "bytecode verified; runtime config/Compare Mode apply" : budgetBlocker);
         IndexSortState.configure(indexSortCompatible, indexSortCompatible
                 ? "validated Embeddium index-only path; runtime config/Compare Mode apply" : indexSortBlocker);
         VaultRenderOptimization.LOGGER.info("Index-only sorting hooks: {} - {}",
@@ -224,6 +241,8 @@ public final class VaultRenderOptimizationMixinPlugin implements IMixinConfigPlu
 
     @Override
     public boolean shouldApplyMixin(String targetClassName, String mixinClassName) {
+        if (mixinClassName.endsWith(".chunk.EmbeddiumAdaptiveBudgetMixin")
+                || mixinClassName.endsWith(".chunk.EmbeddiumBudgetBuilderMixin")) return adaptiveBudgetCompatible;
         if (mixinClassName.endsWith(".chunk.EmbeddiumIndexSortTaskMixin")
                 || mixinClassName.endsWith(".chunk.EmbeddiumIndexSortUploadMixin")) {
             return indexSortCompatible;

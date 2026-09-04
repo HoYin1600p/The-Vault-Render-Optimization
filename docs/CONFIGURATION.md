@@ -298,6 +298,16 @@ The smart-bounds path covers belts, mechanical arms, deployers, portable
 storage interfaces, and mechanical rollers in Create 0.5.1.i. All Create paths
 are optional and are omitted automatically when Create is absent.
 
+## Adaptive deferred chunk budgets
+
+`chunk_updates.adaptive_budget` defaults to `true`. It requires validated
+Embeddium 0.3.18/0.3.19 and effective deferred updates. `/vro chunks budget
+on|off|status` controls it without restart; it is independent of index-only
+sorting. Each renderer learns its own costs, with no saved calibration from
+another PC. Compare Mode/off uses native scheduling and drains remaining native
+results; switching off during a backlog can cause a catch-up hitch. See
+[design, soft limits and test requirements](ADAPTIVE_CHUNK_BUDGET.md).
+
 ## Optional-mod ownership
 
 Coexistence is decided during client startup. When an overlapping standalone

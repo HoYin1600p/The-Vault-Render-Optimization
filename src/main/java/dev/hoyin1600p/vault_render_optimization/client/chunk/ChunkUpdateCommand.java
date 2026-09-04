@@ -3,6 +3,7 @@ package dev.hoyin1600p.vault_render_optimization.client.chunk;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import dev.hoyin1600p.vault_render_optimization.config.ClientOptimizationConfig;
 import dev.hoyin1600p.vault_render_optimization.client.chunk.sorting.IndexSortState;
+import dev.hoyin1600p.vault_render_optimization.client.chunk.budget.AdaptiveBudgetState;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.TextComponent;
@@ -15,6 +16,11 @@ public final class ChunkUpdateCommand {
         return Commands.literal("chunks")
                 .executes(context -> report(context.getSource()))
                 .then(Commands.literal("status").executes(context -> report(context.getSource())))
+                .then(Commands.literal("budget")
+                        .executes(context -> budgetStatus(context.getSource()))
+                        .then(Commands.literal("status").executes(context -> budgetStatus(context.getSource())))
+                        .then(Commands.literal("on").executes(context -> setBudget(context.getSource(), true)))
+                        .then(Commands.literal("off").executes(context -> setBudget(context.getSource(), false))))
                 .then(Commands.literal("sorting")
                         .executes(context -> sortStatus(context.getSource()))
                         .then(Commands.literal("status").executes(context -> sortStatus(context.getSource())))
@@ -49,6 +55,18 @@ public final class ChunkUpdateCommand {
 
     private static int sortStatus(CommandSourceStack source) {
         source.sendSuccess(new TextComponent("[VRO] Index-only sorting: " + IndexSortState.status()), false);
+        return 1;
+    }
+
+    private static int setBudget(CommandSourceStack source, boolean enabled) {
+        ClientOptimizationConfig.setAdaptiveChunkBudget(enabled);
+        source.sendSuccess(new TextComponent("[VRO] Adaptive chunk budget " + (enabled ? "enabled" : "disabled")
+                + " and saved. Applies next update; off restores native draining (a backlog may cause a catch-up hitch)."), false);
+        return budgetStatus(source);
+    }
+
+    private static int budgetStatus(CommandSourceStack source) {
+        source.sendSuccess(new TextComponent("[VRO] Adaptive chunk budget: " + AdaptiveBudgetState.status()), false);
         return 1;
     }
 }

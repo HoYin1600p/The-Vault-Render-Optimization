@@ -20,6 +20,10 @@ bounded composite orbs. The remote server does not need the mod.
 
 ## Highlights
 
+- Dynamically paces deferred chunk builds/uploads on validated Embeddium using
+  each machine's measured costs, with queue backpressure and hot controls.
+  In-game evaluation pending; see [adaptive budgets](docs/ADAPTIVE_CHUNK_BUDGET.md).
+
 - Avoids copying and re-uploading unchanged terrain vertices for translucent
   sorting on validated Embeddium builds. Independently switchable; see
   [index-only sorting](docs/INDEX_ONLY_SORTING.md).
@@ -343,6 +347,7 @@ for upgrades, removal, optional-mod coexistence, and issue isolation.
 | `/vro chunks status` | Reports the selected chunk-update backend and last observed native preference. |
 | `/vro chunks defer on\|off` | Controls native asynchronous chunk scheduling without changing another mod's settings. |
 | `/vro chunks sorting on\|off\|status` | Controls index-only transparency updates and reports avoided vertex copies/uploads. |
+| `/vro chunks budget on\|off\|status` | Controls per-machine adaptive deferred budgets and reports upload cost, queue pressure and waiting time. |
 | `/vro particles billboards on\|off` | Hot-enables or disables VRO's camera-basis billboard geometry. |
 | `/vro particles owner auto\|renderer\|vro` | Hot-selects VRO or renderer ownership; `renderer` yields to Rubidium/Embeddium when present. |
 | `/vro particles shared_light on\|off` | Hot-controls the bounded same-tick shared light cache. |

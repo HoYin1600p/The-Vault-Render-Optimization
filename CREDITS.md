@@ -282,6 +282,17 @@ Block Entities, Optimised Block Entities, Better Block Entities, Better Beds,
 Entity Culling, More Culling, FerriteCore, ModernFix, and other accepted,
 deferred, or rejected references.
 
+## Adaptive deferred chunk budgets
+
+Embeddium (embeddedt and contributors), its Sodium foundation (JellySquid and
+contributors), and the Rubidium lineage supply the inspected native queue,
+task/future and region upload contracts. This integration was checked against
+stock Embeddium 0.3.18 and HoYin1600p's fork revision
+`d95f90d1edb990943b30663b2e95a02ea5e7c2a8`. The adaptive controller, queue observer,
+fairness policy and tests are fresh VRO work; no newer Sodium scheduler is copied.
+The two lifecycle adapters carry LGPL-3.0-only notices. See
+`THIRD_PARTY_NOTICES.md` and `docs/ADAPTIVE_CHUNK_BUDGET.md`.
+
 ## Attribution policy
 
 Every future implementation materially informed by another project must record

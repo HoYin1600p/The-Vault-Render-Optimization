@@ -1,17 +1,19 @@
 # Render optimization follow-up
 
-Recorded 2026-09-03. Only item 1 is authorized for implementation now. Revisit
-items 2 and 3 after several days evaluating the index-only sorting build; no
-scheduled work or automatic deployment is requested.
+Recorded 2026-09-03; updated after authorization to implement item 2.
+Items 1 and 2 are implemented for local evaluation. Item 3 remains deferred;
+no scheduled work or automatic deployment is requested.
 
 1. **Index-only translucent sorting (implemented; in-game evaluation pending).** Keep unchanged terrain
    vertices and replace only drawing-order indices. The older Embeddium path
    copies both buffers and re-uploads vertices on sort-only updates. Preserve
    native sorting, shader vertex formats, cancellation and geometry generations.
-2. **Adaptive build/upload budgets (deferred).** Estimate worker and upload cost,
-   spread bursts, and bound queue pressure without starving old/nearby updates.
-   Do not simply cap chunks per frame. Measure frame-time percentiles, upload
-   bytes/duration, queued memory and visual-update latency before choosing policy.
+2. **Adaptive build/upload budgets (implemented; in-game evaluation pending).**
+   Per-machine feedback, measured worker/upload costs, FIFO batch pacing, queued
+   memory backpressure and aged-class admission opportunities. See
+   [the design and validation plan](ADAPTIVE_CHUNK_BUDGET.md). No benchmark on the
+   development PC sets other players' throughput. Budgets are predictive, not
+   hard timing or total-native-memory guarantees.
 3. **Smarter scheduling/background visibility (deferred).** Consider age,
    distance, visibility and task type, then asynchronous visibility processing.
    Much larger compatibility surface: shader/DH integration, teleports and

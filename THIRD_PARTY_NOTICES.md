@@ -301,6 +301,23 @@ and GPLv3 texts from the source repository are retained together at
 `docs/licenses/embeddium-LGPL-3.0-only.txt` and embedded in the production JAR.
 VRO's overall project license remains AGPL-3.0-or-later.
 
+## Adaptive deferred chunk budgets
+
+Behavioral contracts inspected in HoYin1600p's Embeddium stability fork revision
+`d95f90d1edb990943b30663b2e95a02ea5e7c2a8` (LGPL-3.0-only), and stock Embeddium
+0.3.18: `render/chunk/RenderSectionManager.java`,
+`render/chunk/compile/ChunkBuilder.java`, `render/chunk/compile/ChunkBuildResult.java`,
+`render/chunk/tasks/ChunkRenderBuildTask.java` and
+`render/chunk/region/RenderRegionManager.java` under the native Sodium namespace.
+Upstream authors: embeddedt, JellySquid, the Rubidium lineage and contributors.
+
+`TimedChunkTask` and `EmbeddiumAdaptiveBudgetMixin` are fresh VRO adaptations
+of those lifecycle contracts, marked LGPL-3.0-only. The feedback policy,
+bounded observer/drain, compatibility checks, diagnostics and tests are VRO-owned.
+No full renderer or newer Sodium code is shipped. Full upstream LGPLv3/GPLv3
+texts are already included in `docs/licenses/embeddium-LGPL-3.0-only.txt` and
+embedded in the JAR. VRO remains AGPL-3.0-or-later overall.
+
 ## Native chunk-update deferral
 
 VRO's chunk-update deferral is a fresh integration with existing Minecraft
