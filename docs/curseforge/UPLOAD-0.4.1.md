@@ -47,13 +47,14 @@ relationship selector.
 
 ```text
 vault_render_optimization.0.4.1.jar
-SHA-256: 5AA5A6CE04DD37F1EBC72A097DFA2C3EC03876C794771F606904BF75F56DCD08
-Source state: prepared v0.4.1 release commit
+Size: {{JAR_SIZE}} bytes
+SHA-256: {{JAR_SHA256}}
+Source state: v0.4.1 release commit and tag
 ```
 
-Prepared release artifact: 506,491 bytes, SHA-256
-`5AA5A6CE04DD37F1EBC72A097DFA2C3EC03876C794771F606904BF75F56DCD08`.
-The publication build must reproduce this value from the final release commit.
+The local kit assembler replaces both placeholders from the exact retained
+release JAR after the release commit is finalized. Review the generated
+`UPLOAD-CHECKLIST.md` before upload.
 
 ## Update-manifest activation
 

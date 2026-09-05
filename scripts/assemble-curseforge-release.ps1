@@ -63,6 +63,19 @@ New-Item -ItemType Directory -Path $bundleDirectory -Force | Out-Null
 foreach ($entry in $sources.GetEnumerator()) {
     Copy-Item -LiteralPath $entry.Value -Destination (Join-Path $bundleDirectory $entry.Key)
 }
+$jarName = "vault_render_optimization.$Version.jar"
+$sourceJar = $sources[$jarName]
+$sourceJarItem = Get-Item -LiteralPath $sourceJar
+$sourceHash = (Get-FileHash -LiteralPath $sourceJar -Algorithm SHA256).Hash
+$uploadSheetPath = Join-Path $bundleDirectory 'UPLOAD-CHECKLIST.md'
+$uploadSheet = Get-Content -LiteralPath $uploadSheetPath -Raw
+if (-not $uploadSheet.Contains('{{JAR_SIZE}}') -or
+    -not $uploadSheet.Contains('{{JAR_SHA256}}')) {
+    throw 'The tracked upload sheet is missing its JAR integrity placeholders.'
+}
+$uploadSheet = $uploadSheet.Replace('{{JAR_SIZE}}', [string]$sourceJarItem.Length).
+    Replace('{{JAR_SHA256}}', $sourceHash)
+Set-Content -LiteralPath $uploadSheetPath -Value $uploadSheet -Encoding utf8
 $workflowDestination = Join-Path $releaseRoot 'CURSEFORGE-PUBLISHING-WORKFLOW.md'
 Copy-Item -LiteralPath (Join-Path $repositoryDirectory 'docs/curseforge/PUBLISHING-WORKFLOW.md') `
     -Destination $workflowDestination -Force
@@ -83,16 +96,13 @@ foreach ($publicFile in @(
     }
 }
 
-$jarName = "vault_render_optimization.$Version.jar"
-$sourceJar = $sources[$jarName]
 $bundleJar = Join-Path $bundleDirectory $jarName
-$sourceHash = (Get-FileHash -LiteralPath $sourceJar -Algorithm SHA256).Hash
 $bundleHash = (Get-FileHash -LiteralPath $bundleJar -Algorithm SHA256).Hash
 if ($sourceHash -ne $bundleHash) {
     throw 'The assembled CurseForge JAR does not match the retained release JAR.'
 }
 
-$uploadSheet = Get-Content -LiteralPath (Join-Path $bundleDirectory 'UPLOAD-CHECKLIST.md') -Raw
+$uploadSheet = Get-Content -LiteralPath $uploadSheetPath -Raw
 if (-not $uploadSheet.Contains($sourceHash)) {
     throw 'The upload sheet does not contain the assembled JAR checksum.'
 }
