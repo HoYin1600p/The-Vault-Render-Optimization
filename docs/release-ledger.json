@@ -202,7 +202,7 @@
     {
       "version": "0.4.1",
       "tag": "v0.4.1",
-      "state": "public_verified",
+      "state": "activated",
       "releaseCommit": "824538b33cf1a9d4cc23fb050e55edbdb4609a3d",
       "jar": {
         "filename": "vault_render_optimization.0.4.1.jar",
@@ -242,8 +242,8 @@
       "timestamps": {
         "preparedAt": "2026-09-05T22:08:00Z",
         "submittedAt": "2026-09-05T22:32:11Z",
-        "publicVerifiedAt": "2026-09-05T22:53:42.4468070Z",
-        "activatedAt": null
+        "publicVerifiedAt": "2026-09-05T22:53:42.446807Z",
+        "activatedAt": "2026-09-05T22:53:55.1722152Z"
       },
       "statusNote": "Submitted to CurseForge; awaiting public availability and exact artifact verification."
     }
