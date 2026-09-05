@@ -240,6 +240,10 @@ tasks.named('jar', Jar).configure {
         into 'META-INF'
     }
 
+    from(rootProject.file('CREDITS.md')) {
+        into 'META-INF'
+    }
+
     from(rootProject.file('LICENSE')) {
         into 'META-INF'
     }
