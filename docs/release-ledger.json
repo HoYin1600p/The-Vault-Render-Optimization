@@ -178,19 +178,19 @@
     {
       "version": "0.4.1",
       "tag": "v0.4.1",
-      "state": "prepared",
-      "releaseCommit": null,
+      "state": "awaiting_approval",
+      "releaseCommit": "824538b33cf1a9d4cc23fb050e55edbdb4609a3d",
       "jar": {
         "filename": "vault_render_optimization.0.4.1.jar",
-        "size": null,
-        "sha256": null
+        "size": 513414,
+        "sha256": "ecd77dc20c476b51bb907de2b979424e2c31bbb9a10bd1ad3506cafe78d97e2c"
       },
       "github": {
         "releaseUrl": "https://github.com/HoYin1600p/The-Vault-Render-Optimization/releases/tag/v0.4.1"
       },
       "curseforge": {
         "projectId": "1637635",
-        "fileId": null,
+        "fileId": "8817917",
         "fileUrl": null,
         "manualRelease": false
       },
@@ -209,15 +209,15 @@
         "mode": "github-actions-public-file-page",
         "workflowRunUrl": null,
         "lastCheckedAt": null,
-        "attentionAfter": null
+        "attentionAfter": "2026-09-08T22:32:11Z"
       },
       "timestamps": {
         "preparedAt": "2026-09-05T22:08:00Z",
-        "submittedAt": null,
+        "submittedAt": "2026-09-05T22:32:11Z",
         "publicVerifiedAt": null,
         "activatedAt": null
       },
-      "statusNote": "Prepared locally; no public release operations performed."
+      "statusNote": "Submitted to CurseForge; awaiting public availability and exact artifact verification."
     }
   ]
 }
