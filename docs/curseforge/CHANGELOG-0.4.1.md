@@ -25,15 +25,6 @@ server gameplay.
   and lifetime. VRO does not asynchronously tick or hide on-screen particles.
 - Added `/vro particles` controls and diagnostics that apply immediately.
 
-### Experimental Mana Stealer visuals
-
-- Added an optional pale-blue/navy orb replacement for the Remastered Mana
-  Stealer trap, including a matching stream from affected players to the trap.
-- Added `/vro mana_stealer preview <ticks> [x y z]` for a client-only visual
-  preview without creating a trap or draining mana.
-- The feature is isolated, hot-toggleable, and does not change the server's
-  trap radius, mana drain, duration, or gameplay.
-
 ### Upgrade notes
 
 VRO remains client-only for Minecraft 1.18.2 and Forge 40.3.11 or newer in the

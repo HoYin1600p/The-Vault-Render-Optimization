@@ -13,10 +13,7 @@ rendering, particle-heavy scenes, and long sessions with repeated world or
 dimension changes.
 
 VRO does not remove visible effects, lower animation rates, change loot, or
-modify server gameplay. The current development branch has one clearly
-documented exception for local testing: the removable Mana Stealer prototype
-replaces that trap's legacy dust and optional line sigil with a new visual of
-bounded composite orbs. The remote server does not need the mod.
+modify server gameplay. The remote server does not need the mod.
 
 ## Highlights
 
@@ -38,9 +35,6 @@ bounded composite orbs. The remote server does not need the mod.
 - Builds ordinary particle billboards from the camera basis, reuses packed
   Rubidium/Embeddium output when available, shares safe same-tick light
   results, and skips renderer setup when there is nothing to draw.
-- Includes an isolated development prototype that replaces the Mana Stealer
-  trap's flat dust presentation with bounded inward-moving composite orbs for
-  local visual and performance testing.
 - Reduces retained block-state and baked-model memory beyond FerriteCore 4.2.2.
 - Adds eleven ModernFix-derived render/model improvements with per-feature
   ownership, compatibility gates, and safe coexistence with ModernFix and the
@@ -352,12 +346,6 @@ for upgrades, removal, optional-mod coexistence, and issue isolation.
 | `/vro particles owner auto\|renderer\|vro` | Hot-selects VRO or renderer ownership; `renderer` yields to Rubidium/Embeddium when present. |
 | `/vro particles shared_light on\|off` | Hot-controls the bounded same-tick shared light cache. |
 | `/vro particles diagnostics on\|off\|reset` | Controls queue, timing, writer, and light-cache measurement. |
-| `/vro mana_stealer` | Reports the isolated Mana Stealer visual prototype state and quality targets. |
-| `/vro mana_stealer on\|off` | Hot-enables or disables the prototype particle replacement. |
-| `/vro mana_stealer preview <ticks> [x y z]` | Simulates the complete client-only visual/audio effect at the targeted block or an explicit center. |
-| `/vro mana_stealer preview stop` | Stops preview replenishment; already-live orbs finish naturally. |
-| `/vro mana_stealer sigil on\|off` | Retains or replaces Vault's legacy ground sigil. |
-| `/vro mana_stealer stream on\|off` | Hot-controls the affected-player blue-orb stream to the trap. |
 | `/vro culling` | Reports vertical and horizontal terrain-culling settings. |
 | `/vro culling vertical on\|off\|<distance>` | Changes vertical section culling immediately. |
 | `/vro culling horizontal on\|off\|<distance>` | Changes horizontal section culling immediately. |
@@ -413,10 +401,9 @@ The complete option and coexistence reference is in
 | [Installation](docs/INSTALLATION.md) | Install, upgrade, coexistence, removal, and reporting |
 | [Configuration](docs/CONFIGURATION.md) | Every option, default, command, and immediate behavior |
 | [Particle optimizations](docs/PARTICLE_OPTIMIZATIONS.md) | Billboard ownership, light caches, diagnostics, and safety boundaries |
-| [Mana Stealer prototype](docs/MANA_STEALER_VISUAL_PROTOTYPE.md) | Removable visual-replacement module, tuning, and validation boundary |
 | [Testing](docs/TESTING.md) | Compare Mode and repeatable benchmark procedure |
 | [Performance validation](docs/PERFORMANCE_VALIDATION.md) | Four-client measured results and limitations |
-| [Release notes 0.4.1](docs/releases/0.4.1.md) | Current release candidate: renderer, model, particle, and Mana Stealer work |
+| [Release notes 0.4.1](docs/releases/0.4.1.md) | Current release candidate: renderer, model, particle, and stability work |
 | [Release notes 0.4.0](docs/releases/0.4.0.md) | Previous published release with configurable update notices |
 | [Release notes 0.3.5](docs/releases/0.3.5.md) | Previous release with dedicated Flywheel shader-pack programs |
 | [Release notes 0.3.4](docs/releases/0.3.4.md) | Create contraption and Flywheel shader rendering |

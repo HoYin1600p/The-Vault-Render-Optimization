@@ -38,9 +38,6 @@ paired frame-time distributions and long-frame counts.
 An optimization build is not release-ready until it has exercised:
 
 - particle-heavy mob deaths and item processing;
-- Mana Stealer traps with the experimental replacement hot-toggled, all three
-  Minecraft particle settings, Rubidium culling on/off, shaders on/off, and
-  multiple simultaneous traps, confirming the server drain remains unchanged;
 - dense entities and block entities;
 - Vault gear HUD, armor, tools, abilities, and damage numbers;
 - Vault elixir-orb number particles followed by other colored particles;

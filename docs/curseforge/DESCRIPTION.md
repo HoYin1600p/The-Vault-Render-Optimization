@@ -16,7 +16,6 @@ VRO can check its raw GitHub update manifest asynchronously and show an update r
 *   Reduces iSpawner display-item work without changing its animation or configured viewing distance.
 *   Resolves the Vault map and Xaero's World Map `M`\-key conflict.
 *   Isolates Vault elixir number rendering so it cannot corrupt later particle colors.
-*   Includes an isolated, hot-toggleable Mana Stealer visual prototype for Remastered: pale-blue/navy orbs move through the real spherical radius and a matching stream connects affected players to the trap. Server drain behavior is unchanged.
 
 ## Create and shader improvements
 
@@ -86,7 +85,6 @@ No server installation, world migration, cache deletion, or settings reset is re
 | <code>/vro updates on|off|status|critical|all</code> |Control update checks and choose critical-only or all notices. |
 | <code>/vro backports</code>             |Show the startup owner and reason for each ModernFix-derived backport. |
 | <code>/vro particles</code>             |Control hot billboard ownership, shared light caching, and particle diagnostics. |
-| <code>/vro mana_stealer</code>          |Control or preview the isolated Remastered Mana Stealer visual replacement. |
 | <code>/vro culling</code>               |View or change vertical and horizontal terrain culling.        |
 | <code>/vro lights</code>                |View or change the optional dynamic-light engine.              |
 | <code>/vro create status</code>         |Show Create, Flywheel, shader-path, and culling status.        |
