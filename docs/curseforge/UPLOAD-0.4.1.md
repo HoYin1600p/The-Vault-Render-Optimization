@@ -61,8 +61,8 @@ release JAR after the release commit is finalized. Review the generated
 | Field | Planned value |
 | --- | --- |
 | Version | `0.4.1` |
-| Critical release | Decide at real publication |
-| Client-facing message | Decide at real publication |
+| Critical release | `false` (normal update) |
+| Client-facing message | `Renderer, particle, and chunk performance improvements` |
 | Production state before CurseForge verification | Keep `0.4.0` latest/recommended |
 
 Do not add the 0.4.1 message or change either promotion until the exact public
