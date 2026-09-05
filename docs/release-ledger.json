@@ -16,8 +16,12 @@
       },
       "compatibility": {
         "releaseChannel": "release",
-        "gameVersions": ["1.18.2"],
-        "loaders": ["Forge"]
+        "gameVersions": [
+          "1.18.2"
+        ],
+        "loaders": [
+          "Forge"
+        ]
       },
       "updateCheck": {
         "used": false
@@ -44,8 +48,12 @@
       },
       "compatibility": {
         "releaseChannel": "release",
-        "gameVersions": ["1.18.2"],
-        "loaders": ["Forge"]
+        "gameVersions": [
+          "1.18.2"
+        ],
+        "loaders": [
+          "Forge"
+        ]
       },
       "updateCheck": {
         "used": false
@@ -75,8 +83,12 @@
       },
       "compatibility": {
         "releaseChannel": "release",
-        "gameVersions": ["1.18.2"],
-        "loaders": ["Forge"]
+        "gameVersions": [
+          "1.18.2"
+        ],
+        "loaders": [
+          "Forge"
+        ]
       },
       "updateCheck": {
         "used": false
@@ -100,8 +112,12 @@
       },
       "compatibility": {
         "releaseChannel": "release",
-        "gameVersions": ["1.18.2"],
-        "loaders": ["Forge"]
+        "gameVersions": [
+          "1.18.2"
+        ],
+        "loaders": [
+          "Forge"
+        ]
       },
       "updateCheck": {
         "used": false
@@ -128,14 +144,18 @@
       },
       "compatibility": {
         "releaseChannel": "release",
-        "gameVersions": ["1.18.2"],
-        "loaders": ["Forge"]
+        "gameVersions": [
+          "1.18.2"
+        ],
+        "loaders": [
+          "Forge"
+        ]
       },
       "updateCheck": {
         "used": false
       },
       "timestamps": {
-        "submittedAt": "2026-08-16T23:34:37.240Z"
+        "submittedAt": "2026-08-16T23:34:37.24Z"
       }
     },
     {
@@ -159,8 +179,12 @@
       },
       "compatibility": {
         "releaseChannel": "release",
-        "gameVersions": ["1.18.2"],
-        "loaders": ["Forge"]
+        "gameVersions": [
+          "1.18.2"
+        ],
+        "loaders": [
+          "Forge"
+        ]
       },
       "updateCheck": {
         "used": true,
@@ -178,7 +202,7 @@
     {
       "version": "0.4.1",
       "tag": "v0.4.1",
-      "state": "awaiting_approval",
+      "state": "public_verified",
       "releaseCommit": "824538b33cf1a9d4cc23fb050e55edbdb4609a3d",
       "jar": {
         "filename": "vault_render_optimization.0.4.1.jar",
@@ -191,13 +215,17 @@
       "curseforge": {
         "projectId": "1637635",
         "fileId": "8817917",
-        "fileUrl": null,
+        "fileUrl": "https://www.curseforge.com/minecraft/mc-mods/vault-render-optimization/files/8817917",
         "manualRelease": false
       },
       "compatibility": {
         "releaseChannel": "release",
-        "gameVersions": ["1.18.2"],
-        "loaders": ["Forge"]
+        "gameVersions": [
+          "1.18.2"
+        ],
+        "loaders": [
+          "Forge"
+        ]
       },
       "updateCheck": {
         "used": true,
@@ -214,7 +242,7 @@
       "timestamps": {
         "preparedAt": "2026-09-05T22:08:00Z",
         "submittedAt": "2026-09-05T22:32:11Z",
-        "publicVerifiedAt": null,
+        "publicVerifiedAt": "2026-09-05T22:53:42.4468070Z",
         "activatedAt": null
       },
       "statusNote": "Submitted to CurseForge; awaiting public availability and exact artifact verification."
