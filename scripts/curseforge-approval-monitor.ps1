@@ -574,9 +574,12 @@ function Invoke-SelfTest {
     $testRoot = Join-Path $repositoryDirectory 'build/mod-publish-rehearsal/monitor-self-test'
     New-Item -ItemType Directory -Path $testRoot -Force | Out-Null
 
-    $ledger = Get-Content -LiteralPath $ledgerPath -Raw | ConvertFrom-Json
+    $ledger = [pscustomobject]@{
+        schemaVersion = 1
+        releases = @()
+    }
     if ($null -ne (Get-ActiveRelease -Ledger $ledger)) {
-        throw 'NO_PENDING self-test failed: the production ledger unexpectedly has an active release.'
+        throw 'NO_PENDING self-test failed: the isolated empty ledger returned an active release.'
     }
     $results = [ordered]@{
         noPending = 'PASS'
