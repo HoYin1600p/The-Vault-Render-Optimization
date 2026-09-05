@@ -47,13 +47,13 @@ relationship selector.
 
 ```text
 vault_render_optimization.0.4.1.jar
-SHA-256: filled from the final tagged build during publication
-Source state: eventual v0.4.1 tag
+SHA-256: 5AA5A6CE04DD37F1EBC72A097DFA2C3EC03876C794771F606904BF75F56DCD08
+Source state: prepared v0.4.1 release commit
 ```
 
-Local rehearsal artifact: 480,192 bytes, SHA-256
-`2292F4393AB30893CFE6F3CD1E96D31F373848F7160F885E591E57485B270C61`.
-Recalculate and replace this value after the final tagged build.
+Prepared release artifact: 506,491 bytes, SHA-256
+`5AA5A6CE04DD37F1EBC72A097DFA2C3EC03876C794771F606904BF75F56DCD08`.
+The publication build must reproduce this value from the final release commit.
 
 ## Update-manifest activation
 

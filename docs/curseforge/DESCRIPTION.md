@@ -25,6 +25,7 @@ VRO can check its raw GitHub update manifest asynchronously and show an update r
 *   Works with supported Rubidium and Embeddium configurations.
 *   Allows shader packs to provide dedicated Flywheel scene and shadow programs. When they are unavailable or fail to compile, VRO automatically retries its generated compatibility path and then falls back safely.
 *   Restores Flywheel's normal instancing default when a pack ships it disabled, while retaining hardware and shader failure safeguards.
+*   Keeps Flywheel model formats synchronized across Oculus startup and resource-reload pipeline transitions.
 
 Use `/vro create status` to see the active Flywheel backend, shader path, and contraption-culling activity. Shader compatibility can be changed immediately with `/vro create shader_compat on|off|status`.
 
@@ -34,6 +35,9 @@ Use `/vro create status` to see the active Flywheel backend, shader path, and co
 *   Builds ordinary particle billboards from the camera basis, reuses Rubidium/Embeddium packed output, shares same-tick light results, and skips empty particle, toast, tutorial, debug, and renderer setup work without hiding visible effects.
 *   Adapts eleven later ModernFix render/model improvements for chunk meshing, model caches, profile textures, texture stitching, and Forge/CTM concurrency.
 *   Carries eight guarded Embeddium/Rubidium corrections for chunk rebuilds, bounded native buffers, arena growth, custom block faces, fluid lighting, shader color, vertex writers, and optional CodeChickenLib rendering.
+*   Uses renderer-native asynchronous chunk scheduling by default to reduce blocking rebuild stalls without changing another mod's settings.
+*   Avoids copying and uploading unchanged terrain vertices during supported Embeddium transparency re-sorts.
+*   Paces already-built Embeddium terrain work under measured load while leaving initial and cached-terrain loading on the renderer's native path.
 *   Compacts baked-model and block-state data beyond the reductions already present in FerriteCore 4.2.2.
 *   Adds separate vertical and horizontal terrain-section culling. Vertical culling is enabled by default; horizontal culling is optional.
 *   Cleans up retained Create Addition, Powah, Vault Loot Beams, and empty-item references during long sessions and world changes.
@@ -42,11 +46,11 @@ Use `/vro create status` to see the active Flywheel backend, shader path, and co
 
 VRO applies each backport only when its exact supported target is present and no validated owner is already handling that path. It yields to genuinely active ModernFix features, recognizes Embeddium's same-JAR Rubidium compatibility identity, and blocks unknown or ambiguous renderer layouts instead of guessing.
 
-The supported renderer-transfer baselines are Embeddium `0.3.18+mc1.18.2` and Rubidium `0.5.6`. Compare Mode yields performance-sensitive work while narrow correctness guards remain active. Use `/vro backports` for ModernFix ownership details; renderer-transfer decisions are also reported in the startup log.
+The supported renderer-transfer baselines are Embeddium `0.3.18+mc1.18.2` and `0.3.19+mc1.18.2`, plus Rubidium `0.5.6`. Compare Mode yields performance-sensitive work while narrow correctness guards remain active. Use `/vro backports` for ModernFix ownership details; renderer-transfer decisions are also reported in the startup log.
 
 ## Stability fixes
 
-VRO includes client-side guards for several known stale-state crashes, including Powah cable replacement, Vault Integrations altar conduits, and Xaero's World Map cache writes. These fixes do not change server behavior.
+VRO includes client-side guards for several known stale-state crashes, including Powah cable replacement, Vault Integrations altar conduits, and Xaero's World Map cache writes. It also prevents The Vault's native grayscale shader from uploading startup values without its OpenGL program bound. These fixes do not change server behavior.
 
 An optional spatial dynamic-light engine supports held and dropped items, luminous entities, and resource-defined block entities. It is disabled by default and can be controlled in game with `/vro lights`.
 
@@ -63,7 +67,7 @@ Update checks are enabled by default, while displayed update types default to cr
 *   **Environment:** Client only
 *   **Vault Hunters:** Official Third Edition, Remastered, Wolds Vaults, and selected custom 1.18.2 baselines
 *   **Create shader path:** Create 0.5.1.i, Flywheel 0.6.11, Oculus 1.6.x, and supported Rubidium or Embeddium releases
-*   **Renderer-transfer baselines:** Embeddium 0.3.18 and Rubidium 0.5.6
+*   **Renderer-transfer baselines:** Embeddium 0.3.18/0.3.19 and Rubidium 0.5.6
 
 Optional integrations load only when their target mod is present. VRO yields overlapping work when Entity Collision FPS Fix, BadOptimizations, Particle Core, Flerovium, Better Fps - Render Distance, or Dynamic Lights Reforged is installed.
 
@@ -85,6 +89,10 @@ No server installation, world migration, cache deletion, or settings reset is re
 | <code>/vro updates on|off|status|critical|all</code> |Control update checks and choose critical-only or all notices. |
 | <code>/vro backports</code>             |Show the startup owner and reason for each ModernFix-derived backport. |
 | <code>/vro particles</code>             |Control hot billboard ownership, shared light caching, and particle diagnostics. |
+| <code>/vro chunks status</code>         |Show chunk deferral, sorting, adaptive pacing, and observed renderer state. |
+| <code>/vro chunks defer on|off</code>   |Control renderer-native asynchronous chunk updates immediately. |
+| <code>/vro chunks sorting on|off|status</code> |Control supported Embeddium index-only transparency sorting. |
+| <code>/vro chunks budget on|off|status</code> |Control supported Embeddium adaptive chunk pacing and diagnostics. |
 | <code>/vro culling</code>               |View or change vertical and horizontal terrain culling.        |
 | <code>/vro lights</code>                |View or change the optional dynamic-light engine.              |
 | <code>/vro create status</code>         |Show Create, Flywheel, shader-path, and culling status.        |
@@ -101,6 +109,9 @@ Crash guards, world cleanup, and map-key compatibility remain active in Compare 
 *   [ModernFix backports](https://github.com/HoYin1600p/The-Vault-Render-Optimization/blob/main/docs/MODERNFIX_RENDER_BACKPORTS.md)
 *   [Embeddium/Rubidium ownership transfers](https://github.com/HoYin1600p/The-Vault-Render-Optimization/blob/main/docs/EMBEDDIUM_OWNERSHIP_TRANSFER.md)
 *   [Particle optimizations](https://github.com/HoYin1600p/The-Vault-Render-Optimization/blob/main/docs/PARTICLE_OPTIMIZATIONS.md)
+*   [Chunk update deferral](https://github.com/HoYin1600p/The-Vault-Render-Optimization/blob/main/docs/CHUNK_UPDATE_DEFERRAL.md)
+*   [Adaptive chunk budgets](https://github.com/HoYin1600p/The-Vault-Render-Optimization/blob/main/docs/ADAPTIVE_CHUNK_BUDGET.md)
+*   [Index-only transparency sorting](https://github.com/HoYin1600p/The-Vault-Render-Optimization/blob/main/docs/INDEX_ONLY_SORTING.md)
 *   [Complete changelog](https://github.com/HoYin1600p/The-Vault-Render-Optimization/blob/main/CHANGELOG.md)
 *   [Credits](https://github.com/HoYin1600p/The-Vault-Render-Optimization/blob/main/CREDITS.md)
 *   [Third-party notices](https://github.com/HoYin1600p/The-Vault-Render-Optimization/blob/main/THIRD_PARTY_NOTICES.md)

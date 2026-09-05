@@ -7,6 +7,8 @@ and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+## [0.4.1] - 2026-09-05
+
 ### Changed
 
 - Moved the unreleased Mana Stealer visual replacement, player drain stream,
@@ -25,8 +27,9 @@ and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
   cached-terrain loading delays. Initial builds and their ready results now use
   native scheduling/uploads; queue pressure and waiting work also force native
   fallback, with a recovery cooldown. Explicit v2 off settings remain respected.
-  Diagnostics expose pending requests,
-  queued/active workers and pacing/fallback reasons. Revised runtime validation pending.
+  Diagnostics expose pending requests, queued/active workers and
+  pacing/fallback reasons. The revised loading guard was validated in the
+  VaultCrafters client before release preparation.
 
 - Added independently switchable index-only terrain transparency sorting for
   bytecode-validated Embeddium 0.3.18/0.3.19. Retains unchanged vertices,
@@ -323,7 +326,8 @@ and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 - Released the complete project under AGPL-3.0-or-later, with exact source
   revisions and third-party notices included.
 
-[Unreleased]: https://github.com/HoYin1600p/The-Vault-Render-Optimization/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/HoYin1600p/The-Vault-Render-Optimization/compare/v0.4.1...HEAD
+[0.4.1]: https://github.com/HoYin1600p/The-Vault-Render-Optimization/compare/v0.4.0...v0.4.1
 [0.4.0]: https://github.com/HoYin1600p/The-Vault-Render-Optimization/compare/v0.3.5...v0.4.0
 [0.3.5]: https://github.com/HoYin1600p/The-Vault-Render-Optimization/compare/v0.3.4...v0.3.5
 [0.3.4]: https://github.com/HoYin1600p/The-Vault-Render-Optimization/compare/v0.3.3...v0.3.4

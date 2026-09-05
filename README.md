@@ -4,7 +4,7 @@
 [![Forge](https://img.shields.io/badge/Forge-40.3.11%2B-e04e39)](https://files.minecraftforge.net/net/minecraftforge/forge/index_1.18.2.html)
 [![Environment](https://img.shields.io/badge/Environment-Client-4b8bbe)](#requirements-and-support)
 [![License](https://img.shields.io/badge/License-AGPL--3.0--or--later-blue.svg)](LICENSE)
-[![Release](https://img.shields.io/badge/Release-0.4.1--candidate-7b68ee)](docs/releases/0.4.1.md)
+[![Release](https://img.shields.io/badge/Release-0.4.1-2ea44f)](https://github.com/HoYin1600p/The-Vault-Render-Optimization/releases/tag/v0.4.1)
 
 The Vault Render Optimization (VRO) is a client-side Minecraft Forge 1.18.2
 mod that reduces repeated rendering and client simulation work in Vault
@@ -19,7 +19,8 @@ modify server gameplay. The remote server does not need the mod.
 
 - Offers experimental, default-on pacing for already-built terrain updates on
   validated Embeddium, with native loading/backlog fallback and hot controls.
-  Revised after a loading regression; [runtime evaluation pending](docs/ADAPTIVE_CHUNK_BUDGET.md).
+  Revised after a loading regression and validated in the VaultCrafters
+  client; see [adaptive chunk budgets](docs/ADAPTIVE_CHUNK_BUDGET.md).
 
 - Avoids copying and re-uploading unchanged terrain vertices for translucent
   sorting on validated Embeddium builds. Independently switchable; see
@@ -403,7 +404,7 @@ The complete option and coexistence reference is in
 | [Particle optimizations](docs/PARTICLE_OPTIMIZATIONS.md) | Billboard ownership, light caches, diagnostics, and safety boundaries |
 | [Testing](docs/TESTING.md) | Compare Mode and repeatable benchmark procedure |
 | [Performance validation](docs/PERFORMANCE_VALIDATION.md) | Four-client measured results and limitations |
-| [Release notes 0.4.1](docs/releases/0.4.1.md) | Current release candidate: renderer, model, particle, and stability work |
+| [Release notes 0.4.1](docs/releases/0.4.1.md) | Current release: renderer, model, particle, chunk, and stability work |
 | [Release notes 0.4.0](docs/releases/0.4.0.md) | Previous published release with configurable update notices |
 | [Release notes 0.3.5](docs/releases/0.3.5.md) | Previous release with dedicated Flywheel shader-pack programs |
 | [Release notes 0.3.4](docs/releases/0.3.4.md) | Create contraption and Flywheel shader rendering |
