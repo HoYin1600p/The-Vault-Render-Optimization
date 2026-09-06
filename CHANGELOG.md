@@ -7,6 +7,19 @@ and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### Added
+
+- Added default-on, hot-configurable Sophisticated Storage rendering paths for
+  the validated Remastered 1.18.2 release pair. VRO skips front-face item,
+  quantity, fill, and upgrade block-entity rendering when the display faces
+  away from the camera or its face is immediately covered; caches bounded
+  quantity glyphs; emits fill bars without legacy per-vertex vector
+  allocations; and filters count/fill-only client packets that would otherwise
+  request a chunk-model rebuild. Tier rendering is intentionally unchanged.
+- Added `/vro storage` feature controls and opt-in counters for rendered and
+  culled faces, quantity-cache hits/misses, fill bars, allowed model rebuilds,
+  and skipped count-only rebuilds.
+
 ## [0.4.1] - 2026-09-05
 
 ### Changed

@@ -42,6 +42,11 @@ public final class ClientOptimizationConfig {
     private static final ForgeConfigSpec.BooleanValue EMPTY_DEBUG_RENDER_SKIP;
     private static final ForgeConfigSpec.BooleanValue ENTITY_RENDERER_CACHE;
     private static final ForgeConfigSpec.BooleanValue BLOCK_ENTITY_RENDERER_CACHE;
+    private static final ForgeConfigSpec.BooleanValue SOPHISTICATED_STORAGE_FACE_CULLING;
+    private static final ForgeConfigSpec.BooleanValue SOPHISTICATED_STORAGE_COUNT_CACHE;
+    private static final ForgeConfigSpec.BooleanValue SOPHISTICATED_STORAGE_FILL_FAST_PATH;
+    private static final ForgeConfigSpec.BooleanValue SOPHISTICATED_STORAGE_RENDER_UPDATE_FILTER;
+    private static final ForgeConfigSpec.BooleanValue SOPHISTICATED_STORAGE_DIAGNOSTICS;
     private static final ForgeConfigSpec.BooleanValue VERTICAL_SECTION_CULLING;
     private static final ForgeConfigSpec.IntValue VERTICAL_SECTION_DISTANCE;
     private static final ForgeConfigSpec.BooleanValue HORIZONTAL_SECTION_CULLING;
@@ -82,6 +87,11 @@ public final class ClientOptimizationConfig {
     public static volatile boolean emptyDebugRenderSkip = true;
     public static volatile boolean entityRendererCache = true;
     public static volatile boolean blockEntityRendererCache = true;
+    public static volatile boolean sophisticatedStorageFaceCulling = true;
+    public static volatile boolean sophisticatedStorageCountCache = true;
+    public static volatile boolean sophisticatedStorageFillFastPath = true;
+    public static volatile boolean sophisticatedStorageRenderUpdateFilter = true;
+    public static volatile boolean sophisticatedStorageDiagnostics = false;
     public static volatile boolean verticalSectionCulling = true;
     public static volatile int verticalSectionDistance = 12;
     public static volatile boolean horizontalSectionCulling = false;
@@ -247,6 +257,39 @@ public final class ClientOptimizationConfig {
         BLOCK_ENTITY_RENDERER_CACHE = builder
                 .comment("Cache block entity renderers on their BlockEntityType and refresh on resource reload.")
                 .define("block_entity_renderer_cache", true);
+        builder.pop();
+
+        builder.push("sophisticated_storage");
+        SOPHISTICATED_STORAGE_FACE_CULLING = builder
+                .comment(
+                        "Skip barrel front-display rendering when its display plane faces away from the camera",
+                        "or is completely covered by the immediately adjacent block. Visible displays are unchanged."
+                )
+                .define("front_display_culling", true);
+        SOPHISTICATED_STORAGE_COUNT_CACHE = builder
+                .comment(
+                        "Cache limited-barrel count formatting and glyph layout until the displayed value changes.",
+                        "The cache is bounded and cleared by resource reloads."
+                )
+                .define("quantity_text_cache", true);
+        SOPHISTICATED_STORAGE_FILL_FAST_PATH = builder
+                .comment(
+                        "Render limited-barrel fill indicators without per-vertex temporary objects",
+                        "while preserving the original fill values, texture, lighting, and transparency."
+                )
+                .define("fill_level_fast_path", true);
+        SOPHISTICATED_STORAGE_RENDER_UPDATE_FILTER = builder
+                .comment(
+                        "Avoid rebuilding barrel chunk geometry for client updates that only change quantities",
+                        "or fill levels. Model-affecting display changes still rebuild immediately."
+                )
+                .define("count_only_render_update_filter", true);
+        SOPHISTICATED_STORAGE_DIAGNOSTICS = builder
+                .comment(
+                        "Collect Sophisticated Storage render and cache counters for /vro storage.",
+                        "Disabled by default to keep the normal render path as small as possible."
+                )
+                .define("diagnostics", false);
         builder.pop();
 
         builder.push("section_distance_culling");
@@ -471,6 +514,36 @@ public final class ClientOptimizationConfig {
         particleDiagnostics = enabled;
     }
 
+    public static void setSophisticatedStorageFaceCulling(boolean enabled) {
+        SOPHISTICATED_STORAGE_FACE_CULLING.set(enabled);
+        SOPHISTICATED_STORAGE_FACE_CULLING.save();
+        sophisticatedStorageFaceCulling = enabled;
+    }
+
+    public static void setSophisticatedStorageCountCache(boolean enabled) {
+        SOPHISTICATED_STORAGE_COUNT_CACHE.set(enabled);
+        SOPHISTICATED_STORAGE_COUNT_CACHE.save();
+        sophisticatedStorageCountCache = enabled;
+    }
+
+    public static void setSophisticatedStorageFillFastPath(boolean enabled) {
+        SOPHISTICATED_STORAGE_FILL_FAST_PATH.set(enabled);
+        SOPHISTICATED_STORAGE_FILL_FAST_PATH.save();
+        sophisticatedStorageFillFastPath = enabled;
+    }
+
+    public static void setSophisticatedStorageRenderUpdateFilter(boolean enabled) {
+        SOPHISTICATED_STORAGE_RENDER_UPDATE_FILTER.set(enabled);
+        SOPHISTICATED_STORAGE_RENDER_UPDATE_FILTER.save();
+        sophisticatedStorageRenderUpdateFilter = enabled;
+    }
+
+    public static void setSophisticatedStorageDiagnostics(boolean enabled) {
+        SOPHISTICATED_STORAGE_DIAGNOSTICS.set(enabled);
+        SOPHISTICATED_STORAGE_DIAGNOSTICS.save();
+        sophisticatedStorageDiagnostics = enabled;
+    }
+
     public static void setDynamicLights(boolean enabled) {
         DYNAMIC_LIGHTS.set(enabled);
         DYNAMIC_LIGHTS.save();
@@ -566,6 +639,11 @@ public final class ClientOptimizationConfig {
         emptyDebugRenderSkip = EMPTY_DEBUG_RENDER_SKIP.get();
         entityRendererCache = ENTITY_RENDERER_CACHE.get();
         blockEntityRendererCache = BLOCK_ENTITY_RENDERER_CACHE.get();
+        sophisticatedStorageFaceCulling = SOPHISTICATED_STORAGE_FACE_CULLING.get();
+        sophisticatedStorageCountCache = SOPHISTICATED_STORAGE_COUNT_CACHE.get();
+        sophisticatedStorageFillFastPath = SOPHISTICATED_STORAGE_FILL_FAST_PATH.get();
+        sophisticatedStorageRenderUpdateFilter = SOPHISTICATED_STORAGE_RENDER_UPDATE_FILTER.get();
+        sophisticatedStorageDiagnostics = SOPHISTICATED_STORAGE_DIAGNOSTICS.get();
         verticalSectionCulling = VERTICAL_SECTION_CULLING.get();
         verticalSectionDistance = VERTICAL_SECTION_DISTANCE.get();
         horizontalSectionCulling = HORIZONTAL_SECTION_CULLING.get();

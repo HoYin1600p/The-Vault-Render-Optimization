@@ -56,6 +56,10 @@ modify server gameplay. The remote server does not need the mod.
   when a world unloads.
 - Removes iSpawner's per-frame stream/list allocations and allows ordinary
   off-screen spawner displays to be frustum culled.
+- Reduces Sophisticated Storage barrel display cost by culling hidden front
+  faces, caching quantity labels, emitting fill bars without temporary vertex
+  objects, and avoiding chunk rebuilds for count/fill-only updates. Tier badges
+  are deliberately unchanged.
 - Prevents Minecraft's shared empty item stack from retaining a dropped-item
   entity.
 - Repairs two known client-only stale-state crashes without changing the
@@ -129,6 +133,21 @@ VRO also applies conservative optimizations outside Vault-specific code:
 
 These paths are independently configurable and do not intentionally change
 visible output. Shader-sensitive lightmap and sky-color caching were rejected.
+
+### Sophisticated Storage barrel displays
+
+For the validated Remastered Sophisticated Storage/Core pair, VRO optimizes
+the three expensive front-display choices without touching tier rendering.
+Front-facing item, quantity, fill, and upgrade displays are skipped when their
+face points away from the camera or an immediately adjacent block fully covers
+that face. Visible quantity text uses a bounded glyph cache, fill bars retain
+their original texture/layout while avoiding temporary vertex objects, and
+count/fill-only synchronization no longer asks the terrain renderer to rebuild
+an unchanged barrel model.
+
+All four paths default on, apply immediately, and yield in Compare Mode. The
+exact version gate, controls, diagnostics, and test boundaries are documented
+in [Sophisticated Storage rendering](docs/SOPHISTICATED_STORAGE.md).
 
 ### ModernFix render and model backports
 
@@ -402,6 +421,7 @@ The complete option and coexistence reference is in
 | [Installation](docs/INSTALLATION.md) | Install, upgrade, coexistence, removal, and reporting |
 | [Configuration](docs/CONFIGURATION.md) | Every option, default, command, and immediate behavior |
 | [Particle optimizations](docs/PARTICLE_OPTIMIZATIONS.md) | Billboard ownership, light caches, diagnostics, and safety boundaries |
+| [Sophisticated Storage rendering](docs/SOPHISTICATED_STORAGE.md) | Barrel display culling, quantity/fill fast paths, update filtering, and validation |
 | [Testing](docs/TESTING.md) | Compare Mode and repeatable benchmark procedure |
 | [Performance validation](docs/PERFORMANCE_VALIDATION.md) | Four-client measured results and limitations |
 | [Release notes 0.4.1](docs/releases/0.4.1.md) | Current release: renderer, model, particle, chunk, and stability work |

@@ -4,6 +4,7 @@ import dev.hoyin1600p.vault_render_optimization.client.VaultRenderOptimizationCo
 import dev.hoyin1600p.vault_render_optimization.client.create.FlywheelBackendManager;
 import dev.hoyin1600p.vault_render_optimization.client.lighting.DynamicLightEngine;
 import dev.hoyin1600p.vault_render_optimization.client.lighting.DynamicLightResourceLoader;
+import dev.hoyin1600p.vault_render_optimization.client.sophisticatedstorage.LimitedBarrelCountRenderer;
 import dev.hoyin1600p.vault_render_optimization.client.update.UpdateNoticeService;
 import dev.hoyin1600p.vault_render_optimization.config.ClientOptimizationConfig;
 import net.minecraftforge.client.event.RegisterClientCommandsEvent;
@@ -16,6 +17,7 @@ import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.config.ModConfig;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
+import net.minecraft.server.packs.resources.ResourceManagerReloadListener;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -60,6 +62,10 @@ public final class VaultRenderOptimization {
 
     private void onRegisterClientReloadListeners(RegisterClientReloadListenersEvent event) {
         event.registerReloadListener(DynamicLightResourceLoader.INSTANCE);
+        if (ModList.get().isLoaded("sophisticatedstorage")) {
+            event.registerReloadListener((ResourceManagerReloadListener) resourceManager ->
+                    LimitedBarrelCountRenderer.clear());
+        }
     }
 
     private static boolean supportsFlywheelBackendManagement() {

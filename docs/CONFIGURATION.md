@@ -146,6 +146,21 @@ on-screen particles, or move particle work to another thread. Diagnostics are
 off by default because class-level queue accounting is intended for profiling,
 not everyday play.
 
+## Sophisticated Storage
+
+| Key | Default | Purpose |
+| --- | --- | --- |
+| `sophisticated_storage.front_display_culling` | `true` | Skips item, quantity, fill, and upgrade displays when their barrel face points away from the camera or is immediately covered |
+| `sophisticated_storage.quantity_text_cache` | `true` | Reuses bounded formatted quantity glyphs and measured widths |
+| `sophisticated_storage.fill_level_fast_path` | `true` | Emits the existing fill-bar geometry without temporary per-vertex vectors |
+| `sophisticated_storage.count_only_render_update_filter` | `true` | Avoids terrain rebuilds when synchronized changes affect quantity/fill displays but not the barrel model |
+| `sophisticated_storage.diagnostics` | `false` | Collects front-face, quantity, fill, and render-update counters |
+
+These settings are hot through `/vro storage`. They apply only to the exact
+validated Sophisticated Storage `1.18.2-0.9.8.915` and Sophisticated Core
+`1.18.2-0.6.4.604` pair. Unknown internal layouts fail closed. Compare Mode
+disables all four performance paths. Tier rendering is not modified.
+
 ## Client tick fast paths
 
 | Key | Default | Purpose |
@@ -187,6 +202,12 @@ yields both when Better Fps - Render Distance is installed.
 | `/vro compare on` | Saves and immediately disables VRO performance paths |
 | `/vro compare off` | Saves and immediately enables configured performance paths |
 | `/vro backports` | Reports the launch-time owner and reason for every ModernFix-derived render backport |
+| `/vro storage` | Shows Sophisticated Storage availability and all four hot feature states |
+| `/vro storage face on\|off` | Controls front-display backface/covered-face culling |
+| `/vro storage counts on\|off` | Controls the bounded quantity-label cache |
+| `/vro storage fill on\|off` | Controls allocation-light fill bars |
+| `/vro storage updates on\|off` | Controls count/fill-only chunk-rebuild filtering |
+| `/vro storage diagnostics on\|off\|reset` | Controls and resets Sophisticated Storage profiling counters |
 | `/vro updates` | Shows whether checks are enabled and the selected update types |
 | `/vro updates status` | Shows the same update-notice state explicitly |
 | `/vro updates on` | Enables checks, saves the setting, and starts a fresh request |

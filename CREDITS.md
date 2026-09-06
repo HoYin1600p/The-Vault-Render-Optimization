@@ -304,6 +304,21 @@ contributors' Bobby revision `57ea55a9b365dfc2338214746ed3fdb024b34ea2`
 (LGPL-3.0-or-later): fake chunks notify the normal renderer of loaded/dirty
 sections. This is research provenance only; no Bobby implementation is copied.
 
+## Sophisticated Storage barrel rendering
+
+Sophisticated Storage by P3pp3rF1y and contributors supplied the installed
+limited-barrel render layout and synchronization behavior inspected at revision
+`891b0d9e29350ec78c7b8567285036d2ecdb303c` (GPL-3.0-only). Later upstream
+revision `93656abf01687429c4a5f4407e8f8ff10f5fc29e` informed the decision to
+separate display-only updates from block-model rebuilds.
+
+VRO adapts the 1.18.2 quantity and fill layouts into bounded glyph caching and
+direct vertex emission, then adds its own exact model snapshot, front-display
+visibility policy, hot configuration, diagnostics, version gate, and tests.
+Sophisticated Storage/Core remain external dependencies and no assets are
+bundled. The complete GPLv3 text is included in the GPL portion of
+`docs/licenses/embeddium-LGPL-3.0-only.txt`; VRO remains AGPL-3.0-or-later.
+
 ## Attribution policy
 
 Every future implementation materially informed by another project must record

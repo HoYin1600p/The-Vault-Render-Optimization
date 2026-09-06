@@ -339,6 +339,30 @@ uploads; their code is neither copied nor bundled by this feature. Credits,
 inspected versions and local source revision are in
 `docs/CHUNK_UPDATE_DEFERRAL.md`. Newer Sodium scheduling is research-only.
 
+## Sophisticated Storage barrel rendering
+
+- Project: Sophisticated Storage by P3pp3rF1y and contributors
+- Source: https://github.com/P3pp3rF1y/SophisticatedStorage
+- Installed-layout revision: `891b0d9e29350ec78c7b8567285036d2ecdb303c`
+- Update-filter research revision: `93656abf01687429c4a5f4407e8f8ff10f5fc29e`
+- Upstream license: GPL-3.0-only
+- Validated binaries: Sophisticated Storage `1.18.2-0.9.8.915` and
+  Sophisticated Core `1.18.2-0.6.4.604`
+
+`LimitedBarrelCountRenderer` and `LimitedBarrelFillRenderer` retain the
+upstream 1.18.2 display layout while replacing repeated formatting/measurement
+and legacy temporary-vector emission. The notification filter is a fresh VRO
+implementation informed by the later upstream correction; it compares an exact
+immutable model-bearing snapshot after barrel-specific synchronized fields
+load, and excludes count-only stack size. Visibility culling, cache bounds and
+lifecycle, configuration, diagnostics, compatibility gate, and tests are
+VRO-owned additions. No Sophisticated Storage classes or assets are bundled.
+
+GPLv3 is compatible with VRO's AGPL-3.0-or-later license under GPLv3 section
+13. The complete GPLv3 text is present in the GPL portion of
+`docs/licenses/embeddium-LGPL-3.0-only.txt` and is embedded in the production
+JAR by the existing build. Upstream copyrights and license remain intact.
+
 ## Compatibility behavior inspected
 
 Bobby (Johni0702 and Forge backport contributors), LGPL-3.0-or-later, revision

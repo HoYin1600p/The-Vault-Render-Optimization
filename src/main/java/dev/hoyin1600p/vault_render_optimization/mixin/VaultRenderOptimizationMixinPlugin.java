@@ -8,6 +8,7 @@ import dev.hoyin1600p.vault_render_optimization.backport.RenderBackportCompatibi
 import dev.hoyin1600p.vault_render_optimization.backport.RenderBackportOwnershipRegistry;
 import dev.hoyin1600p.vault_render_optimization.client.particle.ParticleOptimizationState;
 import dev.hoyin1600p.vault_render_optimization.client.particle.ParticleMixinSelection;
+import dev.hoyin1600p.vault_render_optimization.client.sophisticatedstorage.SophisticatedStorageCompatibility;
 import dev.hoyin1600p.vault_render_optimization.client.chunk.ChunkUpdateBackend;
 import dev.hoyin1600p.vault_render_optimization.client.chunk.ChunkUpdateState;
 import dev.hoyin1600p.vault_render_optimization.client.chunk.sorting.IndexSortCompatibility;
@@ -127,6 +128,7 @@ public final class VaultRenderOptimizationMixinPlugin implements IMixinConfigPlu
     private boolean fleroviumLoaded;
     private boolean ctmCompatible;
     private boolean codeChickenLibLoaded;
+    private boolean sophisticatedStorageCompatible;
     private RendererFamily rendererFamily = RendererFamily.NONE;
     private String rendererVersion;
     private ChunkUpdateBackend chunkUpdateBackend = ChunkUpdateBackend.BLOCKED;
@@ -148,6 +150,10 @@ public final class VaultRenderOptimizationMixinPlugin implements IMixinConfigPlu
             fleroviumLoaded = isModLoaded("flerovium");
             ctmCompatible = hasVersion("ctm", "1.18.2-1.1.5+5");
             codeChickenLibLoaded = isModLoaded("codechickenlib");
+            sophisticatedStorageCompatible = SophisticatedStorageCompatibility.supports(
+                    modVersion("sophisticatedstorage"),
+                    modVersion("sophisticatedcore")
+            );
             rendererFamily = resolveRendererFamily();
             rendererVersion = rendererFamily == RendererFamily.EMBEDDIUM
                     ? modVersion("embeddium")
@@ -197,6 +203,13 @@ public final class VaultRenderOptimizationMixinPlugin implements IMixinConfigPlu
                 indexSortCompatible ? "AVAILABLE" : "BLOCKED", indexSortBlocker == null ? "bytecode verified" : indexSortBlocker);
         VaultRenderOptimization.LOGGER.info("Chunk-update deferral backend: {} (runtime config/Compare Mode apply)",
                 chunkUpdateBackend);
+        VaultRenderOptimization.LOGGER.info(
+                "Sophisticated Storage rendering hooks: {} - {}",
+                sophisticatedStorageCompatible ? "AVAILABLE" : "BLOCKED",
+                sophisticatedStorageCompatible
+                        ? "validated Sophisticated Storage 1.18.2-0.9.8.915 / Core 1.18.2-0.6.4.604"
+                        : "requires the validated Sophisticated Storage 1.18.2-0.9.8.915 / Core 1.18.2-0.6.4.604 pair"
+        );
 
         ParticleOptimizationState.configureEnvironment(
                 !modDiscoveryFailed && (rubidiumLoaded || embeddiumLoaded || sodiumLoaded),
@@ -241,6 +254,9 @@ public final class VaultRenderOptimizationMixinPlugin implements IMixinConfigPlu
 
     @Override
     public boolean shouldApplyMixin(String targetClassName, String mixinClassName) {
+        if (mixinClassName.contains(".sophisticatedstorage.")) {
+            return physicalClient && !modDiscoveryFailed && sophisticatedStorageCompatible;
+        }
         if (mixinClassName.endsWith(".chunk.EmbeddiumAdaptiveBudgetMixin")
                 || mixinClassName.endsWith(".chunk.EmbeddiumBudgetBuilderMixin")) return adaptiveBudgetCompatible;
         if (mixinClassName.endsWith(".chunk.EmbeddiumIndexSortTaskMixin")
