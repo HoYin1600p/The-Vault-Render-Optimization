@@ -56,5 +56,18 @@ class SophisticatedStorageMixinStructureTest {
 
         assertFalse(source.contains("new Vector4f"));
         assertTrue(source.contains("consumer.vertex(pose.pose()"));
+        assertTrue(source.contains("consumer.uv(u, v);"));
+        assertFalse(source.matches(
+                "(?s).*consumer\\.vertex\\(pose\\.pose\\(\\), x, y, 0\\.0F\\)\\s*\\.color.*"
+        ));
+    }
+
+    @Test
+    void fillFastPathUsesTheDistinctSmallBarTextureColumn() throws IOException {
+        String source = Files.readString(FILL_RENDERER);
+
+        assertTrue(source.contains("SMALL_MIN_U = 3.0F / 128.0F"));
+        assertTrue(source.contains("SMALL_MAX_U = 6.0F / 128.0F"));
+        assertTrue(source.contains("float minU = large ? LARGE_MIN_U : SMALL_MIN_U"));
     }
 }

@@ -18,8 +18,10 @@ public final class LimitedBarrelFillRenderer {
     private static final float PIXEL = 1.0F / 16.0F;
     private static final float BAR_PIXEL = PIXEL / 5.0F;
     private static final float BAR_WIDTH = BAR_PIXEL * 3.0F;
-    private static final float MIN_U = 0.0F;
-    private static final float MAX_U = 3.0F / 128.0F;
+    private static final float LARGE_MIN_U = 0.0F;
+    private static final float LARGE_MAX_U = 3.0F / 128.0F;
+    private static final float SMALL_MIN_U = 3.0F / 128.0F;
+    private static final float SMALL_MAX_U = 6.0F / 128.0F;
     private static final float LARGE_MAX_V = 68.0F / 128.0F;
     private static final float SMALL_MAX_V = 28.0F / 128.0F;
 
@@ -102,15 +104,17 @@ public final class LimitedBarrelFillRenderer {
         float height = clampedFill * BAR_PIXEL * (barHeightPixels * 5.0F - 2.0F);
         float maxV = large ? LARGE_MAX_V : SMALL_MAX_V;
         float minV = (1.0F - clampedFill) * maxV;
+        float minU = large ? LARGE_MIN_U : SMALL_MIN_U;
+        float maxU = large ? LARGE_MAX_U : SMALL_MAX_U;
         float alpha = translucent ? 0.5F : 1.0F;
 
         poseStack.pushPose();
         poseStack.translate(x + BAR_PIXEL, y + BAR_PIXEL, 0.0D);
         PoseStack.Pose pose = poseStack.last();
-        vertex(consumer, pose, 0.0F, height, MAX_U, minV, alpha, packedOverlay, packedLight);
-        vertex(consumer, pose, 0.0F, 0.0F, MAX_U, maxV, alpha, packedOverlay, packedLight);
-        vertex(consumer, pose, BAR_WIDTH, 0.0F, MIN_U, maxV, alpha, packedOverlay, packedLight);
-        vertex(consumer, pose, BAR_WIDTH, height, MIN_U, minV, alpha, packedOverlay, packedLight);
+        vertex(consumer, pose, 0.0F, height, maxU, minV, alpha, packedOverlay, packedLight);
+        vertex(consumer, pose, 0.0F, 0.0F, maxU, maxV, alpha, packedOverlay, packedLight);
+        vertex(consumer, pose, BAR_WIDTH, 0.0F, minU, maxV, alpha, packedOverlay, packedLight);
+        vertex(consumer, pose, BAR_WIDTH, height, minU, minV, alpha, packedOverlay, packedLight);
         poseStack.popPose();
         SophisticatedStorageDiagnostics.recordFillBarRendered();
     }
@@ -126,12 +130,15 @@ public final class LimitedBarrelFillRenderer {
             int packedOverlay,
             int packedLight
     ) {
-        consumer.vertex(pose.pose(), x, y, 0.0F)
-                .color(1.0F, 1.0F, 1.0F, alpha)
-                .uv(u, v)
-                .overlayCoords(packedOverlay)
-                .uv2(packedLight)
-                .normal(pose.normal(), 0.0F, 1.0F, 0.0F)
-                .endVertex();
+        // SpriteCoordinateExpander returns its underlying consumer from each
+        // fluent setter. Chaining would therefore bypass the sprite wrapper
+        // after vertex() and interpret these local UVs as full-atlas UVs.
+        consumer.vertex(pose.pose(), x, y, 0.0F);
+        consumer.color(1.0F, 1.0F, 1.0F, alpha);
+        consumer.uv(u, v);
+        consumer.overlayCoords(packedOverlay);
+        consumer.uv2(packedLight);
+        consumer.normal(pose.normal(), 0.0F, 1.0F, 0.0F);
+        consumer.endVertex();
     }
 }
