@@ -250,20 +250,20 @@
     {
       "version": "0.4.2",
       "tag": "v0.4.2",
-      "state": "prepared",
-      "releaseCommit": null,
+      "state": "awaiting_approval",
+      "releaseCommit": "75ac45aa6abe84fb8dfcc48b0f9b58d84583b3c6",
       "jar": {
         "filename": "vault_render_optimization.0.4.2.jar",
-        "size": null,
-        "sha256": null
+        "size": 547248,
+        "sha256": "671e254a8896cd52a3175ea9c251e9aa3b92059726d5db1fe48e23f4ef7912d6"
       },
       "github": {
         "releaseUrl": "https://github.com/HoYin1600p/The-Vault-Render-Optimization/releases/tag/v0.4.2"
       },
       "curseforge": {
         "projectId": "1637635",
-        "fileId": null,
-        "fileUrl": null,
+        "fileId": "8834871",
+        "fileUrl": "https://www.curseforge.com/minecraft/mc-mods/vault-render-optimization/files/8834871",
         "manualRelease": false
       },
       "compatibility": {
@@ -293,15 +293,15 @@
         "mode": "github-actions-public-file-page",
         "workflowRunUrl": null,
         "lastCheckedAt": null,
-        "attentionAfter": null
+        "attentionAfter": "2026-09-11T03:09:51Z"
       },
       "timestamps": {
         "preparedAt": "2026-09-08T02:50:55Z",
-        "submittedAt": null,
+        "submittedAt": "2026-09-08T03:09:51Z",
         "publicVerifiedAt": null,
         "activatedAt": null
       },
-      "statusNote": "Prepared for synchronized GitHub and CurseForge publication; production update JSON remains at 0.4.1."
+      "statusNote": "Submitted to CurseForge; awaiting public availability and exact artifact verification. Production update JSON remains at 0.4.1."
     }
   ]
 }
