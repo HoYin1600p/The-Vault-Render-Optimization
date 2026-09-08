@@ -276,7 +276,10 @@ function Get-ArtifactLabel([string]$Path) {
     }
     $shadowWorkspace = (& git -C $repositoryDirectory config --local --get codex.shadowWorkspace 2>$null)
     if ($LASTEXITCODE -eq 0 -and -not [string]::IsNullOrWhiteSpace($shadowWorkspace)) {
-        $shadowWorkspace = [IO.Path]::GetFullPath($shadowWorkspace.Trim()).TrimEnd('\\', '/')
+        $shadowWorkspace = [IO.Path]::GetFullPath($shadowWorkspace.Trim()).TrimEnd(
+            [IO.Path]::DirectorySeparatorChar,
+            [IO.Path]::AltDirectorySeparatorChar
+        )
         if ($fullPath.StartsWith(
                 $shadowWorkspace + [IO.Path]::DirectorySeparatorChar,
                 [StringComparison]::OrdinalIgnoreCase
