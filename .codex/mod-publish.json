@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "workflow": {
     "skill": "publish-mod-update",
-    "revision": 4
+    "revision": 5
   },
   "modName": "The Vault Render Optimization",
   "releaseLedger": "docs/release-ledger.json",
@@ -27,7 +27,7 @@
   "github": {
     "repository": "HoYin1600p/The-Vault-Render-Optimization",
     "defaultBranch": "main",
-    "description": "Client-side Forge 1.18.2 performance and stability for Vault Hunters, Create, particles, models, and Embeddium/Rubidium rendering.",
+    "description": "Client-side Forge 1.18.2 performance for Vault Hunters: faster Create rendering, particles, chunks, models, and Sophisticated Storage displays.",
     "versionTrackingJson": "update.json",
     "versionTrackingProductionUrl": "https://raw.githubusercontent.com/HoYin1600p/The-Vault-Render-Optimization/main/update.json",
     "versionTrackingPointers": {
@@ -44,7 +44,7 @@
     "projectId": "1637635",
     "projectSlug": "vault-render-optimization",
     "uploadCommand": ".\\scripts\\publish-curseforge.ps1 -Version <version> -ChangelogFile <path> -GitHubReleaseUrl <url>",
-    "uploadDryRunCommand": ".\\scripts\\publish-curseforge.ps1 -Version 0.4.1 -ChangelogFile docs/curseforge/CHANGELOG-0.4.1.md -GitHubReleaseUrl https://github.com/HoYin1600p/The-Vault-Render-Optimization/releases/tag/v0.4.1 -DryRun",
+    "uploadDryRunCommand": ".\\scripts\\publish-curseforge.ps1 -Version 0.4.2 -ChangelogFile docs/curseforge/CHANGELOG-0.4.2.md -GitHubReleaseUrl https://github.com/HoYin1600p/The-Vault-Render-Optimization/releases/tag/v0.4.2 -DryRun",
     "uploadTokenEnvironment": "CURSEFORGE_API_TOKEN",
     "descriptionFile": "docs/curseforge/DESCRIPTION.md",
     "descriptionFormat": "markdown",
@@ -54,6 +54,12 @@
       7498,
       9638,
       8326
+    ],
+    "gameVersionTypes": [
+      {"name": "Minecraft", "id": "73250"},
+      {"name": "Modloader", "id": "68441"},
+      {"name": "Environment", "id": "75208"},
+      {"name": "Java", "id": "2"}
     ],
     "gameVersions": [
       "1.18.2",
@@ -77,7 +83,11 @@
   },
   "identity": {
     "scanCommand": ".\\scripts\\verify-public-identity.ps1",
-    "ignoredScanLog": ".identity-scan/identity-scan-log.md"
+    "scanLog": {
+      "location": "external-codex-shadow-workspace",
+      "relativePath": "identity-scan/identity-scan-log.md",
+      "workspaceGitConfig": "codex.shadowWorkspace"
+    }
   },
   "automation": {
     "approvalMonitor": {

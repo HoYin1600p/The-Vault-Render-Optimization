@@ -129,11 +129,16 @@ try {
     $response = $client.PostAsync($plan.endpoint, $multipart).GetAwaiter().GetResult()
     $body = $response.Content.ReadAsStringAsync().GetAwaiter().GetResult()
     if (-not $response.IsSuccessStatusCode) {
-        throw "CurseForge upload failed with HTTP $([int]$response.StatusCode): $body"
+        throw "CurseForge upload failed with HTTP $([int]$response.StatusCode)."
     }
-    $result = $body | ConvertFrom-Json
+    try {
+        $result = $body | ConvertFrom-Json
+    }
+    catch {
+        throw 'CurseForge accepted the upload but returned an unreadable response.'
+    }
     if ($null -eq $result.id) {
-        throw "CurseForge accepted the request but did not return a file ID: $body"
+        throw 'CurseForge accepted the upload but did not return a file ID.'
     }
     Write-Host "CurseForge upload submitted. File ID: $($result.id)"
 }

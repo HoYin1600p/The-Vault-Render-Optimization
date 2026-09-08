@@ -15,19 +15,19 @@ final class VroUpdateManifestTest {
             "https://www.curseforge.com/minecraft/mc-mods/vault-render-optimization";
 
     @Test
-    void currentReleaseIsNotAdvertisedAsOutdated() throws IOException {
-        assertTrue(parseFor("0.4.0").isEmpty());
+    void latestPublicReleaseIsNotAdvertisedAsOutdated() throws IOException {
+        assertTrue(parseFor("0.4.1").isEmpty());
     }
 
     @Test
     void olderReleaseReceivesTheVroManifestNotice() throws IOException {
-        UpdateNotice notice = parseFor("0.3.5").orElseThrow();
+        UpdateNotice notice = parseFor("0.4.0").orElseThrow();
 
         assertEquals("vault_render_optimization", notice.modId());
         assertEquals("VRO", notice.displayName());
-        assertEquals("0.4.0", notice.targetVersion());
+        assertEquals("0.4.1", notice.targetVersion());
         assertEquals(UpdateNotice.Severity.NORMAL, notice.severity());
-        assertEquals("Configurable Update Notices", notice.message());
+        assertEquals("Renderer, particle, and chunk performance improvements", notice.message());
         assertEquals(DOWNLOAD_URL, notice.downloadUrl());
     }
 

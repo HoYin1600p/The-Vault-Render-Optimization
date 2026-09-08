@@ -18,17 +18,19 @@ Before opening CurseForge:
 1. Confirm the intended version's source and documentation are committed and
    the release candidate has been built and tested. Do not publish the GitHub
    release or update the live manifest yet.
-2. Read `.identity-scan/identity-scan-log.md`, validate its newest successful
-   checkpoint, and run the required incremental public-identity scan. Fall
-   back to a full scan when the checkpoint is absent or unsafe. Treat any
-   finding as blocking and append the result to the local ignored log.
+2. Validate the configured external Codex shadow workspace marker, read its
+   `identity-scan/identity-scan-log.md`, and run the required incremental
+   public-identity scan. Fall back to a full scan when the checkpoint is absent
+   or unsafe. Treat any finding as blocking. The scanner atomically appends its
+   result to that external log.
 3. Run `scripts/verify-public-identity.ps1` as part of that scan and treat any
    match as blocking.
 4. Run `scripts/build-pack-compatibility.ps1` against every supported Vault
    baseline.
 5. Confirm the normal JAR name, embedded mod version, and SHA-256 checksum.
 6. Run `scripts/assemble-curseforge-release.ps1 -Version X.Y.Z` and review the
-   resulting local kit under `release/curseforge/`.
+   resulting local kit under the external shadow workspace's
+   `artifacts/curseforge/` directory.
 7. Confirm the CurseForge project Summary exactly matches `PROJECT-SUMMARY.txt`.
 8. Keep the CurseForge changelog concise and user-visible. Do not substitute
    the full GitHub release notes.

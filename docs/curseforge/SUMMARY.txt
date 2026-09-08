@@ -1,1 +1,1 @@
-Client-side Vault Hunters and Create performance: faster particles, models, chunk rendering, contraption culling, shader support, and stability fixes.
+Client-side Vault Hunters performance: faster Create rendering, particles, chunks, models, Sophisticated Storage displays, shaders, and stability.

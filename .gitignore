@@ -2,7 +2,6 @@
 .idea/
 *.iml
 .gradle/
-.identity-scan/
 build/
 logs/
 run/

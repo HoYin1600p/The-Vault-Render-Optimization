@@ -38,6 +38,7 @@ Use `/vro create status` to see the active Flywheel backend, shader path, and co
 *   Uses renderer-native asynchronous chunk scheduling by default to reduce blocking rebuild stalls without changing another mod's settings.
 *   Avoids copying and uploading unchanged terrain vertices during supported Embeddium transparency re-sorts.
 *   Paces already-built Embeddium terrain work under measured load while leaving initial and cached-terrain loading on the renderer's native path.
+*   Makes Sophisticated Storage barrel displays cheaper by culling hidden or covered front faces, caching quantity labels, emitting fill bars without temporary vertex objects, and avoiding chunk rebuilds for count/fill-only updates. Tier badges are unchanged.
 *   Compacts baked-model and block-state data beyond the reductions already present in FerriteCore 4.2.2.
 *   Adds separate vertical and horizontal terrain-section culling. Vertical culling is enabled by default; horizontal culling is optional.
 *   Cleans up retained Create Addition, Powah, Vault Loot Beams, and empty-item references during long sessions and world changes.
@@ -68,6 +69,7 @@ Update checks are enabled by default, while displayed update types default to cr
 *   **Vault Hunters:** Official Third Edition, Remastered, Wolds Vaults, and selected custom 1.18.2 baselines
 *   **Create shader path:** Create 0.5.1.i, Flywheel 0.6.11, Oculus 1.6.x, and supported Rubidium or Embeddium releases
 *   **Renderer-transfer baselines:** Embeddium 0.3.18/0.3.19 and Rubidium 0.5.6
+*   **Sophisticated Storage display path:** Sophisticated Storage 1.18.2-0.9.8.915 with Sophisticated Core 1.18.2-0.6.4.604
 
 Optional integrations load only when their target mod is present. VRO yields overlapping work when Entity Collision FPS Fix, BadOptimizations, Particle Core, Flerovium, Better Fps - Render Distance, or Dynamic Lights Reforged is installed.
 
@@ -93,6 +95,7 @@ No server installation, world migration, cache deletion, or settings reset is re
 | <code>/vro chunks defer on|off</code>   |Control renderer-native asynchronous chunk updates immediately. |
 | <code>/vro chunks sorting on|off|status</code> |Control supported Embeddium index-only transparency sorting. |
 | <code>/vro chunks budget on|off|status</code> |Control supported Embeddium adaptive chunk pacing and diagnostics. |
+| <code>/vro storage on|off|status</code> |Control Sophisticated Storage display paths and diagnostics. |
 | <code>/vro culling</code>               |View or change vertical and horizontal terrain culling.        |
 | <code>/vro lights</code>                |View or change the optional dynamic-light engine.              |
 | <code>/vro create status</code>         |Show Create, Flywheel, shader-path, and culling status.        |
@@ -111,6 +114,7 @@ Crash guards, world cleanup, and map-key compatibility remain active in Compare 
 *   [Particle optimizations](https://github.com/HoYin1600p/The-Vault-Render-Optimization/blob/main/docs/PARTICLE_OPTIMIZATIONS.md)
 *   [Chunk update deferral](https://github.com/HoYin1600p/The-Vault-Render-Optimization/blob/main/docs/CHUNK_UPDATE_DEFERRAL.md)
 *   [Adaptive chunk budgets](https://github.com/HoYin1600p/The-Vault-Render-Optimization/blob/main/docs/ADAPTIVE_CHUNK_BUDGET.md)
+*   [Sophisticated Storage rendering](https://github.com/HoYin1600p/The-Vault-Render-Optimization/blob/main/docs/SOPHISTICATED_STORAGE.md)
 *   [Index-only transparency sorting](https://github.com/HoYin1600p/The-Vault-Render-Optimization/blob/main/docs/INDEX_ONLY_SORTING.md)
 *   [Complete changelog](https://github.com/HoYin1600p/The-Vault-Render-Optimization/blob/main/CHANGELOG.md)
 *   [Credits](https://github.com/HoYin1600p/The-Vault-Render-Optimization/blob/main/CREDITS.md)

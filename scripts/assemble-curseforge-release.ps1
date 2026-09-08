@@ -1,12 +1,33 @@
 param(
-    [string]$Version = '0.4.1',
+    [string]$Version = '0.4.2',
+    [string]$OutputRoot,
     [switch]$Force
 )
 
 $ErrorActionPreference = 'Stop'
 
 $repositoryDirectory = Split-Path -Parent $PSScriptRoot
-$releaseRoot = Join-Path $repositoryDirectory 'release/curseforge'
+if ([string]::IsNullOrWhiteSpace($OutputRoot)) {
+    $shadowWorkspace = (& git -C $repositoryDirectory config --local --get codex.shadowWorkspace 2>$null)
+    if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($shadowWorkspace)) {
+        throw 'Configure git codex.shadowWorkspace or provide -OutputRoot before assembling a release kit.'
+    }
+    $shadowWorkspace = [IO.Path]::GetFullPath($shadowWorkspace.Trim())
+    $markerPath = Join-Path $shadowWorkspace 'workspace-identity.json'
+    if (-not (Test-Path -LiteralPath $markerPath -PathType Leaf)) {
+        throw 'The configured Codex shadow workspace has no identity marker.'
+    }
+    $marker = Get-Content -LiteralPath $markerPath -Raw | ConvertFrom-Json
+    $originRemote = (& git -C $repositoryDirectory remote get-url origin).Trim()
+    if ([string]$marker.canonical_repository_name -ne 'The-Vault-Render-Optimization' -or
+        [string]$marker.remote_identity -ne $originRemote) {
+        throw 'The configured Codex shadow workspace belongs to another repository.'
+    }
+    $releaseRoot = Join-Path $shadowWorkspace 'artifacts/curseforge'
+}
+else {
+    $releaseRoot = [IO.Path]::GetFullPath($OutputRoot)
+}
 $bundleName = "The-Vault-Render-Optimization-$Version"
 $bundleDirectory = Join-Path $releaseRoot $bundleName
 $zipPath = Join-Path $releaseRoot "$bundleName-CurseForge-Upload-Kit.zip"
@@ -132,6 +153,16 @@ finally {
 }
 
 Compress-Archive -LiteralPath $bundleDirectory -DestinationPath $zipPath -CompressionLevel Optimal
+
+& (Join-Path $repositoryDirectory 'scripts/verify-public-identity.ps1') -Quiet -ArtifactPath @(
+    $sourceJar,
+    $bundleJar,
+    $zipPath,
+    $workflowDestination
+)
+if ($LASTEXITCODE -ne 0) {
+    exit $LASTEXITCODE
+}
 
 Write-Host "CurseForge review kit: $bundleDirectory"
 Write-Host "CurseForge support ZIP: $zipPath"

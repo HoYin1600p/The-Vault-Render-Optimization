@@ -4,7 +4,7 @@
 [![Forge](https://img.shields.io/badge/Forge-40.3.11%2B-e04e39)](https://files.minecraftforge.net/net/minecraftforge/forge/index_1.18.2.html)
 [![Environment](https://img.shields.io/badge/Environment-Client-4b8bbe)](#requirements-and-support)
 [![License](https://img.shields.io/badge/License-AGPL--3.0--or--later-blue.svg)](LICENSE)
-[![Release](https://img.shields.io/badge/Release-0.4.1-2ea44f)](https://github.com/HoYin1600p/The-Vault-Render-Optimization/releases/tag/v0.4.1)
+[![Release](https://img.shields.io/badge/Release-0.4.2-2ea44f)](https://github.com/HoYin1600p/The-Vault-Render-Optimization/releases/tag/v0.4.2)
 
 The Vault Render Optimization (VRO) is a client-side Minecraft Forge 1.18.2
 mod that reduces repeated rendering and client simulation work in Vault
@@ -337,7 +337,7 @@ different pack files together.
 
 1. Stop Minecraft.
 2. Remove or disable every older VRO jar.
-3. Place `vault_render_optimization.0.4.1.jar` in the instance's `mods`
+3. Place `vault_render_optimization.0.4.2.jar` in the instance's `mods`
    directory.
 4. Keep only one active VRO jar.
 5. Remove Entity Collision FPS Fix only if you want VRO to own that same
@@ -424,7 +424,7 @@ The complete option and coexistence reference is in
 | [Sophisticated Storage rendering](docs/SOPHISTICATED_STORAGE.md) | Barrel display culling, quantity/fill fast paths, update filtering, and validation |
 | [Testing](docs/TESTING.md) | Compare Mode and repeatable benchmark procedure |
 | [Performance validation](docs/PERFORMANCE_VALIDATION.md) | Four-client measured results and limitations |
-| [Release notes 0.4.1](docs/releases/0.4.1.md) | Current release: renderer, model, particle, chunk, and stability work |
+| [Release notes 0.4.2](docs/releases/0.4.2.md) | Current release: faster Sophisticated Storage barrel displays |
 | [Release notes 0.4.0](docs/releases/0.4.0.md) | Previous published release with configurable update notices |
 | [Release notes 0.3.5](docs/releases/0.3.5.md) | Previous release with dedicated Flywheel shader-pack programs |
 | [Release notes 0.3.4](docs/releases/0.3.4.md) | Create contraption and Flywheel shader rendering |

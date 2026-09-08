@@ -10,9 +10,10 @@ Optimization CurseForge listing.
 - `UPLOAD-X.Y.Z.md`: release-specific project fields and review checklist
 - `PUBLISHING-WORKFLOW.md`: automated upload and approval-monitor procedure
 
-Locally assembled upload bundles belong under `release/curseforge/` and should
-not be committed. Upload the verified runnable jar, not a sources jar or support
-bundle.
+Locally assembled upload bundles belong under the repository's external Codex
+shadow workspace in `artifacts/curseforge/` and must never be committed. The
+local Git setting `codex.shadowWorkspace` identifies that workspace. Upload the
+verified runnable jar, not a sources jar or support bundle.
 
 Assemble or refresh a local review kit with:
 

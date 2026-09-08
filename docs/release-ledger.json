@@ -245,7 +245,63 @@
         "publicVerifiedAt": "2026-09-05T22:53:42.446807Z",
         "activatedAt": "2026-09-05T22:53:55.1722152Z"
       },
-      "statusNote": "Submitted to CurseForge; awaiting public availability and exact artifact verification."
+      "statusNote": "Activated after the public CurseForge download matched the release artifact."
+    },
+    {
+      "version": "0.4.2",
+      "tag": "v0.4.2",
+      "state": "prepared",
+      "releaseCommit": null,
+      "jar": {
+        "filename": "vault_render_optimization.0.4.2.jar",
+        "size": null,
+        "sha256": null
+      },
+      "github": {
+        "releaseUrl": "https://github.com/HoYin1600p/The-Vault-Render-Optimization/releases/tag/v0.4.2"
+      },
+      "curseforge": {
+        "projectId": "1637635",
+        "fileId": null,
+        "fileUrl": null,
+        "manualRelease": false
+      },
+      "compatibility": {
+        "releaseChannel": "release",
+        "gameVersions": [
+          "1.18.2"
+        ],
+        "loaders": [
+          "Forge"
+        ],
+        "environment": "Client",
+        "java": 17,
+        "curseForgeGameVersionIds": [
+          "9008",
+          "7498",
+          "9638",
+          "8326"
+        ]
+      },
+      "updateCheck": {
+        "used": true,
+        "critical": false,
+        "message": "Sophisticated Storage barrel display optimizations",
+        "plannedVersion": "0.4.2"
+      },
+      "monitor": {
+        "mode": "github-actions-public-file-page",
+        "workflowRunUrl": null,
+        "lastCheckedAt": null,
+        "attentionAfter": null
+      },
+      "timestamps": {
+        "preparedAt": "2026-09-08T02:50:55Z",
+        "submittedAt": null,
+        "publicVerifiedAt": null,
+        "activatedAt": null
+      },
+      "statusNote": "Prepared for synchronized GitHub and CurseForge publication; production update JSON remains at 0.4.1."
     }
   ]
 }
