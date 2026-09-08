@@ -94,7 +94,22 @@ $plan = [ordered]@{
 }
 
 if ($DryRun) {
-    $outputDirectory = Join-Path $repositoryDirectory 'build/mod-publish-rehearsal'
+    $shadowWorkspace = (& git -C $repositoryDirectory config --local --get codex.shadowWorkspace 2>$null)
+    if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($shadowWorkspace)) {
+        throw 'Configure git codex.shadowWorkspace before running the upload rehearsal.'
+    }
+    $shadowWorkspace = [IO.Path]::GetFullPath($shadowWorkspace.Trim())
+    $markerPath = Join-Path $shadowWorkspace 'workspace-identity.json'
+    if (-not (Test-Path -LiteralPath $markerPath -PathType Leaf)) {
+        throw 'The configured Codex shadow workspace has no identity marker.'
+    }
+    $marker = Get-Content -LiteralPath $markerPath -Raw | ConvertFrom-Json
+    $originRemote = (& git -C $repositoryDirectory remote get-url origin).Trim()
+    if ([string]$marker.canonical_repository_name -ne 'The-Vault-Render-Optimization' -or
+        [string]$marker.remote_identity -ne $originRemote) {
+        throw 'The configured Codex shadow workspace belongs to another repository.'
+    }
+    $outputDirectory = Join-Path $shadowWorkspace "artifacts/curseforge/rehearsal-$Version"
     New-Item -ItemType Directory -Path $outputDirectory -Force | Out-Null
     $outputPath = Join-Path $outputDirectory 'curseforge-upload-dry-run.json'
     $plan | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath $outputPath -Encoding utf8
