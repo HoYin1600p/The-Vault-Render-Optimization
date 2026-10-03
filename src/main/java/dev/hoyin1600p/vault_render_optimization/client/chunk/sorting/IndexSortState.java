@@ -8,6 +8,9 @@ public final class IndexSortState {
     private static volatile boolean supported;
     private static volatile String reason = "selection pending";
     public static final LongAdder scheduled = new LongAdder();
+    public static final LongAdder geometryDecoded = new LongAdder();
+    public static final LongAdder geometryReused = new LongAdder();
+    public static final LongAdder alreadyOrdered = new LongAdder();
     public static final LongAdder applied = new LongAdder();
     public static final LongAdder stale = new LongAdder();
     public static final LongAdder fallback = new LongAdder();
@@ -32,5 +35,11 @@ public final class IndexSortState {
                 + ", stale=" + stale.sum() + ", fallback=" + fallback.sum()
                 + ", vertex copy bytes avoided=" + vertexCopyBytesAvoided.sum()
                 + ", vertex upload bytes avoided=" + vertexUploadBytesAvoided.sum();
+    }
+
+    public static String geometryStatus() {
+        return "geometry cache " + (ClientOptimizationConfig.sortGeometryCache && enabled() ? "APPLIED" : "YIELDED")
+                + "; decoded=" + geometryDecoded.sum() + ", reused=" + geometryReused.sum()
+                + ", already ordered=" + alreadyOrdered.sum();
     }
 }

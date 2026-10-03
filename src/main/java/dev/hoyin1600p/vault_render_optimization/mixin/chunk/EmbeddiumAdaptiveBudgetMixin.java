@@ -33,6 +33,9 @@ public abstract class EmbeddiumAdaptiveBudgetMixin {
     @Unique private boolean vro$budgetActive;
     @Unique private long vro$lastBudgetReport;
     @Unique private int vro$pendingAtStart;
+    @Unique private static final ChunkUpdateType[] vro$updateTypes = ChunkUpdateType.values();
+    @Unique private final boolean[] vro$waiting = new boolean[vro$updateTypes.length];
+    @Unique private final int[] vro$requestCounts = new int[vro$updateTypes.length];
 
     @Inject(method = "updateChunks", at = @At("HEAD"), require = 1)
     private void vro$beginBudget(CallbackInfo ci) {
@@ -56,9 +59,9 @@ public abstract class EmbeddiumAdaptiveBudgetMixin {
         long now = System.nanoTime();
         var pending = vro$results.inspect(access.vro$pendingResults(), now);
         vro$pendingAtStart = pending.count();
-        boolean[] waiting = new boolean[5];
-        int[] requestCounts = new int[5];
-        for (ChunkUpdateType type : ChunkUpdateType.values()) {
+        boolean[] waiting = vro$waiting;
+        int[] requestCounts = vro$requestCounts;
+        for (ChunkUpdateType type : vro$updateTypes) {
             var queue = rebuildQueues.get(type);
             waiting[type.ordinal()] = queue != null && !queue.isEmpty();
             requestCounts[type.ordinal()] = queue == null ? 0 : queue.size();

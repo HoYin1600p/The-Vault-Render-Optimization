@@ -69,11 +69,9 @@ modify server gameplay. The remote server does not need the mod.
   in-world update notices with a fixed CurseForge download link.
 - Provides immediate in-game Compare Mode for repeatable enabled/disabled
   benchmarks.
-- Includes opt-in spatially indexed dynamic lighting for held and dropped
-  items, luminous entities, and resource-defined block entities.
 - Automatically yields overlapping work to Entity Collision FPS Fix,
-  BadOptimizations, Particle Core, Flerovium, Better Fps - Render Distance,
-  and Dynamic Lights Reforged when present.
+  BadOptimizations, Particle Core, Flerovium, and Better Fps - Render Distance
+  when present.
 
 ## What VRO improves
 
@@ -198,23 +196,6 @@ Vertical terrain-section culling is enabled by default at 12 sections above
 and below the camera. Horizontal culling is independently configurable and
 disabled by default. Both paths affect terrain drawing only, support vanilla
 and Embeddium/Rubidium renderers, and yield to Better Fps - Render Distance.
-
-### Optional dynamic lights
-
-VRO includes an optional dynamic-light engine that is disabled by default.
-When enabled, luminous entities and items light nearby terrain without changing
-server light data. Sources are indexed by 16-block cells, carry independent
-update schedules, and submit one deduplicated set of terrain rebuilds per tick.
-
-Vanilla luminous block items work automatically. Additional item and block
-entity definitions can be supplied by resource packs under
-`assets/<namespace>/vro_dynamic_lights/*.json`. Entity sources and block entity
-sources can be controlled separately. Dynamic lights pause while Oculus shaders
-are active unless shader participation is explicitly enabled.
-
-VRO leaves this entire subsystem inactive when Dynamic Lights Reforged is
-installed. See [Dynamic lights](docs/DYNAMIC_LIGHTS.md) for the resource format,
-commands, diagnostics, and behavior boundaries.
 
 ### Long-session cleanup and crash recovery
 
@@ -362,6 +343,7 @@ for upgrades, removal, optional-mod coexistence, and issue isolation.
 | `/vro chunks defer on\|off` | Controls native asynchronous chunk scheduling without changing another mod's settings. |
 | `/vro chunks sorting on\|off\|status` | Controls index-only transparency updates and reports avoided vertex copies/uploads. |
 | `/vro chunks budget on\|off\|status` | Controls per-machine adaptive deferred budgets and reports upload cost, queue pressure and waiting time. |
+| `/vro chunks farsight on\|off\|status` | With Farsight installed, controls and reports the bound on chunks Farsight keeps loaded. |
 | `/vro particles billboards on\|off` | Hot-enables or disables VRO's camera-basis billboard geometry. |
 | `/vro particles owner auto\|renderer\|vro` | Hot-selects VRO or renderer ownership; `renderer` yields to Rubidium/Embeddium when present. |
 | `/vro particles shared_light on\|off` | Hot-controls the bounded same-tick shared light cache. |
@@ -369,12 +351,6 @@ for upgrades, removal, optional-mod coexistence, and issue isolation.
 | `/vro culling` | Reports vertical and horizontal terrain-culling settings. |
 | `/vro culling vertical on\|off\|<distance>` | Changes vertical section culling immediately. |
 | `/vro culling horizontal on\|off\|<distance>` | Changes horizontal section culling immediately. |
-| `/vro lights` | Reports dynamic-light configuration and live engine counters. |
-| `/vro lights on\|off` | Enables or disables VRO dynamic lights immediately. |
-| `/vro lights entities on\|off` | Controls entity light sources. |
-| `/vro lights block_entities on\|off` | Controls resource-defined block entity sources. |
-| `/vro lights shaders on\|off` | Controls whether VRO lights remain active with shaders. |
-| `/vro lights interval <1-20>` | Changes the independent per-source update interval. |
 | `/vro create status` | Reports Create/Flywheel state and contraption-culling counters. |
 | `/vro create shader_compat status` | Reports whether Flywheel shader compatibility is configured, active, or using its fallback. |
 | `/vro create shader_compat on\|off` | Enables or disables Flywheel shader compatibility and immediately rebuilds Create renderers. |
@@ -401,8 +377,7 @@ The complete option and coexistence reference is in
 
 - Optional integrations load only when their target mod is present.
 - Equivalent mixins yield to Entity Collision FPS Fix, BadOptimizations,
-  Particle Core, Flerovium, Better Fps - Render Distance, and Dynamic Lights
-  Reforged.
+  Particle Core, Flerovium, and Better Fps - Render Distance.
 - Player renderer lookup behavior is not replaced.
 - Renderer caches are discarded on resource reload.
 - Particle subclasses with custom or full-bright lighting keep their own path.
@@ -442,7 +417,20 @@ The complete option and coexistence reference is in
 Requirements:
 
 - JDK 17
-- one supported local Vault Hunters jar for compile-only API verification
+- the compile-only mod jars: The Vault, Embeddium 0.3.18 (and optionally
+  Rubidium 0.5.6), Create 0.5.1.i, Oculus 1.6.x, Vault Loot Beams, iSpawner,
+  Architectury, CodeChickenLib, Sophisticated Storage 1.18.2-0.9.8.915 and
+  Sophisticated Core 1.18.2-0.6.4.604
+
+The build finds these in the known local Prism instances. On any other machine,
+put them in one folder and pass `-Pvro_deps_dir=path/to/folder`, or point at a
+single jar with its property (`vault_mod_jar`, `render_mod_jar`,
+`embeddium_compile_jar`, `create_jar`, `oculus_mod_jar`, `vault_loot_beams_jar`,
+`ispawner_jar`, `architectury_jar`, `codechickenlib_jar`,
+`sophisticated_storage_jar`, `sophisticated_core_jar`). A missing jar is reported
+together with the property that supplies it; `gradlew printDependencyJars` shows
+what was chosen. The custom-Embeddium and Oculus contract tests also accept
+`-Pcustom_embeddium_jar` and `-Poculus_contract_jars`.
 
 Build and run the complete installed-pack compatibility matrix:
 
@@ -468,8 +456,7 @@ VRO was developed by [HoYin1600p](https://github.com/HoYin1600p). The
 learned-ability cache is adapted from Unobtanium work by `radimous`, the client
 collision behavior is adapted from CorgiTaco's CC0 Entity Collision FPS Fix,
 and two post-4.2.2 memory reductions are adapted from FerriteCore. Particle
-Core, BadOptimizations, Better Fps - Render Distance, Dynamic Lights Reforged,
-and other projects informed independently written features and compatibility
+Core, BadOptimizations, Better Fps - Render Distance, and other projects informed independently written features and compatibility
 boundaries.
 
 Read [CREDITS.md](CREDITS.md) and [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)

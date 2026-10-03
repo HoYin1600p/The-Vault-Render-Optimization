@@ -47,11 +47,34 @@ public final class ParticleBillboardGeometry {
             float positionY,
             float positionZ
     ) {
-        ParticleBillboardGeometry geometry = LOCAL.get();
         if (roll != 0.0F) {
-            float sin = Mth.sin(roll);
-            float cos = Mth.cos(roll);
+            return computeRolled(leftX, leftY, leftZ, upX, upY, upZ, true, Mth.sin(roll), Mth.cos(roll), size,
+                    positionX, positionY, positionZ);
+        }
+        return computeRolled(leftX, leftY, leftZ, upX, upY, upZ, false, 0.0F, 1.0F, size, positionX, positionY, positionZ);
+    }
 
+    /**
+     * The same arithmetic with the roll's {@code Mth.sin}/{@code Mth.cos} already taken. The GPU particle
+     * path stores exactly these inputs and its shader repeats these operations ({@code precise fma}).
+     */
+    public static ParticleBillboardGeometry computeRolled(
+            float leftX,
+            float leftY,
+            float leftZ,
+            float upX,
+            float upY,
+            float upZ,
+            boolean rolled,
+            float sin,
+            float cos,
+            float size,
+            float positionX,
+            float positionY,
+            float positionZ
+    ) {
+        ParticleBillboardGeometry geometry = LOCAL.get();
+        if (rolled) {
             float rotatedLeftX = Math.fma(cos, leftX, sin * upX);
             float rotatedLeftY = Math.fma(cos, leftY, sin * upY);
             float rotatedLeftZ = Math.fma(cos, leftZ, sin * upZ);

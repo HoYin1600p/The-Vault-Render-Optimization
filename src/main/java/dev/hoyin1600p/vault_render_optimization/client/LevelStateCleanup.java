@@ -1,7 +1,6 @@
 package dev.hoyin1600p.vault_render_optimization.client;
 
 import dev.hoyin1600p.vault_render_optimization.VaultRenderOptimization;
-import dev.hoyin1600p.vault_render_optimization.client.lighting.DynamicLightEngine;
 import dev.hoyin1600p.vault_render_optimization.mixin.CreateAdditionEnergyNetworkManagerAccessor;
 import dev.hoyin1600p.vault_render_optimization.mixin.PowahCableNetAccessor;
 import dev.hoyin1600p.vault_render_optimization.mixin.VaultLootBeamsCacheAccessor;
@@ -23,7 +22,6 @@ public final class LevelStateCleanup {
     public static void onWorldUnload(WorldEvent.Unload event) {
         Object world = event.getWorld();
 
-        DynamicLightEngine.clearIfWorld(world);
 
         if (ModList.get().isLoaded("createaddition")) {
             removeWorld(CreateAdditionEnergyNetworkManagerAccessor.vaultRenderOptimization$getInstances(), world,

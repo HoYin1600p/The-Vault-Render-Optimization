@@ -45,30 +45,28 @@ public final class CreateRenderContext {
     }
 
     public static AABB transformBounds(AABB box, Matrix4f matrix) {
-        Matrix4fAccessor m = (Matrix4fAccessor) (Object) matrix;
-        double minX = Double.POSITIVE_INFINITY;
-        double minY = Double.POSITIVE_INFINITY;
-        double minZ = Double.POSITIVE_INFINITY;
-        double maxX = Double.NEGATIVE_INFINITY;
-        double maxY = Double.NEGATIVE_INFINITY;
-        double maxZ = Double.NEGATIVE_INFINITY;
+        return transformBounds(box, (Matrix4fAccessor) (Object) matrix);
+    }
 
-        for (int corner = 0; corner < 8; corner++) {
-            float x = (float) ((corner & 1) == 0 ? box.minX : box.maxX);
-            float y = (float) ((corner & 2) == 0 ? box.minY : box.maxY);
-            float z = (float) ((corner & 4) == 0 ? box.minZ : box.maxZ);
-            float transformedX = m.vro$m00() * x + m.vro$m01() * y + m.vro$m02() * z + m.vro$m03();
-            float transformedY = m.vro$m10() * x + m.vro$m11() * y + m.vro$m12() * z + m.vro$m13();
-            float transformedZ = m.vro$m20() * x + m.vro$m21() * y + m.vro$m22() * z + m.vro$m23();
-            minX = Math.min(minX, transformedX);
-            minY = Math.min(minY, transformedY);
-            minZ = Math.min(minZ, transformedZ);
-            maxX = Math.max(maxX, transformedX);
-            maxY = Math.max(maxY, transformedY);
-            maxZ = Math.max(maxZ, transformedZ);
-        }
+    static AABB transformBounds(AABB box, Matrix4fAccessor m) {
+        // An affine row is monotone in each coordinate. Select its two extrema
+        // instead of transforming all eight corners. Keep the original float
+        // casts and operation order, including large-coordinate rounding.
+        // No cross-frame visibility cache: shadow/camera passes stay independent.
+        return new AABB(
+                extreme(box, m.vro$m00(), m.vro$m01(), m.vro$m02(), m.vro$m03(), false),
+                extreme(box, m.vro$m10(), m.vro$m11(), m.vro$m12(), m.vro$m13(), false),
+                extreme(box, m.vro$m20(), m.vro$m21(), m.vro$m22(), m.vro$m23(), false),
+                extreme(box, m.vro$m00(), m.vro$m01(), m.vro$m02(), m.vro$m03(), true),
+                extreme(box, m.vro$m10(), m.vro$m11(), m.vro$m12(), m.vro$m13(), true),
+                extreme(box, m.vro$m20(), m.vro$m21(), m.vro$m22(), m.vro$m23(), true));
+    }
 
-        return new AABB(minX, minY, minZ, maxX, maxY, maxZ);
+    private static float extreme(AABB box, float a, float b, float c, float d, boolean maximum) {
+        float x = (float) ((a < 0) == maximum ? box.minX : box.maxX);
+        float y = (float) ((b < 0) == maximum ? box.minY : box.maxY);
+        float z = (float) ((c < 0) == maximum ? box.minZ : box.maxZ);
+        return a * x + b * y + c * z + d;
     }
 
     public static BlockPos.MutableBlockPos transformCenter(Matrix4f matrix, BlockPos pos,

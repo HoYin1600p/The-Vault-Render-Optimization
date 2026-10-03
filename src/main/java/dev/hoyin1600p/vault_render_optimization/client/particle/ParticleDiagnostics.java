@@ -11,6 +11,7 @@ import net.minecraft.client.particle.Particle;
 import net.minecraft.client.particle.ParticleRenderType;
 
 public final class ParticleDiagnostics {
+    private static final CensusInterval CENSUS = new CensusInterval();
     private static final LongAdder VRO_RENDERER_WRITES = new LongAdder();
     private static final LongAdder VRO_PORTABLE_WRITES = new LongAdder();
     private static final LongAdder RENDERER_PASSTHROUGHS = new LongAdder();
@@ -39,8 +40,12 @@ public final class ParticleDiagnostics {
 
     public static long beginRender(Map<ParticleRenderType, Queue<Particle>> particles) {
         if (!enabled()) {
+            CENSUS.reset();
             return 0L;
         }
+        // Include the sampled census in measured render CPU time; do not hide its cost.
+        long started = System.nanoTime();
+        if (!CENSUS.due(started)) return started;
         TreeMap<String, Integer> byClass = new TreeMap<>();
         int total = 0;
         for (Queue<Particle> queue : particles.values()) {
@@ -51,7 +56,7 @@ public final class ParticleDiagnostics {
         }
         queuedParticles = total;
         queuedClasses = Collections.unmodifiableMap(byClass);
-        return System.nanoTime();
+        return started;
     }
 
     public static void endRender(long started) {
@@ -143,6 +148,8 @@ public final class ParticleDiagnostics {
     }
 
     public static void reset() {
+        ParticleCollisionState.resetCounters();
+        CENSUS.reset();
         VRO_RENDERER_WRITES.reset();
         VRO_PORTABLE_WRITES.reset();
         RENDERER_PASSTHROUGHS.reset();

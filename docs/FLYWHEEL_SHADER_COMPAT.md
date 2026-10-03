@@ -12,9 +12,10 @@ are active. It merges Flywheel's generated vertex logic into the active
 shader-pack block or shadow program. The feature is client-only and does not
 change Create simulation or server behavior.
 
-VRO also restores Flywheel's upstream-default `INSTANCING` backend when a pack
-ships with Flywheel set to `OFF`. This behavior is enabled by default through
-`create_rendering.auto_enable_flywheel_instancing`. It does not bypass
+VRO also turns on Flywheel's `INSTANCING` backend for the session when a pack
+ships with Flywheel set to `OFF`, without changing Flywheel's config file.
+Turning `create_rendering.auto_enable_flywheel_instancing` off (default on)
+returns to the pack's setting immediately. It does not bypass
 Flywheel's GPU capability checks, and shader integration failures still switch
 to the standard renderer.
 
@@ -24,12 +25,34 @@ to the standard renderer.
 - Forge 40.3.11 or newer in the Forge 40 line
 - Create 0.5.1.i
 - Flywheel 0.6.11-107
-- Oculus 1.6.x, compiled and verified against public Oculus 1.6.4
+- Oculus 1.6.x: public Oculus 1.6.4 and HoYin1600p's `dh-compat` builds
+  (1.6.5, 1.6.7 and 1.6.8 were checked)
 - Rubidium 0.5.6 or compatible Embeddium releases
 
 The optional mixins are not applied unless Create, Flywheel, Oculus, and a
 Rubidium/Embeddium renderer are all present. Untested Oculus or Flywheel
 version lines are rejected instead of attempting uncertain injections.
+
+Within the 1.6.x line, several different Oculus builds exist (some share a
+version string), so VRO also checks the installed Oculus jar before any
+compatibility mixin applies (`OculusCompatContract`). Every Oculus class,
+method, field, injection target, invoker and accessor used by VRO's
+compatibility code must exist. If one is missing, the compatibility is disabled
+with a log message naming it and Create uses its standard renderer, instead of
+failing an injection at startup. `OculusCompatContractTest` runs the same check
+against every Oculus jar the build finds in the known instances, plus any given
+with `-Poculus_contract_jars=path1;path2`.
+
+## Oculus Flywheel Compat (irisflw)
+
+VRO's implementation is a newer adaptation of Oculus Flywheel Compat and patches
+the same Flywheel and Oculus methods, so the two must not both run. When VRO's
+compatibility is available and `irisflw` is installed, VRO removes irisflw's
+mixins before they are applied and logs a warning that the
+`oculus-flywheel-compat` jar can be removed. irisflw's mod class only logs, so
+nothing else of it runs. If the replacement cannot be done safely (for example on
+an unexpected Mixin version), VRO disables its own compatibility instead and
+says so, leaving irisflw alone.
 
 ## Included Compatibility
 

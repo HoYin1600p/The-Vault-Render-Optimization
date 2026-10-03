@@ -83,6 +83,7 @@ class SortBufferViewsTest {
                     ChunkBufferSorter.sort(nativeCopy, x, y, z);
                     ChunkBufferSorter.sort(shared, x, y, z);
                     assertArrayEquals(nativeCopy.indexBuffer().array(), shared.indexBuffer().array());
+                    assertArrayEquals(nativeCopy.indexBuffer().array(), SortGeometryCache.sort(source, x, y, z).array());
                     assertArrayEquals(originalVertices, vertices.array());
                     assertArrayEquals(originalIndices, indices.array());
                 }

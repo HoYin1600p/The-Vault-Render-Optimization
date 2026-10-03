@@ -20,6 +20,26 @@ tests, and removal gates are recorded in
 [`docs/EMBEDDIUM_OWNERSHIP_TRANSFER.md`](docs/EMBEDDIUM_OWNERSHIP_TRANSFER.md).
 The original fork remains untouched until every removal gate passes.
 
+### ImmediatelyFast - RK_01/RaphiMC and contributors; Forge port by CCr4ft3r
+
+- Source: [ImmediatelyFast Reforged](https://github.com/CCr4ft3r/ImmediatelyFastReforged), branch
+  `1.18.2`, commit `53d41ab0` (1.1.10); upstream [ImmediatelyFast](https://github.com/RaphiMC/ImmediatelyFast)
+- License: LGPL-3.0-or-later
+
+VRO ships this code as its built-in ImmediatelyFast: immediate-mode batching, HUD batching, fast
+text lookup, font atlas resizing, map atlas generation and buffer-upload reuse. It steps aside
+completely when the standalone mod is installed. See `THIRD_PARTY_NOTICES.md`.
+
+### Accelerated Rendering - Argon4W
+
+- Source: [Argon4W/AcceleratedRendering](https://github.com/Argon4W/AcceleratedRendering), branch
+  `1.20.1`, commit `11f149ac`
+- License: MIT
+
+VRO's GPU entity models adapt its idea of caching model-part meshes on the GPU and expanding
+per-part instances in a compute shader. VRO writes the vertices into vanilla's own uploaded buffer
+with bit-exact vanilla arithmetic. See `THIRD_PARTY_NOTICES.md` and `docs/GPU_ENTITY_MODELS.md`.
+
 ### ModernFix - embeddedt, Fury_Phoenix, and contributors
 
 - Source: [embeddedt/ModernFix](https://github.com/embeddedt/ModernFix)
@@ -187,20 +207,6 @@ independently and uses different bounds, configuration, mixins, renderer
 integration, and defaults. No source code or formulas from the reference mod
 are included.
 
-### Dynamic Lights Reforged - LambdAurora and Forge port contributors
-
-- Source: [Dynamic Lights Reforged](https://github.com/TeamDeusVult/Dynamic-Lights-Reforged)
-- Inspected revision: `d85b337f8f7af328d78e8d380f19fc9b95e93318`
-- License observed during research: MIT
-
-The project informed the expected 1.18.2 feature surface: visual lightmap
-combination, held and dropped item sources, water-sensitive definitions, and
-terrain rebuild invalidation. VRO's implementation was written independently
-with project-owned source state, 16-block spatial indexing, per-source tick
-scheduling, coalesced section rebuilds, Forge resource loading, shader policy,
-diagnostics, cleanup, and coexistence gates. No Dynamic Lights Reforged source
-file is included.
-
 ## Compatibility and behavior sources
 
 ### Vault Hunters - Iskallia and contributors
@@ -318,6 +324,34 @@ visibility policy, hot configuration, diagnostics, version gate, and tests.
 Sophisticated Storage/Core remain external dependencies and no assets are
 bundled. The complete GPLv3 text is included in the GPL portion of
 `docs/licenses/embeddium-LGPL-3.0-only.txt`; VRO remains AGPL-3.0-or-later.
+
+## Astra development research and adaptations
+
+The experimental sort-geometry cache retains Embeddium 0.3.18's triangle-center
+and stable-distance ordering rules (`ChunkBufferSorter`; inspected source revision
+`d28cc2f5aa71014336759d9f81c19d3664acad73`). Its weak identity keys, bounded immutable
+geometry, and direct index-output construction are VRO additions, LGPL-3.0-only.
+No modern Sodium renderer implementation is copied.
+
+ImmediatelyFast by RaphiMC and contributors (research revision
+`94fd5b187290fd1a104b69276920ff43f6b73fee`) and ImmediatelyFastReforged by CCr4ft3r
+(`903a113b2cdef681d39d42f44599de9e8c39088d`, LGPL-3.0-or-later) informed narrow
+batching research. VRO's count-glyph capture/replay is an original implementation,
+not a port of their general batching infrastructure.
+
+Particle Core by fzzyhmstrs and contributors (`1151fe6aca4e1c3b62459de3e3a99ec32af2ac99`,
+MIT) informed collision-cost research. VRO's whole-search empty-section proof is
+independent and does not copy its movement shortcut or asynchronous simulation.
+
+## Additional Astra runtime work
+
+The subsequent plain HUD glyph capture, immutable lighting reverse index and
+aggregate CPU-native retention policy are original VRO implementations by
+HoYin1600p. The retention hooks extend the existing attributed Embeddium transfer;
+no additional upstream code or assets are imported. Minecraft/Forge 1.18.2 bytecode
+was inspected to preserve native font shadows, event boundaries and buffer lifetime.
+Exordium was a metadata/research lead only (2026-09-08); no Exordium code, API,
+framebuffer cache or reduced-refresh behavior is used.
 
 ## Attribution policy
 

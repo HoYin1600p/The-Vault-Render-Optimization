@@ -3,7 +3,10 @@
 ## Scope and ownership
 
 VRO owns creation and upload of index-only sort jobs on inspected Embeddium
-`0.3.18+mc1.18.2` and HoYin1600p's `0.3.19+mc1.18.2` fork. Both new mixins
+`0.3.18+mc1.18.2`, HoYin1600p's `0.3.19+mc1.18.2` fork, and the exact custom
+build `0.3.19-git.7b0cf676+mc1.18.2`. That build's `ChunkBuilder` hash
+`7F0AFD51E4D9A54CBFABF69553579640ADCFD7AC96CF71FCC917719E306B0A11` is accepted
+in addition to the prior hash; the other eight hashes are unchanged. Both new mixins
 are selected together, independently of the older renderer transfers and the
 native deferral feature. Exact hashes of nine relevant renderer classes are
 checked before selection. Missing/changed bytecode, vanilla, Rubidium 0.5.6,
@@ -113,6 +116,39 @@ geometry, OpenGL/mixin failures, buffer errors and growing native memory.
 Compare the same scene with this toggle on/off; keep native deferral unchanged.
 Profile before claiming FPS gains. Do not remove renderer source code: this
 feature replaces its behavior at runtime and the original remains the fallback.
+
+## Translucent sort memory (measurement, centroid-only proposal)
+
+Embeddium keeps a heap copy of every translucent pass's vertex and index data per
+section (`ChunkGraphicsState.translucencyData`, created by `SortBuffer.copyFrom`
+during upload), only to re-sort it later. With the compact 20-byte vertex format
+that is about 104 bytes per quad. `/vro chunks sorting status` now reports, on
+demand, how many sections and bytes are retained and what two smaller forms would
+need: a float3 triangle centre plus its three indices (about 48 bytes per quad,
+roughly 54% less) or a centre only with a regenerated index pattern (about 24 bytes
+per quad, roughly 77% less). The report walks the renderer's section map only when
+the command runs; nothing is measured or retained per frame. `SortGeometryCache`
+already stores the first form, but *in addition to* Embeddium's copy.
+
+Replacing the copy is not implemented. It needs, in order:
+
+1. In-game numbers from the report above (Wolds Vaults with translucent sorting on,
+   ocean and stained-glass scenes at render distance 16 and 32) to decide whether
+   the saving is worth the risk.
+2. A redirect of `SortBuffer.copyFrom` in `RenderRegionManager.upload` (or centroid
+   computation on the build worker) that keeps the `SortBuffer` identity, which is
+   the generation token used by `IndexOnlyUploads`, while dropping its vertices.
+3. An authoritative, non-evicting centroid store; eviction would leave a section
+   impossible to sort.
+4. A guarantee that Embeddium's own sorter never receives a stripped buffer. Every
+   path that falls back to it (runtime off, Compare Mode, a `capture` fallback,
+   the native `ChunkRenderSortTask`) must instead schedule a full rebuild, and
+   `ChunkRenderSortTask` must join the hash gate.
+5. `IndexOnlyUploads.isCurrent` and the byte counters must use stored lengths
+   instead of `generation.vertexBuffer().capacity()`.
+6. A golden test that the centroid order equals `ChunkBufferSorter` on identical
+   input, then an in-game camera sweep over water and glass, including toggling
+   Compare Mode while sorting.
 
 ## Provenance and future work
 

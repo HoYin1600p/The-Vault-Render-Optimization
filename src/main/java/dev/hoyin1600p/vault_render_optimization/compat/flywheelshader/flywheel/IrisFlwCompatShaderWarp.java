@@ -8,9 +8,11 @@ import net.minecraft.client.renderer.ShaderInstance;
 import org.lwjgl.opengl.GL20;
 import dev.hoyin1600p.vault_render_optimization.compat.flywheelshader.iris.GlUniformMcMatrix3f;
 import dev.hoyin1600p.vault_render_optimization.compat.flywheelshader.iris.GlUniformMcMatrix4f;
+import dev.hoyin1600p.vault_render_optimization.compat.flywheelshader.iris.NormalMatrixCache;
 import dev.hoyin1600p.vault_render_optimization.compat.flywheelshader.mixin.flw.ShaderInstanceAccessor;
 
 public class IrisFlwCompatShaderWarp {
+    private final NormalMatrixCache normalMatrices = new NormalMatrixCache();
     public ShaderInstance shader;
     protected GlUniformMcMatrix4f uniformIrisProjMat;
     protected GlUniformMcMatrix4f iris_uniformModelViewMat;
@@ -33,7 +35,8 @@ public class IrisFlwCompatShaderWarp {
 
         uniformIrisProjMat = new GlUniformMcMatrix4f(GL20.glGetUniformLocation(progId,"iris_ProjMat"));
         iris_uniformModelViewMat = new GlUniformMcMatrix4f(GL20.glGetUniformLocation(progId,"iris_ModelViewMat"));
-        uniformNormalMatrix = new GlUniformMcMatrix3f(GL20.glGetUniformLocation(progId,"iris_NormalMat"));
+        int normalLocation = GL20.glGetUniformLocation(progId,"iris_NormalMat");
+        uniformNormalMatrix = normalLocation < 0 ? null : new GlUniformMcMatrix3f(normalLocation);
         uniformModelViewProjMat = new GlUniformMcMatrix4f(GL20.glGetUniformLocation(progId,"flw_ModelViewProjMat"));
     }
 
@@ -58,10 +61,7 @@ public class IrisFlwCompatShaderWarp {
         iris_uniformModelViewMat.set(modelView);
 
         if (this.uniformNormalMatrix != null) {
-            Matrix4f normalMatrix = new Matrix4f(modelView);
-            normalMatrix.invert();
-            normalMatrix.transpose();
-            this.uniformNormalMatrix.set(new Matrix3f(normalMatrix));
+            this.uniformNormalMatrix.set(normalMatrices.get(modelView));
         }
     }
 }

@@ -5,7 +5,10 @@ import java.util.Locale;
 
 /** Safety gate, not a replacement scheduler. Loading or delayed work gets native throughput. */
 public final class TerrainLoadingGuard {
-    public static final int INITIAL_BUILD = 2; // Exact enum contract is fingerprinted and tested.
+    // Exact enum contract [SORT, IMPORTANT_SORT, INITIAL_BUILD, REBUILD, IMPORTANT_REBUILD] is fingerprinted and tested.
+    public static final int IMPORTANT_SORT = 1;
+    public static final int INITIAL_BUILD = 2;
+    public static final int IMPORTANT_REBUILD = 4;
     public static final long WAIT_LIMIT = 250_000_000L;
     public static final long RECOVERY_DELAY = 500_000_000L;
     private final long memoryWatermark;
@@ -68,7 +71,14 @@ public final class TerrainLoadingGuard {
 
     private void fallback(String detail) { pacing = false; recovering = false; reason = detail; }
     public boolean pacing() { return pacing; }
-    public boolean mayLimit(int type) { return pacing && type != INITIAL_BUILD; }
+    /**
+     * Only background updates are paced. Initial terrain and important updates (the player's own
+     * block edits and nearby sorts) keep the native allowance; admitting them still spends the
+     * frame's budget, so fewer background updates follow.
+     */
+    public boolean mayLimit(int type) {
+        return pacing && type != INITIAL_BUILD && type != IMPORTANT_SORT && type != IMPORTANT_REBUILD;
+    }
     public String status() {
         return String.format(Locale.ROOT,
                 "%s (%s); pending requests [sort,important-sort,initial,rebuild,important-rebuild]=%s, worker queue=%d, active workers=%d, completed results=%d, longest pending-class busy=%.1fms, paced/native cycles=%d/%d",

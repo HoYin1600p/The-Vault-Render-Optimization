@@ -7,11 +7,14 @@ package dev.hoyin1600p.vault_render_optimization.mixin.backport.embeddium.buffer
 
 import dev.hoyin1600p.vault_render_optimization.config.ClientOptimizationConfig;
 import dev.hoyin1600p.vault_render_optimization.renderertransfer.VertexBufferRetentionPolicy;
+import dev.hoyin1600p.vault_render_optimization.renderertransfer.BufferTrimHistory;
+import dev.hoyin1600p.vault_render_optimization.renderertransfer.RetainedBufferPressure;
 import java.nio.ByteBuffer;
 import me.jellysquid.mods.sodium.client.model.vertex.buffer.VertexBufferBuilder;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
@@ -24,6 +27,7 @@ public abstract class VertexBufferBuilderMixin {
     @Shadow private int writerOffset;
     @Shadow private int capacity;
     @Shadow private void setBufferSize(int capacity) { throw new AssertionError(); }
+    @Unique private BufferTrimHistory vro$trimHistory;
 
     @Inject(method = "grow", at = @At("HEAD"), cancellable = true, require = 1)
     private void vro$growFromWriterEnd(int requestedLength, CallbackInfo callback) {
@@ -39,9 +43,37 @@ public abstract class VertexBufferBuilderMixin {
                 ClientOptimizationConfig.vertexBufferMaxRetainedMib,
                 this.initialCapacity
         );
-        if (this.buffer != null && this.capacity > limit) {
-            this.setBufferSize(limit);
+        int target = Math.min(this.capacity, limit);
+        if (ClientOptimizationConfig.optimizationsEnabled() && ClientOptimizationConfig.vertexBufferAdaptiveTrimming
+                && this.buffer != null) {
+            if (vro$trimHistory == null) vro$trimHistory = new BufferTrimHistory();
+            long now = System.nanoTime();
+            boolean pressure = RetainedBufferPressure.observe(vro$trimHistory, this.capacity, this.initialCapacity,
+                    ClientOptimizationConfig.vertexBufferAggregateRetainedMib * 1024L * 1024L, now);
+            target = Math.min(target, vro$trimHistory.target(this.capacity, this.initialCapacity,
+                    this.writerOffset, now, pressure));
+        } else if (vro$trimHistory != null) {
+            RetainedBufferPressure.remove(vro$trimHistory);
+            vro$trimHistory = null;
         }
+        if (this.buffer != null && this.capacity > target) {
+            int adaptiveSavings = Math.min(this.capacity, limit) - target;
+            this.setBufferSize(target);
+            if (adaptiveSavings > 0) RetainedBufferPressure.recordTrim(adaptiveSavings);
+        }
+    }
+
+    @Inject(method = "setBufferSize", at = @At("RETURN"), require = 1)
+    private void vro$accountCapacity(int newCapacity, CallbackInfo callback) {
+        if (vro$trimHistory != null) RetainedBufferPressure.observe(vro$trimHistory, this.capacity,
+                this.initialCapacity, ClientOptimizationConfig.vertexBufferAggregateRetainedMib * 1024L * 1024L,
+                System.nanoTime());
+    }
+
+    @Inject(method = "destroy", at = @At("RETURN"), require = 1)
+    private void vro$releaseAccounting(CallbackInfo callback) {
+        if (vro$trimHistory != null) RetainedBufferPressure.remove(vro$trimHistory);
+        vro$trimHistory = null;
     }
 
     @Redirect(

@@ -138,7 +138,8 @@ formula; it uses project-owned camera-to-section bounds, separate vanilla and
 Embeddium/Rubidium hooks, independent horizontal and vertical controls, and
 different defaults.
 
-Dynamic Lights Reforged established the expected behavior surface for held and
+The dynamic-light engine was removed in 0.5.0. While it existed, Dynamic Lights
+Reforged established the expected behavior surface for held and
 dropped item lights, resource definitions, water sensitivity, lightmap
 combination, and terrain invalidation. VRO's engine was independently written
 with spatial cells, per-source scheduling, deduplicated rebuilds, explicit

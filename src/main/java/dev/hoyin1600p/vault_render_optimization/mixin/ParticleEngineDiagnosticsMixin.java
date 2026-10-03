@@ -32,6 +32,14 @@ public abstract class ParticleEngineDiagnosticsMixin {
     @Unique
     private long vro$tickStarted;
 
+    // Independent of lighting-mod ownership and of the diagnostics toggle.
+    @Inject(method = "setLevel", at = @At("HEAD"))
+    private void vro$clearWorldState(CallbackInfo ci) {
+        ParticleDiagnostics.reset();
+        this.vro$renderStarted = 0L;
+        this.vro$tickStarted = 0L;
+    }
+
     @Inject(
             method = "render(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource$BufferSource;Lnet/minecraft/client/renderer/LightTexture;Lnet/minecraft/client/Camera;FLnet/minecraft/client/renderer/culling/Frustum;)V",
             at = @At("HEAD"),

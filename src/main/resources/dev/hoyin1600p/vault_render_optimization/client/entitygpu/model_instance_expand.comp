@@ -1,0 +1,573 @@
+// Adapted from Accelerated Rendering (MIT, Copyright (c) 2023 Argon4W),
+// shaders/core/uploading/entity_mesh_uploading_shader.compute at 11f149ac716ec757907209dc77b04baaa3f915fc.
+// Modified by HoYin1600p for The Vault Render Optimization (VRO), 2026: GLSL 4.30 or 1.50 + ARB
+// extensions (GpuEntityBackend prepends the #version/#extension header), no culling,
+// and vanilla ModelPart arithmetic reproduced bit for bit (precise, vanilla operation order,
+// no normalize/fma/packSnorm). Layout constants must match InstanceRecord and ModelMesh.
+//
+// One work group per instance record; its threads expand the instance's cached model-space mesh
+// into DefaultVertexFormat.NEW_ENTITY vertices (nine 32-bit words each) at the record's output
+// offset inside the vertex buffer BufferUploader has just uploaded.
+
+layout(local_size_x = 64) in;
+
+// Block bindings (0, 1, 2) and uniform locations are assigned by GpuEntityBackend after linking, so
+// the source needs neither GLSL 4.20 binding qualifiers nor explicit uniform locations.
+#ifdef ITEM_QUADS
+// Item arena (ItemMesh words): ten uint words per vertex.
+layout(std430) buffer MeshArena { uint meshWords[]; };
+#else
+layout(std430) buffer MeshArena { float mesh[]; };
+#endif
+layout(std430) buffer Instances { uint instances[]; };
+layout(std430) buffer Vertices { uint vertices[]; };
+
+uniform uint instanceBase;
+uniform uint instanceCount;
+
+const uint RECORD_WORDS = 38u;
+const uint MESH_FLOATS = 8u;
+const uint VERTEX_WORDS = 9u;
+#ifdef ITEM_QUADS
+const uint ITEM_WORDS = 10u;
+const uint FLAG_ITEM_EMBEDDIUM = 16u;
+#endif
+
+float word(uint index) {
+    return uintBitsToFloat(instances[index]);
+}
+
+// BufferVertexConsumer.normalIntValue: (int)(Mth.clamp(v, -1, 1) * 127F) & 255, NaN -> 0.
+uint normalByte(float value) {
+    if (isnan(value)) return 0u;
+    float clamped = value < -1.0 ? -1.0 : (value > 1.0 ? 1.0 : value);
+    precise float scaled = clamped * 127.0;
+    return uint(int(scaled) & 255);
+}
+
+#ifdef IRIS_ENTITY
+// ---- Oculus extended entity vertices (IrisVertexFormats.ENTITY, fourteen words) ----------------------
+//
+// Oculus' fillExtendedData needs Java's correctly rounded float division and square root and
+// NormalHelper.rsqrt, (float) (1.0 / Math.sqrt(x)), which equals the correctly rounded float 1/sqrt(x)
+// for every float (checked exhaustively). GLSL's /, sqrt and inversesqrt are approximations, so each
+// result starts from the native value and is moved to the correctly rounded float by comparing the
+// exact value against the midpoints to its neighbours in integer arithmetic (umulExtended).
+
+const uint EXT_VERTEX_WORDS = 14u;
+const uint INF_BITS = 0x7F800000u;
+
+// Positive finite (or infinite, read as 2^128) float bits as m * 2^e, m < 2^24.
+void split(uint bits, out uint m, out int e) {
+    uint ex = bits >> 23;
+    m = bits & 0x7FFFFFu;
+    if (ex == 0u) {
+        e = -149;
+    } else {
+        m |= 0x800000u;
+        e = int(ex) - 150;
+    }
+}
+
+// The midpoint of adjacent non-negative floats lo < hi, exactly: M * 2^E with M < 2^26.
+void midpoint(uint lo, uint hi, out uint M, out int E) {
+    uint ml, mh;
+    int el, eh;
+    split(lo, ml, el);
+    split(hi, mh, eh);
+    int e0 = min(el, eh);
+    M = (ml << uint(el - e0)) + (mh << uint(eh - e0));
+    E = e0 - 1;
+}
+
+// 64-bit unsigned values as uvec2(high, low).
+uvec2 mul64(uint a, uint b) {
+    uint hi, lo;
+    umulExtended(a, b, hi, lo);
+    return uvec2(hi, lo);
+}
+
+int bitLength64(uvec2 v) {
+    return v.x != 0u ? 33 + findMSB(v.x) : (v.y != 0u ? 1 + findMSB(v.y) : 0);
+}
+
+uvec2 shl64(uvec2 v, int s) {
+    if (s == 0) return v;
+    if (s >= 32) return uvec2(v.y << uint(s - 32), 0u);
+    return uvec2((v.x << uint(s)) | (v.y >> uint(32 - s)), v.y << uint(s));
+}
+
+int cmp64(uvec2 a, uvec2 b) {
+    if (a.x != b.x) return a.x > b.x ? 1 : -1;
+    if (a.y != b.y) return a.y > b.y ? 1 : -1;
+    return 0;
+}
+
+// sign(a * 2^d - p) exactly, for a < 2^32 and any 64-bit p.
+int cmpScaled(uint a, int d, uvec2 p) {
+    uvec2 value = uvec2(0u, a);
+    int pBits = bitLength64(p);
+    if (a == 0u) return pBits == 0 ? 0 : -1;
+    if (pBits == 0) return 1;
+    if (d >= 0) {
+        if (bitLength64(value) + d > 64) return 1;
+        return cmp64(shl64(value, d), p);
+    }
+    if (pBits - d > 64) return -1;
+    return cmp64(value, shl64(p, -d));
+}
+
+// sign(a - mid * b) for the midpoint of the floats lo < hi.
+int divisionSide(uint ma, int ea, uint mb, int eb, uint lo, uint hi) {
+    uint M;
+    int E;
+    midpoint(lo, hi, M, E);
+    return cmpScaled(ma, ea - E - eb, mul64(M, mb));
+}
+
+// sign(x - mid^2).
+int sqrtSide(uint mx, int ex, uint lo, uint hi) {
+    uint M;
+    int E;
+    midpoint(lo, hi, M, E);
+    return cmpScaled(mx, ex - 2 * E, mul64(M, M));
+}
+
+// sign(1 - mid^2 * x): mid^2 * x = Q * 2^(2E + ex) with Q < 2^76 held in three words.
+int rsqrtSide(uint mx, int ex, uint lo, uint hi) {
+    uint M;
+    int E;
+    midpoint(lo, hi, M, E);
+    uvec2 m2 = mul64(M, M);
+    uint c1, c0, d1, d0, carry;
+    umulExtended(m2.y, mx, c1, c0);
+    umulExtended(m2.x, mx, d1, d0);
+    uint w0 = c0;
+    uint w1 = uaddCarry(c1, d0, carry);
+    uint w2 = d1 + carry;
+    int msb = w2 != 0u ? 64 + findMSB(w2) : (w1 != 0u ? 32 + findMSB(w1) : findMSB(w0));
+    int k = -(2 * E + ex);
+    if (msb != k) return msb > k ? -1 : 1;
+    return bitCount(w0) + bitCount(w1) + bitCount(w2) == 1 ? 0 : -1;
+}
+
+// Round to nearest even from a starting candidate: side(lo, hi) > 0 means the exact value is above the
+// midpoint of lo and hi. The kind selects the operation (0 division, 1 sqrt, 2 rsqrt).
+uint correct(uint start, int kind, uint ma, int ea, uint mb, int eb) {
+    uint bits = start;
+    for (int i = 0; i < 8; i++) {
+        if (bits < INF_BITS) {
+            int side = kind == 0 ? divisionSide(ma, ea, mb, eb, bits, bits + 1u)
+                    : kind == 1 ? sqrtSide(ma, ea, bits, bits + 1u) : rsqrtSide(ma, ea, bits, bits + 1u);
+            if (side > 0 || (side == 0 && (bits & 1u) != 0u)) {
+                bits++;
+                continue;
+            }
+        }
+        if (bits > 0u) {
+            int side = kind == 0 ? divisionSide(ma, ea, mb, eb, bits - 1u, bits)
+                    : kind == 1 ? sqrtSide(ma, ea, bits - 1u, bits) : rsqrtSide(ma, ea, bits - 1u, bits);
+            if (side < 0 || (side == 0 && (bits & 1u) != 0u)) {
+                bits--;
+                continue;
+            }
+        }
+        break;
+    }
+    return bits;
+}
+
+// Bits of the float nearest f * 2^s (within an ulp or two), for a positive normal f: a starting candidate
+// built without subnormal arithmetic, which GPUs may flush to zero.
+uint scaledBits(float f, int s) {
+    uint b = floatBitsToUint(f);
+    int biased = int(b >> 23) + s;
+    if (biased >= 255) return INF_BITS;
+    if (biased >= 1) return (b & 0x7FFFFFu) | (uint(biased) << 23);
+    if (biased < -24) return 0u;
+    return uint(ldexp(f, s + 149) + 0.5);
+}
+
+// m * 2^e with an even exponent, for square roots.
+void evenExponent(inout uint m, inout int e) {
+    if ((e & 1) != 0) {
+        m <<= 1;
+        e -= 1;
+    }
+}
+
+// Java's float a / b.
+float javaDivide(float a, float b) {
+    if (isnan(a) || isnan(b)) return uintBitsToFloat(0x7FC00000u);
+    uint ab = floatBitsToUint(a), bb = floatBitsToUint(b);
+    uint signBit = (ab ^ bb) & 0x80000000u;
+    ab &= 0x7FFFFFFFu;
+    bb &= 0x7FFFFFFFu;
+    if (ab == INF_BITS && bb == INF_BITS) return uintBitsToFloat(0x7FC00000u);
+    if (bb == 0u) return ab == 0u ? uintBitsToFloat(0x7FC00000u) : uintBitsToFloat(signBit | INF_BITS);
+    if (ab == INF_BITS) return uintBitsToFloat(signBit | INF_BITS);
+    if (ab == 0u || bb == INF_BITS) return uintBitsToFloat(signBit);
+    uint ma, mb;
+    int ea, eb;
+    split(ab, ma, ea);
+    split(bb, mb, eb);
+    uint start = scaledBits(float(ma) / float(mb), ea - eb);
+    return uintBitsToFloat(signBit | correct(start, 0, ma, ea, mb, eb));
+}
+
+// (float) Math.sqrt((double) x): the correctly rounded float square root.
+float javaSqrt(float x) {
+    uint bits = floatBitsToUint(x);
+    if (isnan(x) || (bits & 0x80000000u) != 0u && bits != 0x80000000u) return uintBitsToFloat(0x7FC00000u);
+    if ((bits & 0x7FFFFFFFu) == 0u || bits == INF_BITS) return x;
+    uint m;
+    int e;
+    split(bits, m, e);
+    uint m2 = m;
+    int e2 = e;
+    evenExponent(m2, e2);
+    return uintBitsToFloat(correct(scaledBits(sqrt(float(m2)), e2 / 2), 1, m, e, 0u, 0));
+}
+
+// NormalHelper.rsqrt: 1 for 0, else (float) (1.0 / Math.sqrt(x)).
+float javaRsqrt(float x) {
+    uint bits = floatBitsToUint(x);
+    if ((bits & 0x7FFFFFFFu) == 0u) return 1.0;
+    if (isnan(x) || (bits & 0x80000000u) != 0u) return uintBitsToFloat(0x7FC00000u);
+    if (bits == INF_BITS) return 0.0;
+    uint m;
+    int e;
+    split(bits, m, e);
+    uint m2 = m;
+    int e2 = e;
+    evenExponent(m2, e2);
+    return uintBitsToFloat(correct(scaledBits(inversesqrt(float(m2)), -(e2 / 2)), 2, m, e, 0u, 0));
+}
+
+// NormalHelper.packNormal(x, y, z, w).
+uint packNormal(float x, float y, float z, float w) {
+    return normalByte(x) | (normalByte(y) << 8) | (normalByte(z) << 16) | (normalByte(w) << 24);
+}
+#endif
+
+#ifdef ITEM_QUADS
+// ---- Item quads (ItemReference): per-lane (q * t) / 255, writer-specific light ----------------------------
+uint itemColor(uint baked, uint tint) {
+    uint result = 0u;
+    for (uint lane = 0u; lane < 4u; lane++) {
+        uint q = (baked >> (8u * lane)) & 255u;
+        uint t = (tint >> (8u * lane)) & 255u;
+        result |= ((q * t) / 255u) << (8u * lane);
+    }
+    return result;
+}
+
+uint itemLight(uint baked, uint light, bool embeddium) {
+    if (embeddium) {
+        if (baked == 0u) return light;
+        return (max((baked >> 16) & 255u, (light >> 16) & 255u) << 16) | max(baked & 255u, light & 255u);
+    }
+    uint bl = max(light & 0xFFFFu, baked & 0xFFFFu);
+    uint sl = max(light >> 16, baked >> 16);
+    return bl | (sl << 16);
+}
+#endif
+
+#if defined(ITEM_QUADS) && defined(IRIS_ENTITY)
+// NormalHelper.computeTangent(nx, ny, nz, vertices 0..2) packed as NormalHelper.packNormal.
+uint itemTangent(float nx, float ny, float nz, float x0, float y0, float z0, float x1, float y1, float z1,
+                 float x2, float y2, float z2, float u0, float v0, float u1, float v1, float u2, float v2) {
+    precise float e1x = x1 - x0, e1y = y1 - y0, e1z = z1 - z0;
+    precise float e2x = x2 - x0, e2y = y2 - y0, e2z = z2 - z0;
+    precise float du1 = u1 - u0, dv1 = v1 - v0;
+    precise float du2 = u2 - u0, dv2 = v2 - v0;
+    precise float denominator = du1 * dv2 - du2 * dv1;
+    float f = denominator == 0.0 ? 1.0 : javaDivide(1.0, denominator);
+    precise float tx = f * (dv2 * e1x - dv1 * e2x);
+    precise float ty = f * (dv2 * e1y - dv1 * e2y);
+    precise float tz = f * (dv2 * e1z - dv1 * e2z);
+    precise float tLengthSquared = (tx * tx + ty * ty) + tz * tz;
+    float tcoeff = javaRsqrt(tLengthSquared);
+    precise float ntx = tx * tcoeff, nty = ty * tcoeff, ntz = tz * tcoeff;
+    precise float bx = f * (-du2 * e1x + du1 * e2x);
+    precise float by = f * (-du2 * e1y + du1 * e2y);
+    precise float bz = f * (-du2 * e1z + du1 * e2z);
+    precise float bLengthSquared = (bx * bx + by * by) + bz * bz;
+    float bcoeff = javaRsqrt(bLengthSquared);
+    precise float nbx = bx * bcoeff, nby = by * bcoeff, nbz = bz * bcoeff;
+    precise float pbx = nty * nz - ntz * ny;
+    precise float pby = ntz * nx - ntx * nz;
+    precise float pbz = ntx * ny - nty * nx;
+    precise float dot = (nbx * pbx + nby * pby) + nbz * pbz;
+    return packNormal(ntx, nty, ntz, dot < 0.0 ? -1.0 : 1.0);
+}
+#endif
+
+#ifdef IRIS_MATH_TEST
+// Test builds only (GpuEntitySelfTestGlTest): one thread per operand pair, Java's a / b, sqrt(a) and rsqrt(a).
+void main() {
+    uint i = gl_WorkGroupID.x * gl_WorkGroupSize.x + gl_LocalInvocationID.x;
+    if (i >= instanceCount) return;
+    float a = uintBitsToFloat(instances[2u * i]), b = uintBitsToFloat(instances[2u * i + 1u]);
+    vertices[3u * i] = floatBitsToUint(javaDivide(a, b));
+    vertices[3u * i + 1u] = floatBitsToUint(javaSqrt(a));
+    vertices[3u * i + 2u] = floatBitsToUint(javaRsqrt(a));
+}
+#else
+void main() {
+    uint instance = instanceBase + gl_WorkGroupID.x;
+    if (instance >= instanceCount) return;
+    uint r = instance * RECORD_WORDS;
+
+    // Pose: Matrix4f.store order, pose[c * 4 + r].
+    float m00 = word(r + 0u), m10 = word(r + 1u), m20 = word(r + 2u);
+    float m01 = word(r + 4u), m11 = word(r + 5u), m21 = word(r + 6u);
+    float m02 = word(r + 8u), m12 = word(r + 9u), m22 = word(r + 10u);
+    float m03 = word(r + 12u), m13 = word(r + 13u), m23 = word(r + 14u);
+    // Normal: Matrix3f.store order, normal[c * 3 + r].
+    float n00 = word(r + 16u), n10 = word(r + 17u), n20 = word(r + 18u);
+    float n01 = word(r + 19u), n11 = word(r + 20u), n21 = word(r + 21u);
+    float n02 = word(r + 22u), n12 = word(r + 23u), n22 = word(r + 24u);
+    uint first = instances[r + 25u];
+    uint count = instances[r + 26u];
+    uint outBase = instances[r + 27u];
+    uint color = instances[r + 28u];
+    uint overlay = instances[r + 29u];
+    uint light = instances[r + 30u];
+    // SpriteCoordinateExpander (block entities): u0 + (u1 - u0) * u. Vanilla computes
+    // u0 + ((u1 - u0) * (u * 16)) / 16; scaling by 16 is exact, so both round identically.
+    uint flags = instances[r + 31u];
+    bool remap = (flags & 1u) != 0u;
+    float su0 = word(r + 32u), suSpan = word(r + 33u), sv0 = word(r + 34u), svSpan = word(r + 35u);
+
+#ifdef ITEM_QUADS
+    bool embeddium = (flags & FLAG_ITEM_EMBEDDIUM) != 0u;
+#ifdef IRIS_ENTITY
+    // Item quads, one thread per quad. FORGE: IrisEntityExtension.extend on the nine-word vertices.
+    // EMBEDDIUM: the direct extended writer, normal word and tangent of the quad's fourth vertex.
+    uint ids = instances[r + 36u];
+    uint item = instances[r + 37u] & 0xFFFFu;
+    for (uint quad = gl_LocalInvocationID.x; quad * 4u < count; quad += gl_WorkGroupSize.x) {
+        float X[4], Y[4], Z[4], U[4], V[4];
+        uint C[4], L[4], NW[4];
+        for (uint k = 0u; k < 4u; k++) {
+            uint d = (first + quad * 4u + k) * ITEM_WORDS;
+            float x = uintBitsToFloat(meshWords[d]), y = uintBitsToFloat(meshWords[d + 1u]);
+            float z = uintBitsToFloat(meshWords[d + 2u]);
+            float nix = uintBitsToFloat(meshWords[d + 5u]), niy = uintBitsToFloat(meshWords[d + 6u]);
+            float niz = uintBitsToFloat(meshWords[d + 7u]);
+            precise float px = ((m00 * x + m01 * y) + m02 * z) + m03 * 1.0;
+            precise float py = ((m10 * x + m11 * y) + m12 * z) + m13 * 1.0;
+            precise float pz = ((m20 * x + m21 * y) + m22 * z) + m23 * 1.0;
+            precise float tx = (n00 * nix + n01 * niy) + n02 * niz;
+            precise float ty = (n10 * nix + n11 * niy) + n12 * niz;
+            precise float tz = (n20 * nix + n21 * niy) + n22 * niz;
+            X[k] = px;
+            Y[k] = py;
+            Z[k] = pz;
+            U[k] = uintBitsToFloat(meshWords[d + 3u]);
+            V[k] = uintBitsToFloat(meshWords[d + 4u]);
+            C[k] = itemColor(meshWords[d + 8u], color);
+            L[k] = itemLight(meshWords[d + 9u], light, embeddium);
+            NW[k] = normalByte(tx) | (normalByte(ty) << 8) | (normalByte(tz) << 16);
+        }
+
+        precise float midU = ((((U[0] == 0.0 ? 0.0 : U[0]) + U[1]) + U[2]) + U[3]) * 0.25;
+        precise float midV = ((((V[0] == 0.0 ? 0.0 : V[0]) + V[1]) + V[2]) + V[3]) * 0.25;
+
+        uint normal;
+        uint tangent;
+        if (embeddium && NW[3] != 0u) {
+            normal = NW[3];
+            precise float ux = float(int(NW[3] << 24) >> 24) * 0.007874016;
+            precise float uy = float(int(NW[3] << 16) >> 24) * 0.007874016;
+            precise float uz = float(int(NW[3] << 8) >> 24) * 0.007874016;
+            tangent = itemTangent(ux, uy, uz, X[0], Y[0], Z[0], X[1], Y[1], Z[1], X[2], Y[2], Z[2],
+                    U[0], V[0], U[1], V[1], U[2], V[2]);
+        } else {
+            precise float dx0 = X[2] - X[0], dy0 = Y[2] - Y[0], dz0 = Z[2] - Z[0];
+            precise float dx1 = X[3] - X[1], dy1 = Y[3] - Y[1], dz1 = Z[3] - Z[1];
+            precise float nx = dy0 * dz1 - dz0 * dy1;
+            precise float ny = dz0 * dx1 - dx0 * dz1;
+            precise float nz = dx0 * dy1 - dy0 * dx1;
+            precise float lengthSquared = (nx * nx + ny * ny) + nz * nz;
+            float l = javaSqrt(lengthSquared);
+            if (l != 0.0) {
+                nx = javaDivide(nx, l);
+                ny = javaDivide(ny, l);
+                nz = javaDivide(nz, l);
+            }
+            normal = packNormal(nx, ny, nz, 0.0);
+            tangent = itemTangent(nx, ny, nz, X[0], Y[0], Z[0], X[1], Y[1], Z[1], X[2], Y[2], Z[2],
+                    U[0], V[0], U[1], V[1], U[2], V[2]);
+        }
+
+        uint mu = floatBitsToUint(midU), mv = floatBitsToUint(midV);
+        for (uint k = 0u; k < 4u; k++) {
+            uint o = outBase + (quad * 4u + k) * EXT_VERTEX_WORDS;
+            vertices[o] = floatBitsToUint(X[k]);
+            vertices[o + 1u] = floatBitsToUint(Y[k]);
+            vertices[o + 2u] = floatBitsToUint(Z[k]);
+            vertices[o + 3u] = C[k];
+            vertices[o + 4u] = floatBitsToUint(U[k]);
+            vertices[o + 5u] = floatBitsToUint(V[k]);
+            vertices[o + 6u] = overlay;
+            vertices[o + 7u] = L[k];
+            vertices[o + 8u] = normal;
+            vertices[o + 9u] = ids;
+            vertices[o + 10u] = item | (mu << 16);
+            vertices[o + 11u] = (mu >> 16) | (mv << 16);
+            vertices[o + 12u] = (mv >> 16) | (tangent << 16);
+            vertices[o + 13u] = tangent >> 16;
+        }
+    }
+#else
+    // Item quads, one thread per vertex.
+    for (uint v = gl_LocalInvocationID.x; v < count; v += gl_WorkGroupSize.x) {
+        uint d = (first + v) * ITEM_WORDS;
+        float x = uintBitsToFloat(meshWords[d]), y = uintBitsToFloat(meshWords[d + 1u]);
+        float z = uintBitsToFloat(meshWords[d + 2u]);
+        float nx = uintBitsToFloat(meshWords[d + 5u]), ny = uintBitsToFloat(meshWords[d + 6u]);
+        float nz = uintBitsToFloat(meshWords[d + 7u]);
+        precise float px = ((m00 * x + m01 * y) + m02 * z) + m03 * 1.0;
+        precise float py = ((m10 * x + m11 * y) + m12 * z) + m13 * 1.0;
+        precise float pz = ((m20 * x + m21 * y) + m22 * z) + m23 * 1.0;
+        precise float tx = (n00 * nx + n01 * ny) + n02 * nz;
+        precise float ty = (n10 * nx + n11 * ny) + n12 * nz;
+        precise float tz = (n20 * nx + n21 * ny) + n22 * nz;
+
+        uint o = outBase + v * VERTEX_WORDS;
+        vertices[o] = floatBitsToUint(px);
+        vertices[o + 1u] = floatBitsToUint(py);
+        vertices[o + 2u] = floatBitsToUint(pz);
+        vertices[o + 3u] = itemColor(meshWords[d + 8u], color);
+        vertices[o + 4u] = meshWords[d + 3u];
+        vertices[o + 5u] = meshWords[d + 4u];
+        vertices[o + 6u] = overlay;
+        vertices[o + 7u] = itemLight(meshWords[d + 9u], light, embeddium);
+        vertices[o + 8u] = normalByte(tx) | (normalByte(ty) << 8) | (normalByte(tz) << 16);
+    }
+#endif
+#else
+#ifdef IRIS_ENTITY
+    // One thread per quad: Oculus derives the face normal, tangent and mid UV from all four vertices.
+    uint ids = instances[r + 36u];
+    uint item = instances[r + 37u] & 0xFFFFu;
+    for (uint quad = gl_LocalInvocationID.x; quad * 4u < count; quad += gl_WorkGroupSize.x) {
+        float X[4], Y[4], Z[4], U[4], V[4];
+        for (uint k = 0u; k < 4u; k++) {
+            uint d = (first + quad * 4u + k) * MESH_FLOATS;
+            float x = mesh[d], y = mesh[d + 1u], z = mesh[d + 2u];
+            precise float px = ((m00 * x + m01 * y) + m02 * z) + m03 * 1.0;
+            precise float py = ((m10 * x + m11 * y) + m12 * z) + m13 * 1.0;
+            precise float pz = ((m20 * x + m21 * y) + m22 * z) + m23 * 1.0;
+            precise float ru = su0 + suSpan * mesh[d + 3u];
+            precise float rv = sv0 + svSpan * mesh[d + 4u];
+            X[k] = px;
+            Y[k] = py;
+            Z[k] = pz;
+            U[k] = remap ? ru : mesh[d + 3u];
+            V[k] = remap ? rv : mesh[d + 4u];
+        }
+
+        // fillExtendedData: 0F + u0 + u1 + u2 + u3 (0F + -0F is +0F), then / 4F (exactly * 0.25).
+        precise float midU = ((((U[0] == 0.0 ? 0.0 : U[0]) + U[1]) + U[2]) + U[3]) * 0.25;
+        precise float midV = ((((V[0] == 0.0 ? 0.0 : V[0]) + V[1]) + V[2]) + V[3]) * 0.25;
+
+        // NormalHelper.computeFaceNormal.
+        precise float dx0 = X[2] - X[0], dy0 = Y[2] - Y[0], dz0 = Z[2] - Z[0];
+        precise float dx1 = X[3] - X[1], dy1 = Y[3] - Y[1], dz1 = Z[3] - Z[1];
+        precise float nx = dy0 * dz1 - dz0 * dy1;
+        precise float ny = dz0 * dx1 - dx0 * dz1;
+        precise float nz = dx0 * dy1 - dy0 * dx1;
+        precise float lengthSquared = (nx * nx + ny * ny) + nz * nz;
+        float l = javaSqrt(lengthSquared);
+        if (l != 0.0) {
+            nx = javaDivide(nx, l);
+            ny = javaDivide(ny, l);
+            nz = javaDivide(nz, l);
+        }
+        uint normal = packNormal(nx, ny, nz, 0.0);
+
+        // NormalHelper.computeTangent(nx, ny, nz, vertices 0..2).
+        precise float e1x = X[1] - X[0], e1y = Y[1] - Y[0], e1z = Z[1] - Z[0];
+        precise float e2x = X[2] - X[0], e2y = Y[2] - Y[0], e2z = Z[2] - Z[0];
+        precise float du1 = U[1] - U[0], dv1 = V[1] - V[0];
+        precise float du2 = U[2] - U[0], dv2 = V[2] - V[0];
+        precise float denominator = du1 * dv2 - du2 * dv1;
+        float f = denominator == 0.0 ? 1.0 : javaDivide(1.0, denominator);
+        precise float tx = f * (dv2 * e1x - dv1 * e2x);
+        precise float ty = f * (dv2 * e1y - dv1 * e2y);
+        precise float tz = f * (dv2 * e1z - dv1 * e2z);
+        precise float tLengthSquared = (tx * tx + ty * ty) + tz * tz;
+        float tcoeff = javaRsqrt(tLengthSquared);
+        precise float ntx = tx * tcoeff, nty = ty * tcoeff, ntz = tz * tcoeff;
+        precise float bx = f * (-du2 * e1x + du1 * e2x);
+        precise float by = f * (-du2 * e1y + du1 * e2y);
+        precise float bz = f * (-du2 * e1z + du1 * e2z);
+        precise float bLengthSquared = (bx * bx + by * by) + bz * bz;
+        float bcoeff = javaRsqrt(bLengthSquared);
+        precise float nbx = bx * bcoeff, nby = by * bcoeff, nbz = bz * bcoeff;
+        precise float pbx = nty * nz - ntz * ny;
+        precise float pby = ntz * nx - ntx * nz;
+        precise float pbz = ntx * ny - nty * nx;
+        precise float dot = (nbx * pbx + nby * pby) + nbz * pbz;
+        uint tangent = packNormal(ntx, nty, ntz, dot < 0.0 ? -1.0 : 1.0);
+
+        uint mu = floatBitsToUint(midU), mv = floatBitsToUint(midV);
+        for (uint k = 0u; k < 4u; k++) {
+            uint o = outBase + (quad * 4u + k) * EXT_VERTEX_WORDS;
+            vertices[o] = floatBitsToUint(X[k]);
+            vertices[o + 1u] = floatBitsToUint(Y[k]);
+            vertices[o + 2u] = floatBitsToUint(Z[k]);
+            vertices[o + 3u] = color;
+            vertices[o + 4u] = floatBitsToUint(U[k]);
+            vertices[o + 5u] = floatBitsToUint(V[k]);
+            vertices[o + 6u] = overlay;
+            vertices[o + 7u] = light;
+            vertices[o + 8u] = normal;
+            vertices[o + 9u] = ids;
+            vertices[o + 10u] = item | (mu << 16);
+            vertices[o + 11u] = (mu >> 16) | (mv << 16);
+            vertices[o + 12u] = (mv >> 16) | (tangent << 16);
+            vertices[o + 13u] = tangent >> 16;
+        }
+    }
+#else
+    for (uint v = gl_LocalInvocationID.x; v < count; v += gl_WorkGroupSize.x) {
+        uint d = (first + v) * MESH_FLOATS;
+        float x = mesh[d], y = mesh[d + 1u], z = mesh[d + 2u];
+        float nx = mesh[d + 5u], ny = mesh[d + 6u], nz = mesh[d + 7u];
+
+        // Vector4f.transform: ((m00 * x + m01 * y) + m02 * z) + m03 * w, each step rounded.
+        precise float px = ((m00 * x + m01 * y) + m02 * z) + m03 * 1.0;
+        precise float py = ((m10 * x + m11 * y) + m12 * z) + m13 * 1.0;
+        precise float pz = ((m20 * x + m21 * y) + m22 * z) + m23 * 1.0;
+        // Vector3f.transform, no normalization.
+        precise float tx = (n00 * nx + n01 * ny) + n02 * nz;
+        precise float ty = (n10 * nx + n11 * ny) + n12 * nz;
+        precise float tz = (n20 * nx + n21 * ny) + n22 * nz;
+        // GeckoLib flat cubes (IGeoRenderer.renderCube): a negative component is negated; exact.
+        if ((flags & 2u) != 0u && tx < 0.0) tx = -tx;
+        if ((flags & 4u) != 0u && ty < 0.0) ty = -ty;
+        if ((flags & 8u) != 0u && tz < 0.0) tz = -tz;
+
+        uint o = outBase + v * VERTEX_WORDS;
+        vertices[o] = floatBitsToUint(px);
+        vertices[o + 1u] = floatBitsToUint(py);
+        vertices[o + 2u] = floatBitsToUint(pz);
+        vertices[o + 3u] = color;
+        precise float mu = suSpan * mesh[d + 3u];
+        precise float mv = svSpan * mesh[d + 4u];
+        precise float ru = su0 + mu;
+        precise float rv = sv0 + mv;
+        vertices[o + 4u] = floatBitsToUint(remap ? ru : mesh[d + 3u]);
+        vertices[o + 5u] = floatBitsToUint(remap ? rv : mesh[d + 4u]);
+        vertices[o + 6u] = overlay;
+        vertices[o + 7u] = light;
+        vertices[o + 8u] = normalByte(tx) | (normalByte(ty) << 8) | (normalByte(tz) << 16);
+    }
+#endif
+#endif
+}
+#endif

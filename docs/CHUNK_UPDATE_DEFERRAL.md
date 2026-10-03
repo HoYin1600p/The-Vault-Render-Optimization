@@ -21,7 +21,8 @@ This is independent of the existing VRO-EMB-01 rebuild de-duplication feature.
   reads in `LevelRenderer.compileChunks` to `PrioritizeChunkUpdates.NONE` while
   enabled. The original async compile list, light-ready check, dirty clearing,
   dispatcher, uploads, and unload handling remain unchanged.
-- Embeddium `0.3.18+mc1.18.2` and validated fork `0.3.19+mc1.18.2`: redirect
+- Embeddium `0.3.18+mc1.18.2`, validated fork `0.3.19+mc1.18.2`, and the
+  exact custom build `0.3.19-git.7b0cf676+mc1.18.2`: redirect
   the manager's deferral-field read in `submitRebuildTasks`. Important rebuilds
   and sorts take the existing `scheduleDeferred` branch; task priorities and
   the native scheduling budget are otherwise unchanged.
@@ -74,6 +75,24 @@ method and priority field. Only existing annotation-processor warnings remain.
 Compilation and layout checks are not proof of successful runtime mixin
 application. No new build should be called in-game validated until the checks
 below have been completed on that build.
+
+### Custom Embeddium `0.3.19-git.7b0cf676+mc1.18.2`
+
+This build is accepted by exact version string; other `-git.` builds stay
+blocked unless listed in `ValidatedRendererVersions` (the post-removal fork
+`0.3.18-git.ced34c84+mc1.18.2` is, because it is byte-identical to the 0.3.19
+fork for every hashed class). It differs from the validated 0.3.19 fork only in
+`ChunkBuilder` and its nested classes (the `getNextJob` worker wake-up used by
+the shader-toggle fix) plus mod metadata. VRO's deferral redirect targets
+`RenderSectionManager.submitRebuildTasks`, which is unchanged. Inspected JAR
+SHA-256: `9B68D17A96314365E72A9A0DE966B6352C9BA6AB4DE5363C670861E5C655D520`.
+
+The custom-JAR tests (`IndexSortCompatibilityTest`, `RendererTransferBytecodeTest`)
+run when the build finds `embeddium-0.3.19-git.7b0cf676+mc1.18.2.jar` in a known
+instance, when `-Pcustom_embeddium_jar=path` is given, or when
+`VRO_CUSTOM_EMBEDDIUM_JAR` is set. Use `-Prequire_custom_renderer_tests=true` for
+release builds so a missing JAR fails the build instead of skipping the tests.
+This fixes compatibility only. No FPS change has been measured.
 
 ## Pending in-game checks
 

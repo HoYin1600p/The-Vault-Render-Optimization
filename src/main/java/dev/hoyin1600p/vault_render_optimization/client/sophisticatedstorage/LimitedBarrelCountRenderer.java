@@ -2,6 +2,7 @@ package dev.hoyin1600p.vault_render_optimization.client.sophisticatedstorage;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Vector3f;
+import com.mojang.math.Matrix4f;
 import it.unimi.dsi.fastutil.longs.Long2ObjectLinkedOpenHashMap;
 import java.util.List;
 import net.minecraft.client.Minecraft;
@@ -30,6 +31,7 @@ public final class LimitedBarrelCountRenderer {
     private static final int MAX_LABELS = 4096;
     private static final Long2ObjectLinkedOpenHashMap<CachedLabel> LABELS =
             new Long2ObjectLinkedOpenHashMap<>();
+    private static Font cachedFont;
 
     private LimitedBarrelCountRenderer() {
     }
@@ -78,7 +80,9 @@ public final class LimitedBarrelCountRenderer {
             );
             poseStack.scale(scale, -scale, scale);
             poseStack.translate(-label.width() / 2.0F, 0.0D, 0.0D);
-            font.drawInBatch(
+            if (label.mesh() != null) {
+                label.mesh().render(poseStack.last().pose(), bufferSource, barrel.getSlotColor(slot), packedLight);
+            } else font.drawInBatch(
                     label.glyphs(),
                     0.0F,
                     0.0F,
@@ -98,6 +102,7 @@ public final class LimitedBarrelCountRenderer {
 
     public static void clear() {
         LABELS.clear();
+        cachedFont = null;
     }
 
     static long cacheKey(int count, int maxCharacters) {
@@ -105,6 +110,10 @@ public final class LimitedBarrelCountRenderer {
     }
 
     private static CachedLabel label(Font font, int count, int maxCharacters) {
+        if (cachedFont != font) {
+            clear();
+            cachedFont = font;
+        }
         long key = cacheKey(count, maxCharacters);
         CachedLabel cached = LABELS.getAndMoveToFirst(key);
         if (cached != null) {
@@ -115,7 +124,17 @@ public final class LimitedBarrelCountRenderer {
         FormattedCharSequence glyphs = new TextComponent(
                 CountAbbreviator.abbreviate(count, maxCharacters)
         ).withStyle(COUNT_DISPLAY_STYLE).getVisualOrderText();
-        CachedLabel created = new CachedLabel(glyphs, font.width(glyphs));
+        CountGlyphMesh mesh = new CountGlyphMesh();
+        try {
+            Matrix4f identity = new Matrix4f();
+            identity.setIdentity();
+            font.drawInBatch(glyphs, 0, 0, -1, false, identity, mesh, false, 0, 0);
+            mesh.freeze();
+        } catch (UnsupportedOperationException unsupported) {
+            // Unknown font vertex output: no real buffers were touched; keep vanilla rendering.
+            mesh = null;
+        }
+        CachedLabel created = new CachedLabel(glyphs, font.width(glyphs), mesh);
         if (LABELS.size() >= MAX_LABELS) {
             LABELS.removeLast();
         }
@@ -124,6 +143,6 @@ public final class LimitedBarrelCountRenderer {
         return created;
     }
 
-    private record CachedLabel(FormattedCharSequence glyphs, float width) {
+    private record CachedLabel(FormattedCharSequence glyphs, float width, CountGlyphMesh mesh) {
     }
 }

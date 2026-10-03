@@ -4,14 +4,13 @@ import com.mojang.math.Matrix3f;
 import com.mojang.math.Matrix4f;
 import me.jellysquid.mods.sodium.client.gl.shader.uniform.GlUniform;
 import org.lwjgl.opengl.GL30C;
-import org.lwjgl.system.MemoryStack;
+import org.lwjgl.BufferUtils;
 
 import java.nio.FloatBuffer;
 
 public class GlUniformMcMatrix3f extends GlUniform<Matrix3f>{
 
-    private static final FloatBuffer buf = MemoryStack.stackGet()
-            .mallocFloat(9);
+    private final FloatBuffer buf = BufferUtils.createFloatBuffer(9);
 
     public GlUniformMcMatrix3f(int index) {
         super(index);
@@ -19,6 +18,7 @@ public class GlUniformMcMatrix3f extends GlUniform<Matrix3f>{
 
 
     public void set(Matrix3f value) {
+        if (this.index < 0) return;
         value.store(buf);
         GL30C.glUniformMatrix3fv(this.index, false, buf);
     }

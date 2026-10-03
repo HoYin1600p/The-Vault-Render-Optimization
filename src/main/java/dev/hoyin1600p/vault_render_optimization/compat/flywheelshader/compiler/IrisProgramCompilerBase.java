@@ -29,10 +29,16 @@ import dev.hoyin1600p.vault_render_optimization.compat.flywheelshader.accessors.
 import dev.hoyin1600p.vault_render_optimization.compat.flywheelshader.accessors.WorldProgramAccessor;
 import dev.hoyin1600p.vault_render_optimization.compat.flywheelshader.flywheel.IrisFlwCompatShaderWarp;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
+import java.util.WeakHashMap;
 
 public abstract class IrisProgramCompilerBase<P extends WorldProgram> {
+    // Every live compiler, so a destroyed Oculus pipeline can be dropped from all of their caches.
+    private static final Set<IrisProgramCompilerBase<?>> COMPILERS = Collections.newSetFromMap(new WeakHashMap<>());
+
     Map<WorldRenderingPipeline, HashMap<ProgramContext, P>> programCache = new HashMap<>();
 
     Map<WorldRenderingPipeline, HashMap<ProgramContext, P>> shadowProgramCache = new HashMap<>();
@@ -42,6 +48,41 @@ public abstract class IrisProgramCompilerBase<P extends WorldProgram> {
 
     public IrisProgramCompilerBase(GlProgram.Factory<P> factory, Template<? extends VertexData> ignoredTemplate, FileResolution ignoredHeader) {
         this.factory = factory;
+        synchronized (COMPILERS) {
+            COMPILERS.add(this);
+        }
+    }
+
+    /**
+     * Oculus closes every shader it created for the pipeline (including ours, which it tracks in
+     * {@code loadedShaders}) when the pipeline is destroyed. Only the stale references are dropped
+     * here; the programs must not be deleted a second time.
+     */
+    public static void forgetPipeline(WorldRenderingPipeline pipeline) {
+        synchronized (COMPILERS) {
+            for (IrisProgramCompilerBase<?> compiler : COMPILERS) {
+                compiler.forget(pipeline);
+            }
+        }
+    }
+
+    /** Distinct Oculus pipelines still referenced by any compiler cache; at most 1 after pack switches. */
+    public static String cachedPipelines() {
+        Set<WorldRenderingPipeline> pipelines = Collections.newSetFromMap(new java.util.IdentityHashMap<>());
+        int compilers;
+        synchronized (COMPILERS) {
+            compilers = COMPILERS.size();
+            for (IrisProgramCompilerBase<?> compiler : COMPILERS) {
+                pipelines.addAll(compiler.programCache.keySet());
+                pipelines.addAll(compiler.shadowProgramCache.keySet());
+            }
+        }
+        return "program caches: " + compilers + " compilers, " + pipelines.size() + " cached pipelines";
+    }
+
+    protected void forget(WorldRenderingPipeline pipeline) {
+        programCache.remove(pipeline);
+        shadowProgramCache.remove(pipeline);
     }
 
     public P getProgram(ProgramContext ctx, boolean isShadow) {

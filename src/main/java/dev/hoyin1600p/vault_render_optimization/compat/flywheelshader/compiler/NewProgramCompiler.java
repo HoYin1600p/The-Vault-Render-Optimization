@@ -156,6 +156,17 @@ public class NewProgramCompiler <TP extends ShaderPatcherBase,P extends WorldPro
     }
 
     @Override
+    protected void forget(WorldRenderingPipeline pipeline) {
+        super.forget(pipeline);
+        if (pipeline instanceof NewWorldRenderingPipeline newPipeline) {
+            ProgramSet programSet = ((IrisRenderingPipelineAccessor) newPipeline).getProgramSet();
+            resolvers.remove(programSet);
+            disabledDedicatedGbuffers.remove(programSet);
+            disabledDedicatedShadow.remove(programSet);
+        }
+    }
+
+    @Override
     public void clear() {
         super.clear();
         resolvers.clear();

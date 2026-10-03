@@ -6,6 +6,7 @@ import com.jozufozu.flywheel.core.model.ShadeSeparatedBufferedData;
 import com.jozufozu.flywheel.core.model.WorldModelBuilder;
 import com.jozufozu.flywheel.core.virtual.VirtualRenderWorld;
 import com.mojang.blaze3d.vertex.VertexConsumer;
+import com.simibubi.create.content.contraptions.AbstractContraptionEntity;
 import com.simibubi.create.content.contraptions.Contraption;
 import com.simibubi.create.content.contraptions.render.ContraptionMatrices;
 import com.simibubi.create.content.contraptions.render.ContraptionProgram;
@@ -21,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -42,6 +44,9 @@ public final class SectionedContraptionRenderer {
                                          VertexConsumer consumer) {
         Contraption contraption = renderInfo.contraption;
         if (!shouldSection(contraption)) {
+            if (!FALLBACK_MESHES.isEmpty()) {
+                invalidateFallback(contraption);
+            }
             return false;
         }
         if (!renderInfo.isVisible()) {
@@ -57,10 +62,34 @@ public final class SectionedContraptionRenderer {
     }
 
     public static void invalidateFallback(Contraption contraption) {
-        FALLBACK_MESHES.remove(contraption);
+        FallbackData removed = FALLBACK_MESHES.remove(contraption);
+        if (removed != null) {
+            removed.delete();
+        }
+    }
+
+    // Create drops dead render infos with removeIf(isDead) and never calls invalidate for them.
+    public static void removeDeadFallbacks() {
+        if (FALLBACK_MESHES.isEmpty()) {
+            return;
+        }
+        Iterator<Map.Entry<Contraption, FallbackData>> entries = FALLBACK_MESHES.entrySet().iterator();
+        while (entries.hasNext()) {
+            Map.Entry<Contraption, FallbackData> entry = entries.next();
+            AbstractContraptionEntity entity = entry.getKey().entity;
+            if (entity == null || !entity.isAliveOrStale()) {
+                // IdentityHashMap entries are unusable after Iterator.remove(): read the value first.
+                FallbackData dead = entry.getValue();
+                entries.remove();
+                dead.delete();
+            }
+        }
     }
 
     public static void clearFallbackMeshes() {
+        for (FallbackData data : FALLBACK_MESHES.values()) {
+            data.delete();
+        }
         FALLBACK_MESHES.clear();
     }
 
@@ -93,6 +122,15 @@ public final class SectionedContraptionRenderer {
         return visible;
     }
 
+    // Live section buffers (Flywheel models plus fallback SuperByteBuffers); returns to 0 when every
+    // contraption's meshes are freed. Render thread only.
+    private static long liveFlywheelSections;
+    private static long liveFallbackSections;
+
+    public static String liveSections() {
+        return "live sectioned meshes: flywheel " + liveFlywheelSections + ", fallback " + liveFallbackSections;
+    }
+
     public static final class FlywheelData {
         private final Map<RenderType, List<FlywheelSection>> layers = new HashMap<>();
 
@@ -111,6 +149,7 @@ public final class SectionedContraptionRenderer {
                         continue;
                     }
                     sections.add(new FlywheelSection(group.bounds(), model, new ArrayModelRenderer(model)));
+                    liveFlywheelSections++;
                 }
                 if (!sections.isEmpty()) {
                     layers.put(layer, sections);
@@ -135,6 +174,7 @@ public final class SectionedContraptionRenderer {
                 for (FlywheelSection section : sections) {
                     section.renderer().delete();
                     section.model().delete();
+                    liveFlywheelSections--;
                 }
             }
             layers.clear();
@@ -177,11 +217,25 @@ public final class SectionedContraptionRenderer {
                         .build();
                 SuperByteBuffer buffer = new SuperByteBuffer(raw);
                 raw.release();
-                if (!buffer.isEmpty()) {
+                if (buffer.isEmpty()) {
+                    buffer.delete();
+                } else {
                     sections.add(new FallbackSection(group.bounds(), buffer));
+                    liveFallbackSections++;
                 }
             }
             return sections;
+        }
+
+        // SuperByteBuffer holds a native vertex copy that is only freed by delete().
+        private void delete() {
+            for (List<FallbackSection> sections : layers.values()) {
+                for (FallbackSection section : sections) {
+                    section.buffer().delete();
+                    liveFallbackSections--;
+                }
+            }
+            layers.clear();
         }
     }
 

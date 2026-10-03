@@ -1,6 +1,9 @@
 package dev.hoyin1600p.vault_render_optimization.client.particle;
 
+import com.mojang.brigadier.arguments.FloatArgumentType;
+import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
+import com.mojang.brigadier.context.CommandContext;
 import dev.hoyin1600p.vault_render_optimization.config.ClientOptimizationConfig;
 import java.util.Comparator;
 import java.util.Locale;
@@ -44,7 +47,73 @@ public final class ParticleCommand {
                         .then(Commands.literal("off")
                                 .executes(context -> setDiagnostics(context.getSource(), false)))
                         .then(Commands.literal("reset")
-                                .executes(context -> resetDiagnostics(context.getSource()))));
+                                .executes(context -> resetDiagnostics(context.getSource()))))
+                .then(Commands.literal("stress")
+                        .then(Commands.literal("status").executes(context -> stressStatus(context.getSource())))
+                        .then(Commands.literal("stop").executes(context -> {
+                            ParticleStress.stop();
+                            return stressStatus(context.getSource());
+                        }))
+                        .then(stressKind("nova", ParticleStress.Kind.NOVA))
+                        .then(stressKind("frost", ParticleStress.Kind.FROST)))
+                .then(Commands.literal("new")
+                        .then(Commands.literal("on").executes(context -> setNew(context.getSource(), true)))
+                        .then(Commands.literal("off").executes(context -> setNew(context.getSource(), false))))
+                .then(Commands.literal("collision")
+                        .then(Commands.literal("on").executes(context -> setCollision(context.getSource(), true)))
+                        .then(Commands.literal("off").executes(context -> setCollision(context.getSource(), false)))
+                        .then(Commands.literal("verify")
+                                .then(Commands.literal("on").executes(context -> setCollisionVerify(context.getSource(), true)))
+                                .then(Commands.literal("off").executes(context -> setCollisionVerify(context.getSource(), false)))));
+    }
+
+    /** A/B switch for the 0.5.0 particle set (collision cache, tick compaction, shared random, provider cache). */
+    private static int setNew(CommandSourceStack source, boolean enabled) {
+        ClientOptimizationConfig.setNewParticleOptimizations(enabled);
+        String text = "[VRO] 0.5.0 particle optimizations (collision cache, tick compaction, shared random, "
+                + "provider cache) " + (enabled ? "enabled" : "disabled") + " and saved.";
+        source.sendSuccess(new TextComponent(text), false);
+        dev.hoyin1600p.vault_render_optimization.VaultRenderOptimization.LOGGER.info("[command] {}", text);
+        return report(source);
+    }
+
+    // /vro particles stress nova|frost <casts per second> <seconds> [radius]
+    private static LiteralArgumentBuilder<CommandSourceStack> stressKind(String name, ParticleStress.Kind kind) {
+        return Commands.literal(name)
+                .then(Commands.argument("casts_per_second", IntegerArgumentType.integer(1, 400))
+                        .then(Commands.argument("seconds", IntegerArgumentType.integer(1, 600))
+                                .executes(context -> startStress(context, kind, 10.0F))
+                                .then(Commands.argument("radius", FloatArgumentType.floatArg(1.0F, 20.0F))
+                                        .executes(context -> startStress(context, kind,
+                                                FloatArgumentType.getFloat(context, "radius"))))));
+    }
+
+    private static int startStress(CommandContext<CommandSourceStack> context, ParticleStress.Kind kind, float radius) {
+        String result = ParticleStress.start(kind,
+                IntegerArgumentType.getInteger(context, "casts_per_second"),
+                IntegerArgumentType.getInteger(context, "seconds"), radius);
+        context.getSource().sendSuccess(new TextComponent("[VRO] Particle stress: " + result
+                + ". Client-side replay of real cast particles; nothing is sent to the server."), false);
+        return 1;
+    }
+
+    private static int stressStatus(CommandSourceStack source) {
+        source.sendSuccess(new TextComponent("[VRO] Particle stress: " + ParticleStress.status()), false);
+        return 1;
+    }
+
+    private static int setCollision(CommandSourceStack source, boolean enabled) {
+        ClientOptimizationConfig.setParticleCollisionCache(enabled);
+        return report(source);
+    }
+
+    private static int setCollisionVerify(CommandSourceStack source, boolean enabled) {
+        // Not saved: verification also runs vanilla collision, so it costs more than either path alone.
+        ParticleCollisionState.setVerify(enabled);
+        source.sendSuccess(new TextComponent("[VRO] Particle collision verification " + (enabled
+                ? "ON: every cached result is compared with vanilla and vanilla's result is used."
+                : "OFF.")), false);
+        return report(source);
     }
 
     private static int setBillboards(CommandSourceStack source, boolean enabled) {
@@ -79,6 +148,7 @@ public final class ParticleCommand {
 
     private static int report(CommandSourceStack source) {
         ParticleDiagnostics.Snapshot snapshot = ParticleDiagnostics.snapshot();
+        source.sendSuccess(new TextComponent("[VRO] Particle collision: " + ParticleCollisionState.status()), false);
         source.sendSuccess(
                 new TextComponent(
                         "[VRO] Particles: billboards " + state(ClientOptimizationConfig.particleBillboardFastPath)
@@ -100,7 +170,7 @@ public final class ParticleCommand {
 
         source.sendSuccess(
                 new TextComponent(
-                        "[VRO] Particle sample: queued " + snapshot.queuedParticles()
+                        "[VRO] Particle census (sampled every 250ms): queued " + snapshot.queuedParticles()
                                 + "; VRO writes packed/portable " + snapshot.vroRendererWrites()
                                 + "/" + snapshot.vroPortableWrites()
                                 + "; renderer passthroughs " + snapshot.rendererPassthroughs()

@@ -29,6 +29,13 @@ primitive-keyed least-recently-used cache is limited to 4,096 entries and is
 cleared on resource reload. Slot color, placement, scale, lighting, and
 abbreviation behavior are unchanged.
 
+On Astra-Dev, each label also retains local glyph vertices and consecutive font
+atlas runs, capped at 128 vertices per label. Color, light and pose are supplied
+fresh on every draw through the original buffer consumer. Unknown glyph attributes
+or oversized output fall back to the normal font renderer. Font replacement and
+resource reload clear the cache. This avoids repeated glyph layout/emission setup;
+it does not claim to eliminate already-batched GPU draws. The tier display is unchanged.
+
 ### Fill bars
 
 VRO preserves Sophisticated Storage's texture, UVs, slot layout, transparency,

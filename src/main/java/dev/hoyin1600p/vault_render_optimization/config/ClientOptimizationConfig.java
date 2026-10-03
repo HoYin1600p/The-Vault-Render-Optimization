@@ -21,22 +21,38 @@ public final class ClientOptimizationConfig {
     private static final ForgeConfigSpec.BooleanValue COMPARE_MODE;
     private static final ForgeConfigSpec.BooleanValue DEFER_CHUNK_UPDATES;
     private static final ForgeConfigSpec.BooleanValue INDEX_ONLY_SORTING;
+    private static final ForgeConfigSpec.BooleanValue SORT_GEOMETRY_CACHE;
+    private static final ForgeConfigSpec.BooleanValue FARSIGHT_CHUNK_BOUND;
     private static final ForgeConfigSpec.BooleanValue ADAPTIVE_CHUNK_BUDGET;
     private static final EnumMap<RenderBackportFeature, ForgeConfigSpec.BooleanValue>
             RENDER_BACKPORT_OPTIONS = new EnumMap<>(RenderBackportFeature.class);
     private static final EnumMap<RendererTransferFeature, ForgeConfigSpec.BooleanValue>
             RENDERER_TRANSFER_OPTIONS = new EnumMap<>(RendererTransferFeature.class);
     private static final ForgeConfigSpec.IntValue VERTEX_BUFFER_MAX_RETAINED_MIB;
+    private static final ForgeConfigSpec.BooleanValue VERTEX_BUFFER_ADAPTIVE_TRIMMING;
+    private static final ForgeConfigSpec.IntValue VERTEX_BUFFER_AGGREGATE_RETAINED_MIB;
+    private static final ForgeConfigSpec.BooleanValue HUD_TEXT_GEOMETRY;
     private static final ForgeConfigSpec.IntValue ASYNC_ARENA_GROWTH_DIVISOR;
     private static final ForgeConfigSpec.IntValue ASYNC_ARENA_MAX_HEADROOM_MIB;
     private static final ForgeConfigSpec.BooleanValue UPDATE_CHECKS;
     private static final ForgeConfigSpec.EnumValue<UpdateNoticeFilter> UPDATE_NOTICE_FILTER;
     private static final ForgeConfigSpec.BooleanValue PARTICLE_LIGHT_CACHE;
+    private static final ForgeConfigSpec.BooleanValue PARTICLE_COLLISION_CACHE;
     private static final ForgeConfigSpec.BooleanValue PARTICLE_SHARED_LIGHT_CACHE;
     private static final ForgeConfigSpec.BooleanValue PARTICLE_BILLBOARD_FAST_PATH;
     private static final ForgeConfigSpec.EnumValue<ParticleBillboardOwner> PARTICLE_BILLBOARD_OWNER;
     private static final ForgeConfigSpec.BooleanValue PARTICLE_DIAGNOSTICS;
     private static final ForgeConfigSpec.BooleanValue EMPTY_PARTICLE_RENDER_SKIP;
+    private static final ForgeConfigSpec.BooleanValue ALLOCATION_FREE_FRUSTUM;
+    private static final ForgeConfigSpec.BooleanValue FASTLOAD_FRUSTUM_BYPASS;
+    private static final ForgeConfigSpec.BooleanValue PARTICLE_TICK_COMPACTION;
+    private static final ForgeConfigSpec.BooleanValue PARTICLE_SHARED_RANDOM;
+    private static final ForgeConfigSpec.BooleanValue PARTICLE_PROVIDER_CACHE;
+    private static final ForgeConfigSpec.BooleanValue GPU_ENTITY_MODELS;
+    private static final ForgeConfigSpec.BooleanValue GPU_PARTICLES;
+    private static final ForgeConfigSpec.BooleanValue GPU_ENTITY_MODELS_WITH_SHADERS;
+    private static final ForgeConfigSpec.BooleanValue GPU_PARTICLES_WITH_SHADERS;
+    private static final ForgeConfigSpec.BooleanValue GPU_ITEMS;
     private static final ForgeConfigSpec.BooleanValue EMPTY_TOAST_RENDER_SKIP;
     private static final ForgeConfigSpec.BooleanValue INACTIVE_TUTORIAL_SKIP;
     private static final ForgeConfigSpec.BooleanValue EMPTY_DEBUG_RENDER_SKIP;
@@ -51,11 +67,6 @@ public final class ClientOptimizationConfig {
     private static final ForgeConfigSpec.IntValue VERTICAL_SECTION_DISTANCE;
     private static final ForgeConfigSpec.BooleanValue HORIZONTAL_SECTION_CULLING;
     private static final ForgeConfigSpec.IntValue HORIZONTAL_SECTION_DISTANCE;
-    private static final ForgeConfigSpec.BooleanValue DYNAMIC_LIGHTS;
-    private static final ForgeConfigSpec.BooleanValue DYNAMIC_LIGHT_ENTITIES;
-    private static final ForgeConfigSpec.BooleanValue DYNAMIC_LIGHT_BLOCK_ENTITIES;
-    private static final ForgeConfigSpec.BooleanValue DYNAMIC_LIGHTS_WITH_SHADERS;
-    private static final ForgeConfigSpec.IntValue DYNAMIC_LIGHT_UPDATE_INTERVAL;
     private static final ForgeConfigSpec.BooleanValue CREATE_EMPTY_BUFFER_FLUSH_SKIP;
     private static final ForgeConfigSpec.BooleanValue CREATE_BLOCK_ENTITY_CULLING;
     private static final ForgeConfigSpec.BooleanValue CREATE_ACTOR_CULLING;
@@ -81,7 +92,20 @@ public final class ClientOptimizationConfig {
     public static volatile boolean particleBillboardFastPath = true;
     public static volatile ParticleBillboardOwner particleBillboardOwner = ParticleBillboardOwner.AUTO;
     public static volatile boolean particleDiagnostics = false;
+    public static volatile boolean particleCollisionCache = true;
+    public static volatile boolean sortGeometryCache = false;
+    public static volatile boolean farsightChunkBound = true;
     public static volatile boolean emptyParticleRenderSkip = true;
+    public static volatile boolean allocationFreeFrustum = true;
+    public static volatile boolean fastloadFrustumBypass = true;
+    public static volatile boolean particleTickCompaction = true;
+    public static volatile boolean particleSharedRandom = true;
+    public static volatile boolean particleProviderCache = true;
+    public static volatile boolean gpuEntityModels = true;
+    public static volatile boolean gpuParticles = true;
+    public static volatile boolean gpuEntityModelsWithShaders = false;
+    public static volatile boolean gpuParticlesWithShaders = false;
+    public static volatile boolean gpuItems = true;
     public static volatile boolean emptyToastRenderSkip = true;
     public static volatile boolean inactiveTutorialSkip = true;
     public static volatile boolean emptyDebugRenderSkip = true;
@@ -96,11 +120,6 @@ public final class ClientOptimizationConfig {
     public static volatile int verticalSectionDistance = 12;
     public static volatile boolean horizontalSectionCulling = false;
     public static volatile int horizontalSectionDistance = 24;
-    public static volatile boolean dynamicLights = false;
-    public static volatile boolean dynamicLightEntities = true;
-    public static volatile boolean dynamicLightBlockEntities = true;
-    public static volatile boolean dynamicLightsWithShaders = false;
-    public static volatile int dynamicLightUpdateInterval = 1;
     public static volatile boolean createEmptyBufferFlushSkip = true;
     public static volatile boolean createBlockEntityCulling = true;
     public static volatile boolean createActorCulling = true;
@@ -110,6 +129,9 @@ public final class ClientOptimizationConfig {
     public static volatile boolean createFlywheelAutoEnable = true;
     public static volatile boolean createFlywheelShaderCompat = true;
     public static volatile int vertexBufferMaxRetainedMib = 16;
+    public static volatile boolean vertexBufferAdaptiveTrimming = false;
+    public static volatile int vertexBufferAggregateRetainedMib = 128;
+    public static volatile boolean hudTextGeometry = false;
     public static volatile int asyncArenaGrowthDivisor = 6;
     public static volatile int asyncArenaMaxHeadroomMib = 64;
 
@@ -154,6 +176,11 @@ public final class ClientOptimizationConfig {
                 "Off/Compare Mode affects new jobs; already queued index-only jobs finish safely.",
                 "Use /vro chunks sorting on|off|status without a restart."
         ).define("index_only_sorting", true);
+        SORT_GEOMETRY_CACHE = builder.comment(
+                "Experimental: cache immutable triangle centers for validated Embeddium index-only sorting.",
+                "Bounded to 16 MiB globally; preserves native stable distance order and generation checks.",
+                "Defaults off pending in-game water/glass and shader comparisons."
+        ).define("sort_geometry_cache", false);
         ADAPTIVE_CHUNK_BUDGET = builder.comment(
                 "Experimental v2: dynamically pace updates to already-built terrain using measured costs.",
                 "Default-on on supported renderers; an explicit adaptive_budget_v2=false remains respected.",
@@ -162,6 +189,13 @@ public final class ClientOptimizationConfig {
                 "Uses conservative startup budgets, bounded feedback and queue backpressure; not an FPS guarantee.",
                 "Off/Compare Mode restores native draining and scheduling; /vro chunks budget on|off|status is hot."
         ).define("adaptive_budget_v2", true);
+        FARSIGHT_CHUNK_BOUND = builder.comment(
+                "Only with Farsight installed: forget client chunks farther than max(server view distance,",
+                "render distance) + 1 chunks, once per second, exactly as the forget packet Farsight cancels would",
+                "(chunk drop, light release, Embeddium/Rubidium render sections). Chunks within render distance stay.",
+                "This is a leak fix: Compare Mode does not affect it, and VH Accelerator leaves this job to VRO,",
+                "so turning it off means nothing bounds Farsight's retained chunks until the level changes."
+        ).define("farsight_chunk_bound", true);
         builder.pop();
 
         builder.push("modernfix_backports");
@@ -194,6 +228,15 @@ public final class ClientOptimizationConfig {
                 "Maximum native capacity retained by one renderer vertex buffer between builds.",
                 "Larger one-off buffers are trimmed at the next start; destroy still frees them deterministically."
         ).defineInRange("vertexBufferMaxRetainedMib", 16, 1, 256);
+        VERTEX_BUFFER_ADAPTIVE_TRIMMING = builder.comment(
+                "Experimental: trim unused CPU-native vertex capacity at safe worker start points.",
+                "Keeps a 30-second demand window; idle workers trim only when used again, never remotely.",
+                "Existing per-buffer ceiling and native destroy remain unchanged. Off pending validation."
+        ).define("vertexBufferAdaptiveTrimming", false);
+        VERTEX_BUFFER_AGGREGATE_RETAINED_MIB = builder.comment(
+                "Aggregate excess-capacity pressure threshold, not a hard process/native/VRAM limit.",
+                "Above this, active workers release old peaks at their next safe start; required writes are never capped."
+        ).defineInRange("vertexBufferAggregateRetainedMib", 128, 16, 2048);
         ASYNC_ARENA_GROWTH_DIVISOR = builder.comment(
                 "Reserve roughly current arena capacity divided by this value during a resize.",
                 "Smaller values trade more speculative VRAM for fewer resize/compaction events."
@@ -205,6 +248,17 @@ public final class ClientOptimizationConfig {
         builder.pop();
 
         builder.push("render_fast_paths");
+        HUD_TEXT_GEOMETRY = builder.comment(
+                "Experimental: reuse unchanged plain HUD text glyph geometry while drawing every frame.",
+                "Formatted/animated/bidirectional/custom font paths fall back; no gear data or HUD state is cached.",
+                "Defaults off pending visual validation. Compare Mode disables reuse."
+        ).define("hud_text_geometry", false);
+        PARTICLE_COLLISION_CACHE = builder.comment(
+                "Exact particle block collision with a per-tick cache: visits the same cells and shapes as",
+                "vanilla and uses vanilla's collision response, but reads each block once per particle tick",
+                "instead of once per particle. Every particle still collides; nothing is skipped.",
+                "Yields to Particle Core/Flerovium. /vro particles collision on|off|verify toggles at runtime."
+        ).define("particle_collision_cache", true);
         PARTICLE_LIGHT_CACHE = builder
                 .comment("Cache unchanged particle light lookups for one client tick.")
                 .define("particle_light_cache", true);
@@ -236,6 +290,56 @@ public final class ClientOptimizationConfig {
         EMPTY_PARTICLE_RENDER_SKIP = builder
                 .comment("Skip particle renderer setup when every particle queue is empty.")
                 .define("skip_empty_particle_render", true);
+        ALLOCATION_FREE_FRUSTUM = builder.comment(
+                "Test each frustum plane against the box corner farthest along its normal instead of allocating eight",
+                "vectors per plane. Same float operations in the same order, so the answer is vanilla's exactly."
+        ).define("allocation_free_frustum", true);
+        FASTLOAD_FRUSTUM_BYPASS = builder.comment(
+                "With Fastload installed: while its frustum event has no listeners (all gameplay after world load),",
+                "visibility checks skip its synchronized per-check event lookup. Same answers; only applies when",
+                "Fastload's hook is the only change to that frustum method."
+        ).define("fastload_frustum_bypass", true);
+        PARTICLE_TICK_COMPACTION = builder.comment(
+                "Remove particles that died this tick in one ordered pass instead of one queue shift each.",
+                "Every particle still ticks in vanilla order; only the removal of dead ones is batched."
+        ).define("particle_tick_compaction", true);
+        PARTICLE_SHARED_RANDOM = builder.comment(
+                "Give particles a per-thread generator with java.util.Random's exact algorithm instead of a new",
+                "Random each (a CAS, nanoTime and AtomicLong per particle, and a CAS per draw). Same distribution."
+        ).define("particle_shared_random", true);
+        PARTICLE_PROVIDER_CACHE = builder.comment(
+                "Resolve each particle type's provider once instead of a registry key plus hash lookup per spawn.",
+                "Invalidated whenever a provider is registered. Returns exactly the provider vanilla would."
+        ).define("particle_provider_cache", true);
+        GPU_ENTITY_MODELS = builder.comment(
+                "Expand entity model cubes on the GPU. Each model part reserves its vertices in the",
+                "vanilla entity buffer and a compute shader writes them into the uploaded vertex buffer right before",
+                "vanilla's own draw, with vanilla's exact float arithmetic (bit-for-bit self-test at startup).",
+                "Needs OpenGL 4.3 or the ARB compute extensions; pauses with an Oculus shader pack (see",
+                "gpu_entity_models_with_shaders), in Compare",
+                "Mode, on a failed self-test or mixin audit. /vro gpuentity status explains the current state."
+        ).define("gpu_entity_models", true);
+        GPU_PARTICLES = builder.comment(
+                "With gpu_entity_models active: billboard particles reserve their four vertices and the same compute",
+                "path writes them with VRO's exact billboard arithmetic (own startup self-test). Every particle is",
+                "still drawn; anything unusual stays on the CPU writer."
+        ).define("gpu_particles", true);
+        GPU_ENTITY_MODELS_WITH_SHADERS = builder.comment(
+                "Experimental; mainly for slower CPUs. With gpu_entity_models active and an Oculus shader pack on,",
+                "entity models and particles",
+                "stay on the GPU path: a second program writes Oculus' extended entity vertices (face normal, tangent,",
+                "mid UV, entity IDs) exactly as Oculus computes them. It saves CPU time, but shader packs usually make",
+                "the game GPU-bound, where the extra compute passes cost more than they save; off by default."
+        ).define("gpu_entity_models_with_shaders", false);
+        GPU_PARTICLES_WITH_SHADERS = builder.comment(
+                "With gpu_particles active and an Oculus shader pack on, keep only particles on the GPU (they keep",
+                "the vanilla particle format under shader packs). gpu_entity_models_with_shaders includes this."
+        ).define("gpu_particles_with_shaders", false);
+        GPU_ITEMS = builder.comment(
+                "With gpu_entity_models active: solid and cutout block items (dropped, in frames, held) reserve their",
+                "vertices and the compute path writes them exactly as the installed item writer (Forge or Embeddium)",
+                "would (own self-test). Flat, translucent and glinting items always stay on the CPU."
+        ).define("gpu_items", true);
         EMPTY_TOAST_RENDER_SKIP = builder
                 .comment("Skip toast renderer work when no toast is queued or visible.")
                 .define("skip_empty_toast_render", true);
@@ -313,27 +417,6 @@ public final class ClientOptimizationConfig {
                 .defineInRange("horizontal_distance", 24, 1, 64);
         builder.pop();
 
-        builder.push("dynamic_lights");
-        DYNAMIC_LIGHTS = builder
-                .comment(
-                        "Enable VRO's client-side dynamic-light engine.",
-                        "Disabled by default and ignored when Dynamic Lights Reforged is installed."
-                )
-                .define("enabled", false);
-        DYNAMIC_LIGHT_ENTITIES = builder
-                .comment("Allow entities, held items, dropped items, fire, TNT, and supported projectiles to emit light.")
-                .define("entities", true);
-        DYNAMIC_LIGHT_BLOCK_ENTITIES = builder
-                .comment("Allow resource-defined block entity types to emit dynamic light.")
-                .define("block_entities", true);
-        DYNAMIC_LIGHTS_WITH_SHADERS = builder
-                .comment("Keep VRO dynamic lights active while an Oculus shader pack is enabled.")
-                .define("enable_with_shaders", false);
-        DYNAMIC_LIGHT_UPDATE_INTERVAL = builder
-                .comment("Per-source update interval in client ticks. Each source keeps an independent schedule.")
-                .defineInRange("update_interval_ticks", 1, 1, 20);
-        builder.pop();
-
         builder.push("create_rendering");
         CREATE_EMPTY_BUFFER_FLUSH_SKIP = builder
                 .comment("Avoid flushing Minecraft's shared render buffers for Create contraptions that rendered no special block entities.")
@@ -358,9 +441,9 @@ public final class ClientOptimizationConfig {
                 .define("smart_machinery_render_bounds", true);
         CREATE_FLYWHEEL_AUTO_ENABLE = builder
                 .comment(
-                        "Restore Flywheel's upstream-default instancing backend when a pack disables it.",
-                        "Unsupported GPUs and shader integration failures still fall back safely.",
-                        "Disable this option to preserve a manually selected OFF backend."
+                        "Turns on Flywheel's instancing renderer for this session when the pack has it set to OFF.",
+                        "Flywheel's own config file is never changed; turning this off returns to the pack's setting",
+                        "immediately. Unsupported GPUs and shader integration failures still fall back safely."
                 )
                 .define("auto_enable_flywheel_instancing", true);
         CREATE_FLYWHEEL_SHADER_COMPAT = builder
@@ -450,7 +533,8 @@ public final class ClientOptimizationConfig {
         );
     }
 
-    private static void reloadCreateRenderers() {
+    /** Rebuilds Create's contraption and Flywheel renderers so changed Create options reach existing ones. */
+    public static void reloadCreateRenderers() {
         if (!ModList.get().isLoaded("create")) {
             return;
         }
@@ -514,6 +598,110 @@ public final class ClientOptimizationConfig {
         particleDiagnostics = enabled;
     }
 
+    public static void setFarsightChunkBound(boolean enabled) {
+        FARSIGHT_CHUNK_BOUND.set(enabled);
+        FARSIGHT_CHUNK_BOUND.save();
+        farsightChunkBound = enabled;
+    }
+
+    public static void setSortGeometryCache(boolean enabled) {
+        SORT_GEOMETRY_CACHE.set(enabled);
+        SORT_GEOMETRY_CACHE.save();
+        sortGeometryCache = enabled;
+    }
+
+    public static void setHudTextGeometry(boolean enabled) {
+        HUD_TEXT_GEOMETRY.set(enabled);
+        HUD_TEXT_GEOMETRY.save();
+        hudTextGeometry = enabled;
+        dev.hoyin1600p.vault_render_optimization.client.hud.HudTextGeometry.clear();
+    }
+
+    public static void setVertexBufferAdaptiveTrimming(boolean enabled) {
+        VERTEX_BUFFER_ADAPTIVE_TRIMMING.set(enabled);
+        VERTEX_BUFFER_ADAPTIVE_TRIMMING.save();
+        vertexBufferAdaptiveTrimming = enabled;
+    }
+
+    public static void setGpuEntityModels(boolean enabled) {
+        GPU_ENTITY_MODELS.set(enabled);
+        GPU_ENTITY_MODELS.save();
+        gpuEntityModels = enabled;
+    }
+
+    /** The 0.5.0 particle set: collision cache, tick compaction, shared random and provider cache. */
+    public static void setNewParticleOptimizations(boolean enabled) {
+        PARTICLE_COLLISION_CACHE.set(enabled);
+        PARTICLE_TICK_COMPACTION.set(enabled);
+        PARTICLE_SHARED_RANDOM.set(enabled);
+        PARTICLE_PROVIDER_CACHE.set(enabled);
+        PARTICLE_COLLISION_CACHE.save();
+        particleCollisionCache = enabled;
+        particleTickCompaction = enabled;
+        particleSharedRandom = enabled;
+        particleProviderCache = enabled;
+    }
+
+    public static void setParticleCollisionCache(boolean enabled) {
+        PARTICLE_COLLISION_CACHE.set(enabled);
+        PARTICLE_COLLISION_CACHE.save();
+        particleCollisionCache = enabled;
+    }
+
+    public static void setParticleTickCompaction(boolean enabled) {
+        PARTICLE_TICK_COMPACTION.set(enabled);
+        PARTICLE_TICK_COMPACTION.save();
+        particleTickCompaction = enabled;
+    }
+
+    public static void setParticleSharedRandom(boolean enabled) {
+        PARTICLE_SHARED_RANDOM.set(enabled);
+        PARTICLE_SHARED_RANDOM.save();
+        particleSharedRandom = enabled;
+    }
+
+    public static void setParticleProviderCache(boolean enabled) {
+        PARTICLE_PROVIDER_CACHE.set(enabled);
+        PARTICLE_PROVIDER_CACHE.save();
+        particleProviderCache = enabled;
+    }
+
+    public static void setGpuEntityModelsWithShaders(boolean enabled) {
+        GPU_ENTITY_MODELS_WITH_SHADERS.set(enabled);
+        GPU_ENTITY_MODELS_WITH_SHADERS.save();
+        gpuEntityModelsWithShaders = enabled;
+    }
+
+    public static void setGpuParticlesWithShaders(boolean enabled) {
+        GPU_PARTICLES_WITH_SHADERS.set(enabled);
+        GPU_PARTICLES_WITH_SHADERS.save();
+        gpuParticlesWithShaders = enabled;
+    }
+
+    public static void setGpuItems(boolean enabled) {
+        GPU_ITEMS.set(enabled);
+        GPU_ITEMS.save();
+        gpuItems = enabled;
+    }
+
+    public static void setGpuParticles(boolean enabled) {
+        GPU_PARTICLES.set(enabled);
+        GPU_PARTICLES.save();
+        gpuParticles = enabled;
+    }
+
+    public static void setFastloadFrustumBypass(boolean enabled) {
+        FASTLOAD_FRUSTUM_BYPASS.set(enabled);
+        FASTLOAD_FRUSTUM_BYPASS.save();
+        fastloadFrustumBypass = enabled;
+    }
+
+    public static void setAllocationFreeFrustum(boolean enabled) {
+        ALLOCATION_FREE_FRUSTUM.set(enabled);
+        ALLOCATION_FREE_FRUSTUM.save();
+        allocationFreeFrustum = enabled;
+    }
+
     public static void setSophisticatedStorageFaceCulling(boolean enabled) {
         SOPHISTICATED_STORAGE_FACE_CULLING.set(enabled);
         SOPHISTICATED_STORAGE_FACE_CULLING.save();
@@ -542,36 +730,6 @@ public final class ClientOptimizationConfig {
         SOPHISTICATED_STORAGE_DIAGNOSTICS.set(enabled);
         SOPHISTICATED_STORAGE_DIAGNOSTICS.save();
         sophisticatedStorageDiagnostics = enabled;
-    }
-
-    public static void setDynamicLights(boolean enabled) {
-        DYNAMIC_LIGHTS.set(enabled);
-        DYNAMIC_LIGHTS.save();
-        dynamicLights = enabled;
-    }
-
-    public static void setDynamicLightEntities(boolean enabled) {
-        DYNAMIC_LIGHT_ENTITIES.set(enabled);
-        DYNAMIC_LIGHT_ENTITIES.save();
-        dynamicLightEntities = enabled;
-    }
-
-    public static void setDynamicLightBlockEntities(boolean enabled) {
-        DYNAMIC_LIGHT_BLOCK_ENTITIES.set(enabled);
-        DYNAMIC_LIGHT_BLOCK_ENTITIES.save();
-        dynamicLightBlockEntities = enabled;
-    }
-
-    public static void setDynamicLightsWithShaders(boolean enabled) {
-        DYNAMIC_LIGHTS_WITH_SHADERS.set(enabled);
-        DYNAMIC_LIGHTS_WITH_SHADERS.save();
-        dynamicLightsWithShaders = enabled;
-    }
-
-    public static void setDynamicLightUpdateInterval(int ticks) {
-        DYNAMIC_LIGHT_UPDATE_INTERVAL.set(ticks);
-        DYNAMIC_LIGHT_UPDATE_INTERVAL.save();
-        dynamicLightUpdateInterval = ticks;
     }
 
     public static void setCreateFlywheelShaderCompat(boolean enabled) {
@@ -603,10 +761,16 @@ public final class ClientOptimizationConfig {
         if (config.getSpec() != SPEC) {
             return;
         }
+        applySavedValues();
+    }
 
+    /** Re-reads every value from the spec into the live fields, exactly as a config reload does. */
+    public static void applySavedValues() {
         compareMode = COMPARE_MODE.get();
         deferChunkUpdates = DEFER_CHUNK_UPDATES.get();
         indexOnlySorting = INDEX_ONLY_SORTING.get();
+        sortGeometryCache = SORT_GEOMETRY_CACHE.get();
+        farsightChunkBound = FARSIGHT_CHUNK_BOUND.get();
         adaptiveChunkBudget = ADAPTIVE_CHUNK_BUDGET.get();
         EnumMap<RenderBackportFeature, Boolean> backportValues =
                 new EnumMap<>(RenderBackportFeature.class);
@@ -619,6 +783,9 @@ public final class ClientOptimizationConfig {
         );
         rendererTransferOptions = Map.copyOf(rendererTransferValues);
         vertexBufferMaxRetainedMib = VERTEX_BUFFER_MAX_RETAINED_MIB.get();
+        vertexBufferAdaptiveTrimming = VERTEX_BUFFER_ADAPTIVE_TRIMMING.get();
+        vertexBufferAggregateRetainedMib = VERTEX_BUFFER_AGGREGATE_RETAINED_MIB.get();
+        hudTextGeometry = HUD_TEXT_GEOMETRY.get();
         asyncArenaGrowthDivisor = ASYNC_ARENA_GROWTH_DIVISOR.get();
         asyncArenaMaxHeadroomMib = ASYNC_ARENA_MAX_HEADROOM_MIB.get();
         updateChecks = UPDATE_CHECKS.get();
@@ -633,7 +800,18 @@ public final class ClientOptimizationConfig {
         particleBillboardFastPath = PARTICLE_BILLBOARD_FAST_PATH.get();
         particleBillboardOwner = PARTICLE_BILLBOARD_OWNER.get();
         particleDiagnostics = PARTICLE_DIAGNOSTICS.get();
+        particleCollisionCache = PARTICLE_COLLISION_CACHE.get();
         emptyParticleRenderSkip = EMPTY_PARTICLE_RENDER_SKIP.get();
+        allocationFreeFrustum = ALLOCATION_FREE_FRUSTUM.get();
+        fastloadFrustumBypass = FASTLOAD_FRUSTUM_BYPASS.get();
+        particleTickCompaction = PARTICLE_TICK_COMPACTION.get();
+        particleSharedRandom = PARTICLE_SHARED_RANDOM.get();
+        particleProviderCache = PARTICLE_PROVIDER_CACHE.get();
+        gpuEntityModels = GPU_ENTITY_MODELS.get();
+        gpuParticles = GPU_PARTICLES.get();
+        gpuEntityModelsWithShaders = GPU_ENTITY_MODELS_WITH_SHADERS.get();
+        gpuParticlesWithShaders = GPU_PARTICLES_WITH_SHADERS.get();
+        gpuItems = GPU_ITEMS.get();
         emptyToastRenderSkip = EMPTY_TOAST_RENDER_SKIP.get();
         inactiveTutorialSkip = INACTIVE_TUTORIAL_SKIP.get();
         emptyDebugRenderSkip = EMPTY_DEBUG_RENDER_SKIP.get();
@@ -648,11 +826,6 @@ public final class ClientOptimizationConfig {
         verticalSectionDistance = VERTICAL_SECTION_DISTANCE.get();
         horizontalSectionCulling = HORIZONTAL_SECTION_CULLING.get();
         horizontalSectionDistance = HORIZONTAL_SECTION_DISTANCE.get();
-        dynamicLights = DYNAMIC_LIGHTS.get();
-        dynamicLightEntities = DYNAMIC_LIGHT_ENTITIES.get();
-        dynamicLightBlockEntities = DYNAMIC_LIGHT_BLOCK_ENTITIES.get();
-        dynamicLightsWithShaders = DYNAMIC_LIGHTS_WITH_SHADERS.get();
-        dynamicLightUpdateInterval = DYNAMIC_LIGHT_UPDATE_INTERVAL.get();
         createEmptyBufferFlushSkip = CREATE_EMPTY_BUFFER_FLUSH_SKIP.get();
         createBlockEntityCulling = CREATE_BLOCK_ENTITY_CULLING.get();
         createActorCulling = CREATE_ACTOR_CULLING.get();

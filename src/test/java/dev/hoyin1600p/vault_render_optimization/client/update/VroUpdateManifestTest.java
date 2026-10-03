@@ -16,7 +16,7 @@ final class VroUpdateManifestTest {
 
     @Test
     void latestPublicReleaseIsNotAdvertisedAsOutdated() throws IOException {
-        assertTrue(parseFor("0.4.1").isEmpty());
+        assertTrue(parseFor(latestVersion()).isEmpty());
     }
 
     @Test
@@ -25,9 +25,13 @@ final class VroUpdateManifestTest {
 
         assertEquals("vault_render_optimization", notice.modId());
         assertEquals("VRO", notice.displayName());
-        assertEquals("0.4.1", notice.targetVersion());
-        assertEquals(UpdateNotice.Severity.NORMAL, notice.severity());
-        assertEquals("Renderer, particle, and chunk performance improvements", notice.message());
+        assertEquals(latestVersion(), notice.targetVersion());
+        // A release marked critical carries the prefix in update.json; the parser strips it.
+        String raw = com.google.gson.JsonParser.parseString(Files.readString(Path.of("update.json")))
+                .getAsJsonObject().getAsJsonObject("1.18.2").get(latestVersion()).getAsString();
+        boolean critical = raw.regionMatches(true, 0, "[CRITICAL]", 0, "[CRITICAL]".length());
+        assertEquals(critical ? UpdateNotice.Severity.CRITICAL : UpdateNotice.Severity.NORMAL, notice.severity());
+        assertEquals(critical ? raw.substring("[CRITICAL]".length()).trim() : raw, notice.message());
         assertEquals(DOWNLOAD_URL, notice.downloadUrl());
     }
 
@@ -45,5 +49,10 @@ final class VroUpdateManifestTest {
                 "1.18.2",
                 DOWNLOAD_URL
         );
+    }
+
+    private static String latestVersion() throws IOException {
+        return com.google.gson.JsonParser.parseString(Files.readString(Path.of("update.json")))
+                .getAsJsonObject().getAsJsonObject("promos").get("1.18.2-latest").getAsString();
     }
 }

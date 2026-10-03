@@ -17,6 +17,27 @@ import me.jellysquid.mods.sodium.client.util.task.CancellationSource;
 import org.junit.jupiter.api.Test;
 
 class BudgetAdaptersTest {
+    @Test void observationReusesTwoTablesWithoutRetainingConsumedResults() throws Exception {
+        var ledger = new BudgetResults();
+        var seenField = BudgetResults.class.getDeclaredField("seen");
+        var scratchField = BudgetResults.class.getDeclaredField("scratch");
+        seenField.setAccessible(true);
+        scratchField.setAccessible(true);
+        Object first = seenField.get(ledger), second = scratchField.get(ledger);
+        var queue = new ArrayDeque<ChunkBuildResult>();
+        var result = new ChunkBuildResult(null, null, Map.of(), 0);
+        queue.add(result);
+        for (int i = 0; i < 10; i++) {
+            assertEquals(i, ledger.inspect(queue, i).oldestWait());
+            assertSame(i % 2 == 0 ? second : first, seenField.get(ledger));
+            assertTrue(((Map<?, ?>) scratchField.get(ledger)).isEmpty());
+        }
+        queue.clear();
+        assertEquals(0, ledger.inspect(queue, 20).count());
+        assertTrue(((Map<?, ?>) seenField.get(ledger)).isEmpty());
+        assertTrue(((Map<?, ?>) scratchField.get(ledger)).isEmpty());
+    }
+
     @Test void uploadHookLeavesNativeCallbackAndInitialQueueUntouched() throws Exception {
         var adapter = new dev.hoyin1600p.vault_render_optimization.mixin.chunk.EmbeddiumAdaptiveBudgetMixin() {};
         var guard = new TerrainLoadingGuard(64 * AdaptiveChunkBudget.MIB);

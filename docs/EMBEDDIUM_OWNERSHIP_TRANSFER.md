@@ -9,8 +9,20 @@ single-owner control is recorded in Embeddium commit `565016a2`.
 
 Validated renderer baselines:
 
-- Embeddium `0.3.18+mc1.18.2`
-- Rubidium `0.5.6`
+- Embeddium `0.3.18+mc1.18.2` (newest public 1.18.2 release)
+- HoYin1600p fork builds: `0.3.18-git.ced34c84+mc1.18.2` (the post-removal build
+  used by the single-owner control below), `0.3.19+mc1.18.2` and the custom build
+  `0.3.19-git.7b0cf676+mc1.18.2`
+- Rubidium `0.5.6` (newest public 1.18.2 release)
+
+Versions are matched exactly (`ValidatedRendererVersions`), and each transfer is
+also gated on the bytes of the renderer class that held the fork's own copy
+(`RendererTransferBytecode`). A version string alone is not trusted: some local
+pre-removal fork jars (`a8cebc3a`, `14ef7988`, and one relabelled
+`0.3.18+mc1.18.2` jar) still contain the transferred implementations. On those,
+the affected transfers report `BLOCKED` and the renderer's own copy stays in
+charge. Earlier VRO builds used a `0.3.18`/`0.5.6` prefix and no bytecode check,
+which let such jars run both copies.
 
 Embeddium `0.3.18` publishes its own `embeddium` identity and a `rubidium`
 compatibility alias from the same mod file. VRO treats that same-file pair as

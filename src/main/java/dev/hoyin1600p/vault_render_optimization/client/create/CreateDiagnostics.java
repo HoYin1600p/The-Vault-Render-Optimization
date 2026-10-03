@@ -65,7 +65,8 @@ public final class CreateDiagnostics {
         source.sendSuccess(new TextComponent(
                 "[VRO] Flywheel automatic instancing "
                         + (ClientOptimizationConfig.createFlywheelAutoEnable ? "ON" : "OFF")
-                        + (FlywheelBackendManager.promotedBackend() ? "; restored from OFF this session." : ".")
+                        + (FlywheelBackendManager.promotedBackend()
+                                ? "; instancing on for this session (the pack's setting is OFF, left unchanged)." : ".")
         ), false);
         source.sendSuccess(new TextComponent(
                 "[VRO] Flywheel shader programs: scene "

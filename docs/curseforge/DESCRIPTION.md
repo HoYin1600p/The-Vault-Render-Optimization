@@ -53,8 +53,6 @@ The supported renderer-transfer baselines are Embeddium `0.3.18+mc1.18.2` and `0
 
 VRO includes client-side guards for several known stale-state crashes, including Powah cable replacement, Vault Integrations altar conduits, and Xaero's World Map cache writes. It also prevents The Vault's native grayscale shader from uploading startup values without its OpenGL program bound. These fixes do not change server behavior.
 
-An optional spatial dynamic-light engine supports held and dropped items, luminous entities, and resource-defined block entities. It is disabled by default and can be controlled in game with `/vro lights`.
-
 ## Update notices
 
 VRO checks its repository-owned update manifest in the background and never downloads or installs files. When an allowed release is available, it can show a small coordinated main-menu row and an occasional in-world reminder linking to this official CurseForge page.
@@ -71,7 +69,7 @@ Update checks are enabled by default, while displayed update types default to cr
 *   **Renderer-transfer baselines:** Embeddium 0.3.18/0.3.19 and Rubidium 0.5.6
 *   **Sophisticated Storage display path:** Sophisticated Storage 1.18.2-0.9.8.915 with Sophisticated Core 1.18.2-0.6.4.604
 
-Optional integrations load only when their target mod is present. VRO yields overlapping work when Entity Collision FPS Fix, BadOptimizations, Particle Core, Flerovium, Better Fps - Render Distance, or Dynamic Lights Reforged is installed.
+Optional integrations load only when their target mod is present. VRO yields overlapping work when Entity Collision FPS Fix, BadOptimizations, Particle Core, Flerovium, or Better Fps - Render Distance is installed.
 
 ## Installation
 
@@ -97,7 +95,6 @@ No server installation, world migration, cache deletion, or settings reset is re
 | <code>/vro chunks budget on|off|status</code> |Control supported Embeddium adaptive chunk pacing and diagnostics. |
 | <code>/vro storage on|off|status</code> |Control Sophisticated Storage display paths and diagnostics. |
 | <code>/vro culling</code>               |View or change vertical and horizontal terrain culling.        |
-| <code>/vro lights</code>                |View or change the optional dynamic-light engine.              |
 | <code>/vro create status</code>         |Show Create, Flywheel, shader-path, and culling status.        |
 | <code>/vro create shader_compat on|off|status</code> |Control Flywheel compatibility with Oculus shaders.            |
 

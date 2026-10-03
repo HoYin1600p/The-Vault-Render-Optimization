@@ -58,6 +58,7 @@ public abstract class SingleQuadParticleMixin extends Particle {
         }
 
         ci.cancel();
+        if (this.vro$reserveOnGpu(consumer, camera, partialTick)) return;
         ParticleBillboardGeometry geometry = this.vro$geometry(camera, partialTick);
         int light = this.getLightColor(partialTick);
         float minU = this.getU0();
@@ -70,6 +71,30 @@ public abstract class SingleQuadParticleMixin extends Particle {
         this.vro$write(consumer, geometry.x2(), geometry.y2(), geometry.z2(), minU, minV, light);
         this.vro$write(consumer, geometry.x3(), geometry.y3(), geometry.z3(), minU, maxV, light);
         ParticleDiagnostics.recordVroBillboard(false, this.getClass());
+    }
+
+    /** GPU particles: the same inputs vro$geometry and vro$write use, reserved instead of written. */
+    private boolean vro$reserveOnGpu(VertexConsumer consumer, Camera camera, float partialTick) {
+        if (consumer.getClass() != com.mojang.blaze3d.vertex.BufferBuilder.class
+                || !dev.hoyin1600p.vault_render_optimization.client.entitygpu.GpuEntityModels.particleFrameActive()) {
+            return false;
+        }
+        Vec3 cameraPosition = camera.getPosition();
+        float positionX = (float) (Mth.lerp(partialTick, this.xo, this.x) - cameraPosition.x());
+        float positionY = (float) (Mth.lerp(partialTick, this.yo, this.y) - cameraPosition.y());
+        float positionZ = (float) (Mth.lerp(partialTick, this.zo, this.z) - cameraPosition.z());
+        float angle = this.roll == 0.0F ? 0.0F : Mth.lerp(partialTick, this.oRoll, this.roll);
+        float size = this.getQuadSize(partialTick);
+        int light = this.getLightColor(partialTick);
+        int color = dev.hoyin1600p.vault_render_optimization.client.entitygpu.EntityVertexPacking.color(
+                this.rCol, this.gCol, this.bCol, this.alpha);
+        if (!dev.hoyin1600p.vault_render_optimization.client.entitygpu.GpuParticles.tryReserve(consumer,
+                positionX, positionY, positionZ, camera.getLeftVector(), camera.getUpVector(), angle, size,
+                this.getU0(), this.getU1(), this.getV0(), this.getV1(), color, light)) {
+            return false;
+        }
+        ParticleDiagnostics.recordVroBillboard(false, this.getClass());
+        return true;
     }
 
     private ParticleBillboardGeometry vro$geometry(Camera camera, float partialTick) {

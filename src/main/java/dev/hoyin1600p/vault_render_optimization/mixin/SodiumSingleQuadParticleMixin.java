@@ -69,6 +69,18 @@ public abstract class SodiumSingleQuadParticleMixin extends Particle {
         Vector3f left = camera.getLeftVector();
         Vector3f up = camera.getUpVector();
         float angle = this.roll == 0.0F ? 0.0F : Mth.lerp(partialTick, this.oRoll, this.roll);
+        if (consumer.getClass() == com.mojang.blaze3d.vertex.BufferBuilder.class
+                && dev.hoyin1600p.vault_render_optimization.client.entitygpu.GpuEntityModels.particleFrameActive()) {
+            float gpuSize = this.getQuadSize(partialTick);
+            int gpuLight = this.getLightColor(partialTick);
+            int gpuColor = ColorABGR.pack(this.rCol, this.gCol, this.bCol, this.alpha);
+            if (dev.hoyin1600p.vault_render_optimization.client.entitygpu.GpuParticles.tryReserve(consumer,
+                    positionX, positionY, positionZ, left, up, angle, gpuSize,
+                    this.getU0(), this.getU1(), this.getV0(), this.getV1(), gpuColor, gpuLight)) {
+                ParticleDiagnostics.recordVroBillboard(true, this.getClass());
+                return;
+            }
+        }
         ParticleBillboardGeometry geometry = ParticleBillboardGeometry.compute(
                 left.x(), left.y(), left.z(),
                 up.x(), up.y(), up.z(),

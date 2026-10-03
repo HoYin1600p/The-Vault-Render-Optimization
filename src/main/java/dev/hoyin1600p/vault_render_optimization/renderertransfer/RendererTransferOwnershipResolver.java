@@ -45,12 +45,7 @@ public final class RendererTransferOwnershipResolver {
     }
 
     static boolean isSupportedVersion(RendererFamily family, String version) {
-        if (version == null) {
-            return false;
-        }
-        return family == RendererFamily.EMBEDDIUM
-                && (version.startsWith("0.3.18") || version.equals("0.3.19+mc1.18.2"))
-                || family == RendererFamily.RUBIDIUM && version.startsWith("0.5.6");
+        return ValidatedRendererVersions.supports(family, version);
     }
 
     private static RendererTransferDecision yielded(RendererTransferFeature feature, String reason) {

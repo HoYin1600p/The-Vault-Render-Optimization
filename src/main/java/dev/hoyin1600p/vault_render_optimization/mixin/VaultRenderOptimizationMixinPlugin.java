@@ -6,10 +6,13 @@ import dev.hoyin1600p.vault_render_optimization.backport.ModernFixOwnership;
 import dev.hoyin1600p.vault_render_optimization.backport.RenderBackportFeature;
 import dev.hoyin1600p.vault_render_optimization.backport.RenderBackportCompatibility;
 import dev.hoyin1600p.vault_render_optimization.backport.RenderBackportOwnershipRegistry;
+import dev.hoyin1600p.vault_render_optimization.client.entitygpu.GpuEntityAudit;
 import dev.hoyin1600p.vault_render_optimization.client.particle.ParticleOptimizationState;
+import dev.hoyin1600p.vault_render_optimization.client.particle.ParticleCollisionState;
 import dev.hoyin1600p.vault_render_optimization.client.particle.ParticleMixinSelection;
 import dev.hoyin1600p.vault_render_optimization.client.sophisticatedstorage.SophisticatedStorageCompatibility;
 import dev.hoyin1600p.vault_render_optimization.client.chunk.ChunkUpdateBackend;
+import dev.hoyin1600p.vault_render_optimization.compat.immediatelyfast.VroImmediatelyFast;
 import dev.hoyin1600p.vault_render_optimization.client.chunk.ChunkUpdateState;
 import dev.hoyin1600p.vault_render_optimization.client.chunk.sorting.IndexSortCompatibility;
 import dev.hoyin1600p.vault_render_optimization.client.chunk.sorting.IndexSortState;
@@ -18,6 +21,7 @@ import dev.hoyin1600p.vault_render_optimization.client.chunk.budget.AdaptiveBudg
 import dev.hoyin1600p.vault_render_optimization.renderertransfer.BootstrapRendererTransferConfig;
 import dev.hoyin1600p.vault_render_optimization.renderertransfer.RendererFamily;
 import dev.hoyin1600p.vault_render_optimization.renderertransfer.RendererFamilyDetector;
+import dev.hoyin1600p.vault_render_optimization.renderertransfer.RendererTransferBytecode;
 import dev.hoyin1600p.vault_render_optimization.renderertransfer.RendererTransferFeature;
 import dev.hoyin1600p.vault_render_optimization.renderertransfer.RendererTransferOwnershipRegistry;
 import java.lang.reflect.Field;
@@ -51,6 +55,12 @@ public final class VaultRenderOptimizationMixinPlugin implements IMixinConfigPlu
             "ToastComponentMixin",
             "TutorialMixin"
     );
+    // Mods that replace or parallelize ParticleEngine ticking own the whole tick loop.
+    private static final Set<String> PARTICLE_TICK_OWNER_MOD_IDS = Set.of(
+            "particle_core",
+            "flerovium",
+            "asyncparticles"
+    );
     private static final Set<String> PARTICLE_LIGHT_CACHE_MOD_IDS = Set.of(
             "particle_core",
             "flerovium"
@@ -70,13 +80,6 @@ public final class VaultRenderOptimizationMixinPlugin implements IMixinConfigPlu
             "rubidium",
             "sodium"
     );
-    private static final Set<String> DYNAMIC_LIGHT_MIXINS = Set.of(
-            "EntityDynamicLightMixin",
-            "EntityRendererDynamicLightMixin",
-            "LevelDynamicLightMixin",
-            "LevelRendererDynamicLightMixin",
-            "MinecraftDynamicLightMixin"
-    );
     private static final Set<String> UNOBTANIUM_EQUIVALENT_MIXINS = Set.of(
             "EmptyItemStackEntityReferenceMixin",
             "ISpawnerRendererMixin",
@@ -86,18 +89,25 @@ public final class VaultRenderOptimizationMixinPlugin implements IMixinConfigPlu
     private static final Map<String, String> OPTIONAL_MIXIN_MODS = Map.ofEntries(
             Map.entry("AltarConduitClientCrashGuardMixin", "vaultintegrations"),
             Map.entry("ClientAbilityDataMixin", "the_vault"),
+            Map.entry("ClientPacketListenerFarsightMixin", "farsight_view"),
+            Map.entry("ForgetLevelChunkPacketFarsightMixin", "farsight_view"),
             Map.entry("CreateArmBoundsMixin", "create"),
             Map.entry("CreateBeltBoundsMixin", "create"),
             Map.entry("CreateCachedRenderBoundsAccessor", "create"),
             Map.entry("CreateBlockEntityRenderHelperMixin", "create"),
             Map.entry("CreateContraptionRenderDispatcherMixin", "create"),
+            Map.entry("CreateContraptionRenderingWorldMixin", "create"),
             Map.entry("CreateDeployerBoundsMixin", "create"),
             Map.entry("CreateFlwContraptionMixin", "create"),
+            Map.entry("FlywheelBackendOverrideMixin", "flywheel"),
             Map.entry("CreatePortableStorageInterfaceBoundsMixin", "create"),
             Map.entry("CreateRollerBoundsMixin", "create"),
             Map.entry("CreateSbbContraptionManagerMixin", "create"),
             Map.entry("Matrix4fAccessor", "create"),
             Map.entry("ElixirOrbParticleMixin", "the_vault"),
+            Map.entry("NovaCloudParticleRandomMixin", "the_vault"),
+            Map.entry("NovaExplosionProviderRandomMixin", "the_vault"),
+            Map.entry("NovaSpeedParticleRandomMixin", "the_vault"),
             Map.entry("ISpawnerRendererMixin", "ispawner"),
             Map.entry("CreateAdditionEnergyNetworkManagerAccessor", "createaddition"),
             Map.entry("PowahCableNetAccessor", "powah"),
@@ -215,6 +225,11 @@ public final class VaultRenderOptimizationMixinPlugin implements IMixinConfigPlu
                 !modDiscoveryFailed && (rubidiumLoaded || embeddiumLoaded || sodiumLoaded),
                 !modDiscoveryFailed && fleroviumLoaded
         );
+        boolean particleCollisionCompatible = !modDiscoveryFailed
+                && PARTICLE_LIGHT_CACHE_MOD_IDS.stream().noneMatch(this::isModLoaded);
+        ParticleCollisionState.configure(particleCollisionCompatible, particleCollisionCompatible
+                ? "exact cached block collision; vanilla response retained"
+                : "unknown mod discovery or Particle Core/Flerovium ownership");
 
         BootstrapRenderBackportConfig.capture();
         RenderBackportOwnershipRegistry.initialize(
@@ -254,6 +269,19 @@ public final class VaultRenderOptimizationMixinPlugin implements IMixinConfigPlu
 
     @Override
     public boolean shouldApplyMixin(String targetClassName, String mixinClassName) {
+        if (mixinClassName.endsWith(".FrustumFastloadMixin")) {
+            return physicalClient && !modDiscoveryFailed && isModLoaded("fastload");
+        }
+        if (mixinClassName.contains(".entitygpu.")) {
+            // Passive until the runtime gate (config, capabilities, self-test, audit) turns the path on.
+            return physicalClient && !modDiscoveryFailed && !resourceExists("net.optifine.Config")
+                    && !resourceExists("optifine.OptiFineTransformationService");
+        }
+        if (mixinClassName.endsWith(".HudFontGeometryMixin") || mixinClassName.endsWith(".HudFontGenerationMixin")) {
+            return physicalClient && !modDiscoveryFailed && !isModLoaded("modernui")
+                    && !VroImmediatelyFast.ownsText() && !isModLoaded("exordium")
+                    && !isModLoaded("smoothfont");
+        }
         if (mixinClassName.contains(".sophisticatedstorage.")) {
             return physicalClient && !modDiscoveryFailed && sophisticatedStorageCompatible;
         }
@@ -293,6 +321,16 @@ public final class VaultRenderOptimizationMixinPlugin implements IMixinConfigPlu
             return false;
         }
 
+        if (simpleName.equals("ParticleEngineCompactionMixin") || simpleName.equals("ParticleRandomMixin")
+                || simpleName.equals("ClientPacketListenerParticleRandomMixin")
+                || simpleName.equals("ParticleProviderCacheMixin")) {
+            return !modDiscoveryFailed && PARTICLE_TICK_OWNER_MOD_IDS.stream().noneMatch(this::isModLoaded);
+        }
+
+        if (simpleName.equals("ParticleCollisionMixin") || simpleName.equals("ParticleEngineCollisionScopeMixin")) {
+            return !modDiscoveryFailed && PARTICLE_LIGHT_CACHE_MOD_IDS.stream().noneMatch(this::isModLoaded);
+        }
+
         if (simpleName.equals("ParticleLightCacheMixin")
                 && PARTICLE_LIGHT_CACHE_MOD_IDS.stream().anyMatch(this::isModLoaded)) {
             return false;
@@ -321,10 +359,6 @@ public final class VaultRenderOptimizationMixinPlugin implements IMixinConfigPlu
             if (SODIUM_SECTION_CULLING_MIXINS.contains(simpleName)) {
                 return SODIUM_RENDER_MOD_IDS.stream().anyMatch(this::isModLoaded);
             }
-        }
-
-        if (DYNAMIC_LIGHT_MIXINS.contains(simpleName) && isModLoaded("dynamiclightsreforged")) {
-            return false;
         }
 
         if (UNOBTANIUM_EQUIVALENT_MIXINS.contains(simpleName) && isModLoaded("unobtainium")) {
@@ -450,7 +484,16 @@ public final class VaultRenderOptimizationMixinPlugin implements IMixinConfigPlu
                 return "the validated Embeddium CodeChickenLib bridge is absent";
             }
         }
-        return null;
+        return RendererTransferBytecode.blocker(feature, this::resourceBytes);
+    }
+
+    private byte[] resourceBytes(String path) {
+        try {
+            var resource = loadingModList.findResource(path);
+            return resource == null ? null : java.nio.file.Files.readAllBytes(resource);
+        } catch (java.io.IOException failure) {
+            throw new java.io.UncheckedIOException(failure);
+        }
     }
 
     private RendererFamily resolveRendererFamily() {
@@ -508,5 +551,19 @@ public final class VaultRenderOptimizationMixinPlugin implements IMixinConfigPlu
 
     @Override
     public void postApply(String targetClassName, ClassNode targetClass, String mixinClassName, IMixinInfo mixinInfo) {
+        if (mixinClassName.endsWith(".FrustumFastloadMixin")) {
+            dev.hoyin1600p.vault_render_optimization.client.render.FastloadFrustum.audit(targetClass);
+        }
+        if (mixinClassName.contains(".entitygpu.") && !mixinClassName.endsWith("Accessor")
+                && !mixinClassName.endsWith(".LevelRendererGpuMixin")
+                && !mixinClassName.endsWith(".BufferSourceGpuHintMixin")
+                && !mixinClassName.endsWith(".OculusBufferSourceGpuHintMixin")
+                && !mixinClassName.endsWith(".ImmediatelyFastBufferSourceGpuHintMixin")
+                && !mixinClassName.endsWith(".OculusSegmentedBufferBuilderGpuMixin")
+                && !mixinClassName.endsWith(".GeoEntityRendererGpuMixin")
+                && !mixinClassName.endsWith(".ArsGeoEntityRendererGpuMixin")
+                && !mixinClassName.endsWith(".GeoCubeGpuSlotMixin")) {
+            GpuEntityAudit.audit(targetClass.name, targetClass, mixinClassName);
+        }
     }
 }

@@ -153,7 +153,7 @@ public class GlslTransformerShaderPatcher extends ShaderPatcherBase {
 
         if (VroFlywheelShaderCompat.isUsingExtendedVertexFormat()) {
             replaceReferenceExpressionsWithCorrectSwizzle(root, transformer, "at_tangent", "_flw_at_tangent", atTangentDim);
-            replaceReferenceExpressionsWithCorrectSwizzle(root, transformer, "mc_Entity", "_flw_v_mc_Entity", atTangentDim);
+            replaceReferenceExpressionsWithCorrectSwizzle(root, transformer, "mc_Entity", "_flw_v_mc_Entity", mcEntityDim);
             replaceReferenceExpressionsWithCorrectSwizzle(root, transformer, "mc_midTexCoord", "_flw_mc_midTexCoord", mcMidTexCoordDim);
             replaceReferenceExpressionsWithCorrectSwizzle(root, transformer, "at_midBlock", "_flw_at_midBlock", atMidBlockDim);
         } else {

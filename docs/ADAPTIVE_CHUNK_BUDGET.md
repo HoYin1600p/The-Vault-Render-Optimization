@@ -12,9 +12,16 @@ Revision 2 is a default-on experiment on supported renderers. It aims to pace up
 that already has geometry without delaying initial terrain. This is not yet a
 verified runtime fix or a demonstrated performance improvement.
 
-Supported: exact inspected Embeddium 0.3.18 and HoYin1600p's 0.3.19 fork.
-Eleven input classes are fingerprinted: nine shared index-sort contracts plus
-the update-type enum and base task. Unknown bytecode, Rubidium, vanilla and
+Supported: exact inspected Embeddium 0.3.18 and HoYin1600p's forks (0.3.19,
+the post-removal `0.3.18-git.ced34c84` build, and the custom build
+`0.3.19-git.7b0cf676+mc1.18.2`). The 7b0cf676 build changes only `ChunkBuilder`
+(worker wake-up in `getNextJob`) and its nested classes. Its hash
+`7F0AFD51...306B0A11` is accepted alongside the prior `78D52451...4540`. The
+update-type and base-task hashes are unchanged. The `buildQueue` accessor and
+`scheduleDeferred` redirect still target unchanged members.
+Thirteen input classes are fingerprinted: eleven shared index-sort contracts
+(including `ChunkBuilder$WrappedTask` and `$WorkerRunnable`) plus the
+update-type enum and base task. Unknown bytecode, Rubidium, vanilla and
 ambiguous renderers do not select these hooks. Input-JAR gates cannot guarantee
 compatibility with later third-party mixin transformations.
 
@@ -33,7 +40,11 @@ compatibility with later third-party mixin transformations.
 ## Loading and backlog guard
 
 1. INITIAL_BUILD admissions always retain the original native budget, and their
-   tasks are not wrapped for budget timing.
+   tasks are not wrapped for budget timing. IMPORTANT_REBUILD and IMPORTANT_SORT
+   (the player's own block edits and nearby sorts) also keep the native
+   admission budget. They are still timed and still spend the frame's
+   allowance, so fewer background updates follow. Their completed results use
+   the normal paced upload queue (results do not record their update type).
 2. Initial requests or completed results whose section is not built disable pacing.
    Zero-byte initial results count too: accepting them changes section state.
 3. Startup and detected loading latch a conservative barrier until queued workers,

@@ -45,6 +45,52 @@ ModernFix's STB atlas stitcher adapts work from GTNewHorizons/lwjgl3ify:
 
 VRO preserves that transitive source and license attribution.
 
+### ImmediatelyFast Reforged (built-in batching and text/map optimizations)
+
+VRO contains a relocated copy of ImmediatelyFast Reforged for Minecraft Forge 1.18.2.
+
+- Project: ImmediatelyFast by RK_01/RaphiMC and contributors; Forge port ImmediatelyFast
+  Reforged by CCr4ft3r
+- Source: https://github.com/CCr4ft3r/ImmediatelyFastReforged, branch `1.18.2`, commit
+  `53d41ab043eacf4664be70d54b18b23b690e537e` (mod version 1.1.10)
+- Copyright: 2023 RK_01/RaphiMC and contributors
+- License: LGPL-3.0-or-later
+- Location: `src/main/java/dev/hoyin1600p/vault_render_optimization/compat/immediatelyfast/`
+
+Every copied file keeps its original license header and carries a VRO modification note. VRO
+changes: package relocation, VRO-owned configuration file and startup decision, the built-in copy
+is skipped when the standalone `immediatelyfast` mod is installed, the bundled Reflect library is
+replaced with `MethodHandles`, and a failed Oculus lookup disables that path instead of exiting.
+The access-transformer entries are merged into VRO's. The complete license text is retained at
+`docs/licenses/immediatelyfast-LGPL-3.0-or-later.txt` and embedded in the runnable jar.
+
+### Accelerated Rendering (GPU entity models)
+
+- Project: Accelerated Rendering by Argon4W
+- Source: https://github.com/Argon4W/AcceleratedRendering, branch `1.20.1`, commit
+  `11f149ac716ec757907209dc77b04baaa3f915fc`
+- Copyright: 2023 Argon4W
+- License: MIT
+- Location: `src/main/java/dev/hoyin1600p/vault_render_optimization/client/entitygpu/`,
+  `mixin/entitygpu/ModelPartGpuMixin.java` and
+  `src/main/resources/dev/hoyin1600p/vault_render_optimization/client/entitygpu/model_instance_expand.comp`
+
+Adapted: the idea of caching each `ModelPart`'s cubes once as a GPU mesh and expanding per-part
+instances with a compute shader, the structure of `features/modelparts/mixins/ModelPartMixin.java`,
+parts of the buffer handling in `core/meshes/MeshBuffer.java` and
+`core/buffers/accelerated/AcceleratedBufferSource.java`, and the vertex layout of
+`shaders/core/uploading/entity_mesh_uploading_shader.compute`. Adapted files carry a header naming
+their upstream files and a VRO modification note. VRO changes: ported to Forge 1.18.2 official
+mappings; GLSL 4.30 or GLSL 1.50 with ARB extensions instead of 4.60; no direct state access,
+persistent mapping, indirect draws or culling; the vertices are reserved in vanilla's own entity
+buffer and written into the vertex buffer vanilla uploads, so vanilla's draw, order and render state
+are unchanged; the shader reproduces vanilla's float arithmetic bit for bit (AR's `normalize` and
+`packSnorm` are not used), checked by a startup self-test; a CPU fill and a mixin audit fail closed.
+The mixin audit, capability decision, hole bookkeeping, CPU fallback and tests are original VRO
+code. No item, text, GUI, Iris or third-party-mod compatibility code from AR is included. The
+complete license text is retained at `docs/licenses/accelerated-rendering-MIT.txt` and embedded
+in the runnable jar.
+
 ### Flerovium particle billboard geometry
 
 VRO's particle geometry helper and ordinary-particle render injections adapt
@@ -206,21 +252,6 @@ Fps - Render Distance is included. VRO uses its own camera-to-section bounds,
 vanilla render context, Embeddium/Rubidium render-list filter, configuration,
 and coexistence gate.
 
-### Dynamic Lights Reforged
-
-- Project: Dynamic Lights Reforged, based on LambDynamicLights by LambdAurora
-- Source: https://github.com/TeamDeusVult/Dynamic-Lights-Reforged
-- Inspected revision: `d85b337f8f7af328d78e8d380f19fc9b95e93318`
-- License observed at inspection: MIT
-- Design influence: expected dynamic-light sources, resource-defined item
-  luminance, water sensitivity, lightmap combination, and terrain invalidation.
-
-VRO does not include a Dynamic Lights Reforged source file. Its engine was
-implemented independently using 16-block spatial cells, independent per-source
-scheduling, deduplicated end-of-tick section rebuilds, explicit world cleanup,
-Oculus-aware policy, diagnostics, and a startup coexistence gate. VRO does not
-apply its dynamic-light mixins when `dynamiclightsreforged` is installed.
-
 ### Unobtanium world-retention research
 
 Unobtanium's Create Addition and Powah memory-leak work identified these mods'
@@ -365,6 +396,26 @@ JAR by the existing build. Upstream copyrights and license remain intact.
 
 ## Compatibility behavior inspected
 
+### Astra development additions
+
+`SortGeometryCache` adapts the triangle-center selection and stable distance
+ordering of Embeddium 0.3.18 `ChunkBufferSorter`, inspected at source revision
+`d28cc2f5aa71014336759d9f81c19d3664acad73`, LGPL-3.0-only. Embeddium/Sodium-lineage
+attribution and the bundled LGPL/GPL license text above also apply to this file.
+Bounded weak-identity storage and cache output construction are VRO additions.
+Current Sodium's separately licensed source is not used.
+
+ImmediatelyFast (`94fd5b187290fd1a104b69276920ff43f6b73fee`) and its LGPL-3.0-or-later
+Forge port ImmediatelyFastReforged (`903a113b2cdef681d39d42f44599de9e8c39088d`)
+were conceptual references for reducing repeated text/buffer work; their source
+is not bundled or copied into `CountGlyphMesh`. That helper is original VRO work
+used with the separately attributed Sophisticated Storage layout above.
+
+Particle Core (`1151fe6aca4e1c3b62459de3e3a99ec32af2ac99`, MIT) was a research
+reference for particle collision costs. `EmptySectionCollisionProof` is an
+independent sufficient-space test, not adapted Particle Core movement code.
+VRO remains AGPL-3.0-or-later; component licenses and existing notices are unchanged.
+
 Bobby (Johni0702 and Forge backport contributors), LGPL-3.0-or-later, revision
 `57ea55a9b365dfc2338214746ed3fdb024b34ea2`: inspected `FakeChunk`,
 `FakeChunkManager` and its Sodium chunk-status listener for normal
@@ -385,3 +436,9 @@ and no Powah source file is included.
 
 The complete research ledger, including rejected and unimplemented projects,
 is in `docs/PERFORMANCE_BACKPORT_RESEARCH.md`.
+
+The Astra HUD glyph reuse and CPU-native retention hysteresis are original VRO code under the project license.
+The existing Embeddium-derived vertex-buffer mixin retains its upstream header
+and notices. No Exordium source is copied or adapted; its protected implementation
+and reduced-refresh design are not used. No new third-party runtime library,
+artwork, GPU allocator or font implementation is bundled by these additions.

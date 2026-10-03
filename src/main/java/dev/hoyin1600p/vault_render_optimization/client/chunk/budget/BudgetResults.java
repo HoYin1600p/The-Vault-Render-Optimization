@@ -10,16 +10,17 @@ import me.jellysquid.mods.sodium.client.render.chunk.compile.ChunkBuildResult;
 public final class BudgetResults {
     private record Seen(long at, long bytes) { }
     private Map<ChunkBuildResult, Seen> seen = new IdentityHashMap<>();
+    private Map<ChunkBuildResult, Seen> scratch = new IdentityHashMap<>();
     public record Snapshot(long bytes, int count, long oldestWait, boolean unbuiltTerrain) { }
 
     public Snapshot inspect(Queue<ChunkBuildResult> queue, long now) {
-        Map<ChunkBuildResult, Seen> live = new IdentityHashMap<>();
+        Map<ChunkBuildResult, Seen> live = scratch;
         long bytes = 0, oldest = now;
         boolean unbuilt = false;
         for (ChunkBuildResult result : queue) {
             if (live.size() == 4096) {
                 // Saturated native queue: report overload, bound observation overhead, keep native ownership.
-                seen = live;
+                finishInspection();
                 return new Snapshot(Long.MAX_VALUE / 4, 4097, Math.max(0, now - oldest), true);
             }
             Seen entry = seen.get(result);
@@ -29,8 +30,16 @@ public final class BudgetResults {
             bytes += entry.bytes;
             oldest = Math.min(oldest, entry.at);
         }
-        seen = live;
+        finishInspection();
         return new Snapshot(bytes, live.size(), Math.max(0, now - oldest), unbuilt);
+    }
+
+    private void finishInspection() {
+        Map<ChunkBuildResult, Seen> previous = seen;
+        seen = scratch;
+        scratch = previous;
+        // Release consumed payload references immediately, while retaining bounded table capacity.
+        scratch.clear();
     }
 
     public static boolean isUnbuiltTerrain(ChunkBuildResult result) {
@@ -45,7 +54,7 @@ public final class BudgetResults {
     }
 
     public void forget(ChunkBuildResult result) { seen.remove(result); }
-    public void clear() { seen.clear(); }
+    public void clear() { seen.clear(); scratch.clear(); }
 
     /** Native payload bytes only; cached heap geometry and driver allocations are not included. */
     public static long bytes(ChunkBuildResult result) {

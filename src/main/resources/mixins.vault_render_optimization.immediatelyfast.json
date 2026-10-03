@@ -1,0 +1,33 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "dev.hoyin1600p.vault_render_optimization.compat.immediatelyfast.injection.mixins",
+  "compatibilityLevel": "JAVA_17",
+  "refmap": "mixins.vault_render_optimization.refmap.json",
+  "client": [
+    "core.MixinTextureManager",
+    "fast_text_lookup.ISinglePreparationResourceReloader",
+    "font_atlas_resizing.MixinGlyphAtlasTexture",
+    "hud_batching.MixinInGameHud",
+    "hud_batching.consumer.MixinTextRenderer",
+    "core.MixinBufferBuilder",
+    "core.MixinDebugHud",
+    "core.MixinRenderLayer",
+    "core.MixinVertexConsumerProvider",
+    "fast_buffer_upload.MixinVertexBuffer",
+    "fast_text_lookup.MixinFontManager",
+    "hud_batching.MixinDebugHud",
+    "hud_batching.MixinMinecraftClient",
+    "hud_batching.consumer.MixinDrawableHelper",
+    "hud_batching.consumer.MixinItemRenderer",
+    "map_atlas_generation.MixinMapRenderer",
+    "map_atlas_generation.MixinMapRenderer_MapTexture"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "overwrites": {
+    "requireAnnotations": true
+  },
+  "plugin": "dev.hoyin1600p.vault_render_optimization.compat.immediatelyfast.injection.VroImmediatelyFastMixinPlugin"
+}

@@ -1,10 +1,12 @@
 package dev.hoyin1600p.vault_render_optimization.mixin;
 
+import dev.hoyin1600p.vault_render_optimization.client.shader.UniformLocationCache;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL20;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Pseudo;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -14,6 +16,14 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public abstract class VaultNativeShaderUniformMixin {
     @Shadow
     private int loadedShader;
+
+    @Unique private UniformLocationCache vro$uniformLocations;
+
+    @Inject(method = {"loadShader", "destroy"}, at = @At("HEAD"), remap = false, require = 2)
+    private void vro$invalidateUniformLocations(CallbackInfo ci) {
+        // loadShader is called from the target constructor: initialize lazily.
+        if (vro$uniformLocations != null) vro$uniformLocations.clear();
+    }
 
     @Inject(method = "applyFloatValue", at = @At("HEAD"), cancellable = true, remap = false, require = 0)
     private void vault_render_optimization$bindProgramForFloatUniform(
@@ -33,7 +43,9 @@ public abstract class VaultNativeShaderUniformMixin {
         }
 
         try {
-            int location = GL20.glGetUniformLocation(loadedShader, uniformName);
+            if (vro$uniformLocations == null) vro$uniformLocations = new UniformLocationCache();
+            int location = vro$uniformLocations.get(loadedShader, uniformName,
+                    (program, name) -> GL20.glGetUniformLocation(program, name));
             GL20.glUniform1f(location, value);
         } finally {
             if (restoreProgram) {

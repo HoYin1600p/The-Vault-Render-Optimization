@@ -38,6 +38,14 @@ class TerrainLoadingGuardTest {
         assertTrue(guard.mayLimit(0));
     }
 
+    @Test void importantUpdatesFromPlayerEditsAreNeverPaced() {
+        pacing();
+        assertFalse(guard.mayLimit(TerrainLoadingGuard.IMPORTANT_REBUILD));
+        assertFalse(guard.mayLimit(TerrainLoadingGuard.IMPORTANT_SORT));
+        assertEquals(4, TerrainLoadingGuard.IMPORTANT_REBUILD);
+        assertEquals(1, TerrainLoadingGuard.IMPORTANT_SORT);
+    }
+
     @Test void initialResultsAndTheirWorkersKeepTheNativePathUntilFullyDrained() {
         pacing();
         update(516, new int[5], 0, 2, 1, 64, 0, true);

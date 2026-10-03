@@ -47,8 +47,6 @@ An optimization build is not release-ready until it has exercised:
 - model-heavy resource reloads with FerriteCore 4.2.2 present;
 - vertical section culling in tall rooms, mountains, caves, the Nether, and
   spectator flight, plus opt-in horizontal culling at its distance boundary;
-- dynamic lights off by default, then enabled with held, dropped, entity, and
-  resource-defined block-entity sources, including source removal and movement;
 - stationary and moving Create contraptions above and below the 512-block mesh
   threshold, including a 1,600+ block glued structure viewed from every side;
 - Create belts, mechanical arms, deployers, portable storage interfaces, and
@@ -74,8 +72,7 @@ An optimization build is not release-ready until it has exercised:
 - window resizing, fullscreen changes, and repeated shader toggles.
 
 Terrain-culling tests must confirm that chunk loading and Distant Horizons
-storage remain unchanged. Dynamic-light shader tests must confirm the default
-pause policy and the explicit opt-in path separately.
+storage remain unchanged.
 
 Create tests must confirm identical geometry, textures, lighting, transparency,
 and animation on both sides of the frustum boundary. Record the one-time mesh

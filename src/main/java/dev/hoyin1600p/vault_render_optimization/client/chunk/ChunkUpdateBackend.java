@@ -1,6 +1,7 @@
 package dev.hoyin1600p.vault_render_optimization.client.chunk;
 
 import dev.hoyin1600p.vault_render_optimization.renderertransfer.RendererFamily;
+import dev.hoyin1600p.vault_render_optimization.renderertransfer.ValidatedRendererVersions;
 
 /** Mutually exclusive startup selection. No renderer classes are loaded by this selector. */
 public enum ChunkUpdateBackend {
@@ -16,14 +17,10 @@ public enum ChunkUpdateBackend {
         if (family == RendererFamily.NONE) {
             return VANILLA;
         }
-        if (family == RendererFamily.EMBEDDIUM && version != null
-                && (version.equals("0.3.18+mc1.18.2") || version.equals("0.3.19+mc1.18.2"))) {
-            return EMBEDDIUM;
+        if (!ValidatedRendererVersions.supports(family, version)) {
+            return BLOCKED;
         }
-        if (family == RendererFamily.RUBIDIUM && "0.5.6".equals(version)) {
-            return RUBIDIUM;
-        }
-        return BLOCKED;
+        return family == RendererFamily.EMBEDDIUM ? EMBEDDIUM : RUBIDIUM;
     }
 
     public boolean usesSodiumScheduler() {

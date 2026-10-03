@@ -21,7 +21,18 @@ public final class IndexSortCompatibility {
             Map.entry("render/chunk/compile/ChunkBufferSorter", Set.of("290922AB29DAF3502FC982BDF780196DE016315646FF6C11EBB53144E98B2A4E")),
             Map.entry("render/chunk/compile/ChunkBufferSorter$SortBuffer", Set.of("8D2A35DA6B99B741AB10FF9C02FF8DE8B36C030910E358930D3E1A0569B72C27")),
             Map.entry("render/chunk/compile/ChunkBuildResult", Set.of("99834D162F87542A57AD25FECF4886EA63F48E50CFDE1E74D0FC1D9F752A85BB")),
-            Map.entry("render/chunk/compile/ChunkBuilder", Set.of("78D5245193022E2E4B722DFD49E1AB6523C3D8F1FE7D7D4E43960A39C96C4540")),
+            Map.entry("render/chunk/compile/ChunkBuilder", Set.of(
+                    "78D5245193022E2E4B722DFD49E1AB6523C3D8F1FE7D7D4E43960A39C96C4540",
+                    // Embeddium 0.3.19-git.7b0cf676: getNextJob worker wake-up change only.
+                    "7F0AFD51E4D9A54CBFABF69553579640ADCFD7AC96CF71FCC917719E306B0A11")),
+            // VRO reads WrappedTask's future/cancel fields and relies on WorkerRunnable's builder accounting.
+            // 7b0cf676 differs only in line-number tables (javap -c identical).
+            Map.entry("render/chunk/compile/ChunkBuilder$WrappedTask", Set.of(
+                    "C2E3530406C3331006A8ED5B8FBFFEC700F72D76665EC6EC5F4D72630D2C4218",
+                    "F93F3B394CCCF81BCCF3B8EF3DF4759013A60940765D5EB7B646FB26ECF33CFF")),
+            Map.entry("render/chunk/compile/ChunkBuilder$WorkerRunnable", Set.of(
+                    "CE07DD067538AA4E13B91A91711F23CC3392C2FF5A49D33987F87A8C6FD24803",
+                    "73F106740B2362FDD11806CC0436B826A88543A36CA0D8CDE270756D37F174BC")),
             Map.entry("render/chunk/data/ChunkMeshData", Set.of("8F5559B51505027B4703C17FB0DC327F0C83A38850243E71CEB1C6D76B791038"))
     );
 

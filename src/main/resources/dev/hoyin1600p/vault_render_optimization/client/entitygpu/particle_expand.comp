@@ -1,0 +1,68 @@
+// VRO GPU particle quads (HoYin1600p, 2026). GLSL 4.30 or 1.50 + ARB extensions: GpuEntityBackend prepends
+// the #version/#extension header (ARB_gpu_shader5 provides fma). One thread per particle record expands the
+// four DefaultVertexFormat.PARTICLE vertices VRO's billboard writers produce, repeating
+// ParticleBillboardGeometry.computeRolled bit for bit: every multiply-add is a precise fma (one rounding, like
+// Java's Math.fma) and every other operation keeps Java's order. Layout constants must match ParticleRecord.
+
+layout(local_size_x = 64) in;
+
+layout(std430) buffer Particles { uint particles[]; };
+layout(std430) buffer Vertices { uint vertices[]; };
+
+uniform uint particleBase;
+uniform uint particleCount;
+uniform vec3 cameraLeft;
+uniform vec3 cameraUp;
+
+const uint RECORD_WORDS = 14u;
+const uint VERTEX_WORDS = 7u;
+
+float word(uint index) {
+    return uintBitsToFloat(particles[index]);
+}
+
+void emit(uint o, float x, float y, float z, uint u, uint v, uint color, uint light) {
+    vertices[o] = floatBitsToUint(x);
+    vertices[o + 1u] = floatBitsToUint(y);
+    vertices[o + 2u] = floatBitsToUint(z);
+    vertices[o + 3u] = u;
+    vertices[o + 4u] = v;
+    vertices[o + 5u] = color;
+    vertices[o + 6u] = light;
+}
+
+void main() {
+    uint p = particleBase + gl_GlobalInvocationID.x;
+    if (p >= particleCount) return;
+    uint r = p * RECORD_WORDS;
+    float px = word(r), py = word(r + 1u), pz = word(r + 2u);
+    float size = word(r + 3u);
+    float s = word(r + 4u), c = word(r + 5u);
+    bool rolled = particles[r + 6u] != 0u;
+
+    precise float lx = cameraLeft.x, ly = cameraLeft.y, lz = cameraLeft.z;
+    precise float ux = cameraUp.x, uy = cameraUp.y, uz = cameraUp.z;
+    if (rolled) {
+        // Math.fma(cos, left, sin * up) and Math.fma(-sin, left, cos * up): the product is rounded first.
+        precise float su_x = s * ux, su_y = s * uy, su_z = s * uz;
+        precise float cu_x = c * ux, cu_y = c * uy, cu_z = c * uz;
+        precise float rlx = fma(c, lx, su_x), rly = fma(c, ly, su_y), rlz = fma(c, lz, su_z);
+        precise float rux = fma(-s, lx, cu_x), ruy = fma(-s, ly, cu_y), ruz = fma(-s, lz, cu_z);
+        lx = rlx; ly = rly; lz = rlz;
+        ux = rux; uy = ruy; uz = ruz;
+    }
+    precise float ax = lx + ux, ay = ly + uy, az = lz + uz;       // left + up
+    precise float bx = -lx + ux, by = -ly + uy, bz = -lz + uz;    // -left + up
+    precise float x0 = fma(ax, -size, px), y0 = fma(ay, -size, py), z0 = fma(az, -size, pz);
+    precise float x1 = fma(bx, size, px), y1 = fma(by, size, py), z1 = fma(bz, size, pz);
+    precise float x2 = fma(ax, size, px), y2 = fma(ay, size, py), z2 = fma(az, size, pz);
+    precise float x3 = fma(bx, -size, px), y3 = fma(by, -size, py), z3 = fma(bz, -size, pz);
+
+    uint minU = particles[r + 7u], maxU = particles[r + 8u], minV = particles[r + 9u], maxV = particles[r + 10u];
+    uint color = particles[r + 11u], light = particles[r + 12u];
+    uint o = particles[r + 13u];
+    emit(o, x0, y0, z0, maxU, maxV, color, light);
+    emit(o + VERTEX_WORDS, x1, y1, z1, maxU, minV, color, light);
+    emit(o + 2u * VERTEX_WORDS, x2, y2, z2, minU, minV, color, light);
+    emit(o + 3u * VERTEX_WORDS, x3, y3, z3, minU, maxV, color, light);
+}

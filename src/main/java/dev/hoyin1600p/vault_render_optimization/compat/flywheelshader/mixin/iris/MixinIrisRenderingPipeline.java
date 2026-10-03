@@ -17,6 +17,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import dev.hoyin1600p.vault_render_optimization.compat.flywheelshader.accessors.IrisRenderingPipelineAccessor;
 import dev.hoyin1600p.vault_render_optimization.compat.flywheelshader.FlywheelShaderCompatState;
+import dev.hoyin1600p.vault_render_optimization.compat.flywheelshader.compiler.IrisProgramCompilerBase;
 
 import java.io.IOException;
 
@@ -40,6 +41,7 @@ public abstract class MixinIrisRenderingPipeline implements IrisRenderingPipelin
     @Inject(method = "destroy", at = @At("HEAD"), remap = false)
     private void vroFlywheel$destroy(CallbackInfo callbackInfo) {
         FlywheelShaderCompatState.endPipeline(this);
+        IrisProgramCompilerBase.forgetPipeline((NewWorldRenderingPipeline) (Object) this);
     }
 
 

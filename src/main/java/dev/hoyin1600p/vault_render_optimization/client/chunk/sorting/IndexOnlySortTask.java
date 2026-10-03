@@ -7,6 +7,7 @@ package dev.hoyin1600p.vault_render_optimization.client.chunk.sorting;
 import java.nio.ByteBuffer;
 import java.util.EnumMap;
 import java.util.Map;
+import dev.hoyin1600p.vault_render_optimization.config.ClientOptimizationConfig;
 import me.jellysquid.mods.sodium.client.gl.compile.ChunkBuildContext;
 import me.jellysquid.mods.sodium.client.render.chunk.RenderSection;
 import me.jellysquid.mods.sodium.client.render.chunk.compile.ChunkBuildResult;
@@ -60,10 +61,15 @@ public final class IndexOnlySortTask extends ChunkRenderBuildTask {
             for (var entry : snapshots.entrySet()) {
                 if (cancellation.isCancelled()) return null;
                 SortBuffer source = entry.getValue();
-                ByteBuffer indices = SortBufferViews.indices(source.indexBuffer());
-                SortBuffer view = new SortBuffer(SortBufferViews.vertices(source.vertexBuffer()),
-                        indices, source.vertexFormat(), source.parts());
-                ChunkBufferSorter.sort(view, x, y, z);
+                ByteBuffer indices = ClientOptimizationConfig.sortGeometryCache
+                        && !ClientOptimizationConfig.compareModeEnabled()
+                        ? SortGeometryCache.sort(source, x, y, z) : null;
+                if (indices == null) {
+                    indices = SortBufferViews.indices(source.indexBuffer());
+                    SortBuffer view = new SortBuffer(SortBufferViews.vertices(source.vertexBuffer()),
+                            indices, source.vertexFormat(), source.parts());
+                    ChunkBufferSorter.sort(view, x, y, z);
+                }
                 if (cancellation.isCancelled()) return null;
                 NativeBuffer nativeIndices = new NativeBuffer(indices.capacity());
                 try {

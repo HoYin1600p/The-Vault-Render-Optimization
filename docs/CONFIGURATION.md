@@ -9,6 +9,89 @@ config/vault_render_optimization-client.toml
 All release fast paths are enabled by default. Forge reloads changes made by
 VRO's command immediately. For manual file edits, stop Minecraft first.
 
+## Settings screen
+
+VRO has an in-game settings screen. Open it with the **Open VRO settings** key,
+which is unbound by default: set it in Options > Controls, under
+**The Vault Render Optimization**. There is no Mods-list or pause-menu button.
+
+VRO's screens (the settings screen, its dialogs and the bug-report preview)
+look the same at every resolution and GUI scale setting. While one of them is
+open, VRO lays it out at a fixed virtual size of 960 x 540 GUI units, scaling
+it to fill the window (for example 2x at 1080p, about 2.67x at 1440p, 4x at
+4K; windows smaller than 960 x 540 pixels use 1x). Your own GUI scale is
+restored as soon as you leave VRO's screens.
+
+The screen needs [Cloth Config](https://www.curseforge.com/minecraft/mc-mods/cloth-config)
+(Forge, 6.5.102 or newer). Cloth is an optional dependency. Without it VRO
+loads and runs normally, and pressing the key prints a chat message saying that
+the settings can still be changed in the `.toml` file and with `/vro` commands.
+
+Settings are grouped into tabs by what they affect, not by `.toml` section:
+GPU rendering, Chunks & terrain, Entities & particles, Interface & HUD, Mod
+compatibility, ImmediatelyFast, Updates and Diagnostics. The ImmediatelyFast
+tab edits `config/vault_render_optimization-immediatelyfast.json`. Its
+cosmetic and debug-only options are under Diagnostics. The option
+`debug_only_and_not_recommended_disable_mod_conflict_handling` is not shown,
+because VRO never reads it.
+
+Each setting is a toggle, a number field or slider (within the `.toml` range),
+or a selector. A grey line under it summarises it; click that line to show or
+hide the full explanation underneath. A `(restart)` badge marks settings that take effect only after a
+restart: the ModernFix backports, the Embeddium/Rubidium transfer switches,
+every ImmediatelyFast option and Compare Mode's effect on those startup
+features. The two buffer-arena sizes are badged too; they apply after
+rejoining a world.
+
+**Save** writes the values through Forge's config (and the ImmediatelyFast
+JSON), applies live settings at once the same way a config reload and the
+`/vro` commands do, and then lists any changed setting that needs a restart.
+
+Two extra buttons sit beside Cancel and Save. Both ask for confirmation first,
+discard unsaved edits on the screen, and save and apply immediately:
+
+- **Default** resets every setting, including Diagnostics and the
+  ImmediatelyFast options, to the shipped defaults.
+- **Experimental** turns on every setting that ships off, except those in
+  Diagnostics and horizontal section culling (which shortens the sideways draw
+  distance rather than being an experiment). The confirmation lists the
+  settings it will change. Currently these are GPU models with shaders, GPU
+  particles with shaders, the sort geometry cache, HUD text reuse, adaptive
+  vertex buffer trimming and ImmediatelyFast's hotbar item batching.
+
+### Report a bug
+
+The Diagnostics tab starts with a **Report a bug** button. It opens a preview
+screen. VRO uploads nothing: it only copies text to your clipboard and opens
+a page in your browser, and only after you click.
+
+The preview shows the exact text of a new GitHub issue for
+`HoYin1600p/The-Vault-Render-Optimization`:
+
+- versions of VRO, Minecraft, Forge, Java and the operating system;
+- the rendering stack: GPU and driver, Embeddium or Rubidium, Oculus and its
+  shader pack, Flywheel, and whether ImmediatelyFast is the standalone mod or
+  VRO's built-in copy;
+- VRO's state: Compare Mode, every setting that differs from its default, and
+  the GPU path status including its self-test results.
+
+If `crash-reports/` holds a crash report, the newest one is shown below the
+issue text exactly as it would be copied. Before anything is shown, paths
+inside user folders (`C:\Users\<name>\`, `/home/<name>/`, `/Users/<name>/`)
+become `<user>`, and your Minecraft name and UUID become `<player>` and
+`<uuid>`.
+
+- **Copy crash report & open GitHub** copies that crash report to the
+  clipboard and opens the pre-filled issue, which includes the exception line
+  and a marked place to paste the report.
+- **Open GitHub without crash report** opens the issue without the crash
+  section. Without a crash report this button is simply **Open GitHub**.
+- **Cancel** goes back.
+
+The link is kept under about 7,500 characters. When the report is longer, GPU
+status lines are dropped first, then non-default settings. Describe the problem
+and submit the issue yourself on GitHub.
+
 ## Chunk-update frame pacing
 
 | Key | Default | Purpose |
@@ -221,35 +304,11 @@ yields both when Better Fps - Render Distance is installed.
 | `/vro culling horizontal on` | Enables horizontal terrain culling immediately |
 | `/vro culling horizontal off` | Disables horizontal terrain culling immediately |
 | `/vro culling horizontal <1-64>` | Saves the horizontal distance immediately |
-| `/vro lights` | Shows configuration, active state, source counts, rebuilds, and loaded definitions |
-| `/vro lights on` | Enables VRO dynamic lights immediately |
-| `/vro lights off` | Disables VRO dynamic lights and clears retained source state |
-| `/vro lights entities on\|off` | Controls all entity-based light sources |
-| `/vro lights block_entities on\|off` | Controls resource-defined block entity sources |
-| `/vro lights shaders on\|off` | Controls operation while Oculus shaders are active |
-| `/vro lights interval <1-20>` | Saves the independent per-source update interval |
 | `/vro create` | Shows Create/Flywheel and loaded-contraption diagnostics |
 | `/vro create status` | Shows the same Create diagnostics explicitly |
 
 These are client commands in multiplayer. They require no server permission
 and work even when the remote server does not have VRO.
-
-## Dynamic lights
-
-| Key | Default | Purpose |
-| --- | --- | --- |
-| `dynamic_lights.enabled` | `false` | Enables VRO's client-only dynamic-light engine |
-| `dynamic_lights.entities` | `true` | Allows held/dropped items, burning entities, TNT, and supported entities/projectiles to emit light |
-| `dynamic_lights.block_entities` | `true` | Allows resource-defined block entity types to emit light |
-| `dynamic_lights.enable_with_shaders` | `false` | Keeps VRO lights active while an Oculus shader pack is active |
-| `dynamic_lights.update_interval_ticks` | `1` | Per-source update interval from 1 to 20 client ticks |
-
-The master switch is intentionally off by default. Dynamic light is visual
-only and does not change server light levels, mob spawning, crops, or chunk
-storage. Compare Mode pauses it. Dynamic Lights Reforged owns the feature when
-that mod is installed, regardless of these settings.
-
-See [Dynamic lights](DYNAMIC_LIGHTS.md) for source definitions and diagnostics.
 
 ## Create rendering
 
@@ -261,7 +320,7 @@ See [Dynamic lights](DYNAMIC_LIGHTS.md) for source definitions and diagnostics.
 | `create_rendering.sectioned_contraption_meshes` | `true` | Splits large contraption geometry into local 16-block sections for frustum culling |
 | `create_rendering.sectioned_mesh_block_threshold` | `512` | Minimum rendered-block count for sectioned contraption meshes |
 | `create_rendering.smart_machinery_render_bounds` | `true` | Uses tighter directional bounds for supported Create machinery |
-| `create_rendering.auto_enable_flywheel_instancing` | `true` | Restores Flywheel's upstream-default instancing backend when a pack configures it as `OFF`; unsupported hardware and integration failures retain the fallback renderer |
+| `create_rendering.auto_enable_flywheel_instancing` | `true` | Turns on Flywheel's instancing renderer for this session when the pack has it set to `OFF`. Flywheel's own config file is never changed; turning this off returns to the pack's setting immediately. Unsupported hardware and integration failures retain the fallback renderer |
 
 Sectioned meshes preserve Create's original block models, textures, lighting,
 render layers, and shader program. The feature is not LOD: it does not reduce
@@ -273,6 +332,27 @@ draw work when only part of the structure is on screen.
 The smart-bounds path covers belts, mechanical arms, deployers, portable
 storage interfaces, and mechanical rollers in Create 0.5.1.i. All Create paths
 are optional and are omitted automatically when Create is absent.
+
+## Farsight chunk bound
+
+`chunk_updates.farsight_chunk_bound` defaults to `true` and only acts when
+Farsight (`farsight_view`) is installed. Farsight cancels the client's chunk
+forget packet, so every chunk seen while travelling stays in memory (chunk data,
+light data and Embeddium/Rubidium render sections) until the level changes. Once
+a second, VRO forgets chunks that the server has already unloaded and that are
+farther than `max(server view distance, render distance) + 1` chunks from the
+player, running the same drop, light release and renderer notification the
+cancelled packet would have. Chunks within render distance stay, so Farsight's
+extended view is unchanged. A chunk the server still counts as sent is never
+dropped: the server would not resend it, and the area would stay empty until a
+relog.
+
+This is a leak fix, not an optimization, so Compare Mode does not affect it. The
+VRO jar contains `META-INF/vro-features/farsight-chunk-bound`; VH Accelerator
+sees that marker and leaves the bound to VRO, so turning this off leaves Farsight
+unbounded. `/vro chunks farsight on|off|status` changes or reports it without a
+restart; status shows the server radius, current bound, tracked chunks and how
+many were forgotten in this level.
 
 ## Adaptive deferred chunk budgets
 
@@ -317,3 +397,97 @@ resize.
 `asyncArenaMaxHeadroomMib` defaults to `64` and caps only speculative headroom,
 never bytes required by the current upload. This control is independent of
 vertex-buffer retention.
+
+## Particle collision cache
+
+`render_fast_paths.particle_collision_cache` defaults to `true`. Particle movement
+collides with exactly the blocks and shapes vanilla would use, and vanilla's own
+collision response is applied, but each block position is read once per particle
+tick instead of once per particle. Every particle still collides; nothing is
+skipped or culled. The cache lives only for one `ParticleEngine.tick`, when no
+block can change. It replaces the earlier opt-in empty-section proof
+(`particle_empty_section_collision`, no longer read) and yields to Particle Core
+and Flerovium.
+
+`/vro particles collision on|off` toggles it. `/vro particles collision verify on`
+also runs vanilla collision for every particle, uses vanilla's result, and counts
+mismatches in `/vro particles status` (the first ten are logged). Verification
+costs more than either path, so it is not saved and is off after a restart.
+
+## Exact per-particle and frame fast paths
+
+All default to `true`, are disabled by Compare Mode, and keep vanilla's results;
+none of them removes, skips or hides a particle.
+
+| Key | What it avoids |
+| --- | --- |
+| `render_fast_paths.particle_tick_compaction` | One array shift per dead particle; dead particles are removed in one ordered pass |
+| `render_fast_paths.particle_shared_random` | A new `Random` per particle and atomic draws (also constructor `Math.random()`, packet Gaussian spread and Vault Nova constructors) |
+| `render_fast_paths.particle_provider_cache` | A registry key and hash lookup per particle spawn |
+| `render_fast_paths.allocation_free_frustum` | 48 vector allocations per particle/entity/block-entity frustum test |
+
+Particle tick compaction, the shared generator, the provider cache and the
+collision cache yield to Particle Core, Flerovium and AsyncParticles. See
+[Particle optimizations](PARTICLE_OPTIMIZATIONS.md) for the Nova-storm details.
+
+## Astra development experiments
+
+These additions are unreleased and default off pending in-game validation:
+
+- `chunk_updates.sort_geometry_cache`: `/vro chunks sort_geometry on|off`.
+  Requires VRO index-only sorting on the bytecode-validated Embeddium path.
+  Reuses immutable triangle centers, capped at 16 MiB globally and 1 MiB per
+  entry (256 entries maximum). `/vro chunks sorting status` reports cache reuse.
+
+Compare Mode disables both. Queued work finishes safely. Neither option changes
+the native initial/cached-terrain loading bypass, visible particle count, or
+render distance. Existing `sophisticated_storage.quantity_text_cache` now also
+retains bounded count glyph geometry with fresh color, pose and lighting; resource
+reloads clear it. Particle census diagnostics now sample at 250 ms intervals.
+
+### GPU entity models
+
+- `render_fast_paths.gpu_entity_models` (default `true`): `/vro gpuentity on|off|status|stats|selftest`.
+  Entity model part vertices are written by a compute shader into the vertex buffer vanilla has
+  just uploaded, before vanilla's own draw. The arithmetic is bit-exact with vanilla and checked by
+  a startup self-test. It turns itself off with an Oculus shader pack, on unsupported drivers, in
+  Compare Mode, or when another mod changes `ModelPart` rendering. See `docs/GPU_ENTITY_MODELS.md`.
+
+### Deferred-validation runtime batch
+
+- `render_fast_paths.hud_text_geometry` (default `false`):
+  `/vro experiments hud on|off|status`. Reuses exact final glyph vertices for
+  unchanged, printable ASCII string draws inside the Forge HUD. Draws still happen
+  every frame. Text, position, full pose, color/alpha, shadow, background, display
+  mode and light are part of the key. Font identity/default-font selection,
+  font-set reload/close, resource reload and window/GUI-scale changes invalidate
+  reuse. At most 128 entries and 2 MiB of vertex payload, plus bounded metadata.
+  Styled sequences, formatting codes (including obfuscation), bidirectional text,
+  custom Font/FontSet/buffer-source subclasses and nonstandard vertex attributes
+  fall back. Yields to detected Modern UI, ImmediatelyFast, Exordium and Smooth Font.
+  No icon/bar geometry or gear/HUD state is cached. This is not a reduced-refresh HUD.
+  Counters report accepted-path hits/misses and unsupported-output fallbacks;
+  they do not count all text drawn by other paths or prove an FPS improvement.
+- `embeddium_transfers.vertexBufferAdaptiveTrimming` (default `false`):
+  `/vro experiments memory on|off|status`. Requires VRO's existing VRO-EMB-02
+  ownership. Retains a 30-second demand peak, rounds retained demand upward, and
+  reallocates only for savings of at least half the buffer. Aggregate pressure
+  permits earlier trimming after three consecutive low-demand starts. A worker
+  returning after 30 seconds idle can trim to its initial capacity. No other
+  thread frees its buffer and no live result/upload storage is touched.
+  `vertexBufferAggregateRetainedMib` (default `128`) is the advisory threshold for
+  aggregate capacity above initial allocations, **not** a hard native-memory or
+  VRAM cap. Trimming waits for each owner's next `start()`; workers that remain
+  idle retain allocations until reuse or native `destroy()`. Required growth is
+  never capped. Existing per-builder `vertexBufferMaxRetainedMib` still applies.
+
+Both new switches honor Compare Mode and are hot; they do not require a new
+client session when the corresponding mixins were installed at startup. Changing
+the VRO-EMB-02 ownership/startup setting still requires a restart.
+
+The diagnostic `indexed sections` count is affected buckets, not old source cells.
+Snapshot publication costs allocations on source changes and requires measurement
+in moving-light-heavy scenes; it is not a blanket performance guarantee.
+
+All tests for this batch remain pending; compilation is not runtime validation.
+Gear-cache invalidation and TTLs are intentionally unchanged.

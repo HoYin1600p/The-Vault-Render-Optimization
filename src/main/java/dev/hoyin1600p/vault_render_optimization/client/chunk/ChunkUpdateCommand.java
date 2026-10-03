@@ -3,10 +3,13 @@ package dev.hoyin1600p.vault_render_optimization.client.chunk;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import dev.hoyin1600p.vault_render_optimization.config.ClientOptimizationConfig;
 import dev.hoyin1600p.vault_render_optimization.client.chunk.sorting.IndexSortState;
+import dev.hoyin1600p.vault_render_optimization.client.chunk.sorting.TranslucentSortFootprint;
 import dev.hoyin1600p.vault_render_optimization.client.chunk.budget.AdaptiveBudgetState;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.TextComponent;
+import net.minecraftforge.fml.ModList;
+import dev.hoyin1600p.vault_render_optimization.client.chunk.residency.FarsightChunkBound;
 
 public final class ChunkUpdateCommand {
     private ChunkUpdateCommand() {
@@ -26,6 +29,15 @@ public final class ChunkUpdateCommand {
                         .then(Commands.literal("status").executes(context -> sortStatus(context.getSource())))
                         .then(Commands.literal("on").executes(context -> setSorting(context.getSource(), true)))
                         .then(Commands.literal("off").executes(context -> setSorting(context.getSource(), false))))
+                .then(Commands.literal("sort_geometry")
+                        .executes(context -> sortStatus(context.getSource()))
+                        .then(Commands.literal("on").executes(context -> setGeometry(context.getSource(), true)))
+                        .then(Commands.literal("off").executes(context -> setGeometry(context.getSource(), false))))
+                .then(Commands.literal("farsight")
+                        .executes(context -> farsightStatus(context.getSource()))
+                        .then(Commands.literal("status").executes(context -> farsightStatus(context.getSource())))
+                        .then(Commands.literal("on").executes(context -> setFarsight(context.getSource(), true)))
+                        .then(Commands.literal("off").executes(context -> setFarsight(context.getSource(), false))))
                 .then(Commands.literal("defer")
                         .then(Commands.literal("on").executes(context -> set(context.getSource(), true)))
                         .then(Commands.literal("off").executes(context -> set(context.getSource(), false))));
@@ -55,7 +67,14 @@ public final class ChunkUpdateCommand {
 
     private static int sortStatus(CommandSourceStack source) {
         source.sendSuccess(new TextComponent("[VRO] Index-only sorting: " + IndexSortState.status()), false);
+        source.sendSuccess(new TextComponent("[VRO] " + IndexSortState.geometryStatus()), false);
+        source.sendSuccess(new TextComponent("[VRO] " + TranslucentSortFootprint.report()), false);
         return 1;
+    }
+
+    private static int setGeometry(CommandSourceStack source, boolean enabled) {
+        ClientOptimizationConfig.setSortGeometryCache(enabled);
+        return sortStatus(source);
     }
 
     private static int setBudget(CommandSourceStack source, boolean enabled) {
@@ -63,6 +82,22 @@ public final class ChunkUpdateCommand {
         source.sendSuccess(new TextComponent("[VRO] Adaptive chunk budget " + (enabled ? "enabled" : "disabled")
                 + " and saved. Applies next update; off restores native draining (a backlog may cause a catch-up hitch)."), false);
         return budgetStatus(source);
+    }
+
+    private static int setFarsight(CommandSourceStack source, boolean enabled) {
+        ClientOptimizationConfig.setFarsightChunkBound(enabled);
+        source.sendSuccess(new TextComponent("[VRO] Farsight chunk bound " + (enabled ? "enabled" : "disabled")
+                + " and saved; applies at the next sweep."), false);
+        return farsightStatus(source);
+    }
+
+    private static int farsightStatus(CommandSourceStack source) {
+        if (!ModList.get().isLoaded("farsight_view")) {
+            source.sendSuccess(new TextComponent("[VRO] Farsight chunk bound: Farsight is not installed."), false);
+            return 0;
+        }
+        source.sendSuccess(new TextComponent("[VRO] Farsight chunk bound: " + FarsightChunkBound.status()), false);
+        return 1;
     }
 
     private static int budgetStatus(CommandSourceStack source) {

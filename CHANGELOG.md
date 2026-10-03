@@ -7,6 +7,219 @@ and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-10-03
+
+### Performance
+
+- GPU entity models (`gpu_entity_models`, on by default; validated in game on public Embeddium,
+  public Oculus and custom forks with 0 mismatching vertices and +8-11% FPS in a crowded mob scene).
+  Entity model parts reserve their vertices in vanilla's entity buffer, and a compute shader writes
+  them into the vertex buffer vanilla has just uploaded, right before vanilla's own draw.
+  - The shader reproduces vanilla's float arithmetic bit for bit and must pass a startup self-test.
+  - Reserved vertices are written on the CPU with vanilla's exact bytes whenever they go anywhere
+    else, for example sorting.
+  - It turns itself off with an Oculus shader pack, on unsupported drivers and in Compare Mode. It
+    also stays off when another mod changes `ModelPart` rendering. Skin Layers 3D, wildbackport and
+    Xaero's Minimap are supported.
+  - Covers mobs, armor stands and unenchanted armor, and block entities drawn through an atlas
+    sprite (chests, beds, shulker boxes, signs).
+  - Also covers GeckoLib 3 entities: Vault Hunters' knights, Death and Acid mobs, Naga, Scarabs,
+    tanks, bosses and pets. With 192 such mobs in view: +50% FPS (90 to 136) and 0 mismatching
+    vertices. GeckoLib's own flat-cube normal handling is reproduced exactly; a renderer that
+    overrides GeckoLib's cube code, or another mod changing it, keeps those models on the CPU.
+  - Billboard particles too (`gpu_particles`, default on, shaders off): each particle reserves its
+    four vertices and the compute shader writes them with VRO's exact billboard arithmetic (own
+    startup self-test; 39.6 million live-verified vertices, 0 mismatches). No particle is skipped.
+    Under heavy Nova particles: particle render -6%, allocation -25%; frame rate within noise.
+  - When installed, also covers Ars Nouveau's own GeckoLib copy (familiars, Wilden, Weald walkers)
+    and Citadel models (Alex's Mobs). Both are exact against the mods' own rendering and apply only
+    when those mods are present. Checked in Wolds Vaults with 621 different mobs in view: 0
+    mismatching vertices, and CPU vertex building for entity models almost gone.
+  - Only the vertices the CPU wrote are uploaded; the GPU fills the rest in place.
+  - Works with public Oculus' batched entity rendering (Oculus installed, shaders off).
+  - Translucent parts such as players stay on vanilla's path.
+  - Pauses itself where buffers are drawn outside vanilla's upload.
+  - Adapted from Accelerated Rendering (MIT). See `docs/GPU_ENTITY_MODELS.md`.
+- `/vro gpuentity verify on|off` reads back every GPU dispatch and compares the whole uploaded buffer
+  with the exact expected bytes (testing only).
+- `/vro particles new on|off` switches the 0.5.0 particle set live, for A/B comparisons: collision
+  cache, tick compaction, shared random and provider cache.
+- `/vro feature <collision|compaction|random|provider|frustum> on|off` switches each of those
+  optimizations live on its own; `/vro feature frustum verify on|off` checks every frustum answer
+  against vanilla's; `/vro alloc start|report|resources` measures render-thread allocation per frame
+  and shows the live Create contraption meshes and Oculus program-cache pipelines.
+- With Fastload installed, visibility checks for particles, entities and block entities skip Fastload's
+  per-check event lookup while that event is idle (all gameplay after world load), with identical
+  results (`fastload_frustum_bypass`, default on; `/vro feature fastload on|off`). Under heavy Nova
+  particles: particle render time -17%, FPS +11% (213 to 237), render-thread allocation -38%. It only
+  applies when Fastload's own hook is the only change to that frustum method.
+- Experimental, off by default: GPU entity models and particles can stay on with an Oculus shader
+  pack (`gpu_entity_models_with_shaders`; `/vro feature gpushaders on|off`). A second compute program
+  writes Oculus' extended entity vertices exactly as Oculus computes them (0 mismatches over 63.1
+  million live-verified vertices with SolasVH). On a GPU-bound shader setup it cost about 4-8% FPS,
+  so it is off by default; it is meant for players limited by a slower CPU. `gpu_particles_with_shaders`
+  (`/vro feature gpushaderparticles on|off`, default off) keeps only particles on the GPU. See
+  `docs/GPU_ENTITY_MODELS.md`.
+- Block items on the GPU (`gpu_items`, default on; `/vro feature gpuitems on|off`). Dropped, framed and
+  held solid/cutout block items are written by the compute path, exactly as Embeddium's or Forge's item
+  writer would (the mixin audit picks the installed one). This also works under shader packs when
+  `gpu_entity_models_with_shaders` is on. Flat items (gems, loot, tools) and translucent blocks work
+  too, although their buffers are sorted. Only each quad's two sort positions are written on the CPU
+  before vanilla sorts and writes the indices unchanged. With 240 flat stacks added to the scene:
+  - shaders off: +17% FPS (132 to 154);
+  - SolasVH: +4%;
+  - 0 mismatches over 106 million GPU-written vertices and 104 million oracle vertices.
+
+  Glinting and custom-rendered items stay on the CPU, and tiny batches (HUD icons, a held item) are
+  filled on the CPU. Asgard, 480 block-item stacks:
+  - shaders off: +7% FPS (217 to 232), 19% less render-thread allocation;
+  - SolasVH: FPS-neutral;
+  - 0 mismatches over 32.6 million GPU-written vertices, and over 42.7 million vertices checked against
+    the installed writer.
+
+- Cheaper visibility test for particles, entities and block entities (`allocation_free_frustum`,
+  default on): each screen edge is checked against the one box corner that decides it instead of
+  up to eight, with no temporary vectors. Every answer is bit-for-bit vanilla's (checked on
+  600,000 random boxes and 429,385 live ones); the saving is small.
+- Each particle type's provider is resolved once instead of through a registry key and hash
+  lookup on every spawn (`particle_provider_cache`, default on). Invalidated whenever a provider is
+  registered; the same provider vanilla would find is always returned.
+- Particles draw from a per-thread generator with `java.util.Random`'s exact algorithm instead of
+  each allocating its own (`particle_shared_random`, default on). That saves a CAS, a `nanoTime`
+  call and an `AtomicLong` per particle, plus a CAS per random draw. Same distribution. The same
+  generator replaces vanilla's six `Math.random()` calls in the velocity constructor and the
+  per-spawn `Random`/`Math.random()` use in Vault's Nova cloud, explosion and Frost/Poison Nova
+  particles (Vault hooks skip themselves if Vault changes those classes).
+  Particle packets (Frost Nova sends 400 per cast) spread each particle with six Gaussian draws;
+  those use the same generator's unsynchronized copy of `Random`'s polar method.
+- Particles that die in a tick are removed in one ordered pass instead of one queue shift each
+  (`particle_tick_compaction`, default on). Tick order, death timing and particle-group limits
+  match vanilla exactly; with thousands of Nova particles expiring per tick this was quadratic.
+- Particle collision reads each block once per particle tick instead of once per particle, using
+  the exact cells, shapes and collision response vanilla uses (`particle_collision_cache`,
+  default on; `/vro particles collision verify on` compares every result with vanilla in game).
+  Aimed at Vault Hunters Nova bursts, whose particles collide every tick just above the floor.
+  Replaces the opt-in empty-section proof. No particle is skipped or culled.
+
+### Fixed
+
+- Adaptive chunk budget no longer holds back important rebuilds and sorts (the player's own
+  block edits). They could wait up to about 250 ms behind background pacing.
+- If the old Oculus Flywheel Compat mod (`irisflw`) is still installed, VRO switches it off and
+  uses its own Create shader support; the irisflw jar can be removed. Both patch the same
+  Flywheel/Oculus methods, so they never run together: if irisflw cannot be switched off safely,
+  VRO turns off its own support instead.
+- Create shader compatibility checks the installed Oculus jar before applying its mixins. A
+  missing class, member or injection target disables the feature with a log message instead
+  of failing a required injection. Public Oculus 1.6.4 and the 1.6.5/1.6.7/1.6.8 dh-compat
+  builds pass. The startup decision is made once instead of once per mixin config.
+- Renderer transfers match validated Embeddium/Rubidium versions exactly and verify the
+  bytes of each renderer class that held the fork's own copy. The old `0.3.18`/`0.5.6`
+  prefix check accepted pre-removal Embeddium fork builds (including one carrying a stock
+  version string) that still contain the transferred code, so both copies ran. Those now
+  leave the renderer's own copy in charge.
+- The post-removal Embeddium fork `0.3.18-git.ced34c84+mc1.18.2` is supported for chunk
+  deferral, adaptive budget and index-only sorting as well (byte-identical to the 0.3.19
+  fork for every hashed class). `ChunkBuilder$WrappedTask` and `$WorkerRunnable` are now
+  hashed too.
+- The custom-Embeddium tests now run whenever the custom jar is found or passed with
+  `-Pcustom_embeddium_jar`; `-Prequire_custom_renderer_tests=true` fails instead of skipping.
+- Create sectioned contraption meshes on the non-Flywheel path now free their native vertex
+  copies when a contraption is invalidated, removed, disabled for sectioning or reset.
+  Contraptions that Create drops as dead (without an invalidate call) are swept as well.
+- Create shader compatibility no longer keeps references to destroyed Oculus pipelines and
+  their program sets. Oculus already closes the programs themselves, so nothing is freed twice.
+- Create shader compatibility: shader packs that declare `mc_Entity` as `vec2` or `vec3`
+  alongside a `vec4 at_tangent` no longer fail to compile under the extended vertex format
+  (the `mc_Entity` swizzle used the tangent's width).
+- Accept the exact custom Embeddium `0.3.19-git.7b0cf676+mc1.18.2` build (and only its
+  inspected `ChunkBuilder` hash) for chunk deferral, adaptive budget, index-only sorting
+  and renderer transfers. This build was previously blocked by the version and hash gates.
+  Prior Embeddium/Rubidium baselines are unchanged, and other git builds stay blocked.
+
+### Changed
+
+- `create_rendering.auto_enable_flywheel_instancing` is now session-only. It turns on Flywheel's
+  instancing renderer for this session when the pack has it set to off. Flywheel's own config file
+  is never changed; turning this off (or turning on Compare Mode) returns to the pack's setting
+  immediately. Previously VRO wrote `INSTANCING` into Flywheel's config once and never undid it.
+
+- Release particle light-cache world references on level changes, including dormant worker caches.
+- Sample diagnostic particle censuses every 250 ms and include census work in render CPU timings.
+- Reuse bounded chunk-budget observation tables and request arrays without changing terrain-loading bypasses.
+- Compute Create culling bounds from exact affine extrema instead of eight transformed corners.
+- Cache limited-barrel count glyph vertices and consecutive atlas runs; keep per-slot color, light and pose dynamic.
+- Cache Vault float-uniform locations across calls, invalidating on shader load/destroy; reuse Flywheel normal matrices
+  and replace long-lived temporary-stack uniform buffers with owned storage.
+
+- The build no longer requires the local Prism instances. Every compile-only jar has a
+  `-P<name>_jar` override and `-Pvro_deps_dir` supplies a folder of jars; all missing jars are
+  reported together. `gradlew printDependencyJars` shows the resolved jars. A fresh clone no
+  longer fails with `NoSuchElementException` before the override is read.
+
+### Removed
+
+- VRO's optional dynamic-light engine, its `/vro lights` commands, the `[dynamic_lights]`
+  config section and `vro_dynamic_lights` resource definitions. It was default off, never
+  validated, and outside VRO's render-speed scope; packs use a standalone dynamic-lights mod.
+  Existing config files lose the old section on the next load (Forge corrects the file).
+
+### Added
+
+- Settings screen, opened with a key that is unbound by default (Controls, under "The Vault Render
+  Optimization"). Every VRO setting and the built-in ImmediatelyFast options are grouped into
+  player-facing tabs, each with a one-line summary that expands into a full explanation on click,
+  and a `(restart)` badge where a change needs a restart or world rejoin. Saving applies live settings at once and lists
+  the ones that need a restart. **Default** resets everything to the shipped defaults;
+  **Experimental** turns on every default-off setting outside Diagnostics. Both ask first. Uses
+  Cloth Config (6.5.102 or newer) as an optional dependency: without it VRO runs as before and
+  the key says where the settings still live. See `docs/CONFIGURATION.md`. Not yet tested in game.
+- VRO's screens are laid out at a fixed 960 x 540 virtual size, so they look the same at every
+  resolution and GUI scale; the player's GUI scale is restored when they close.
+- **Report a bug** button in the settings screen's Diagnostics tab. It first shows a preview of
+  the exact GitHub issue text (versions, rendering stack, non-default settings, Compare Mode and
+  GPU path status) and of the newest crash report, with user-folder paths, the player name and
+  UUID removed. Nothing is uploaded and nothing happens until the player clicks: **Copy crash
+  report & open GitHub** copies the scrubbed crash report to the clipboard and opens a pre-filled
+  issue with the exception line and a place to paste it; **Open GitHub without crash report**
+  opens the issue without it. Not yet tested in game.
+- Built-in ImmediatelyFast: a relocated copy of ImmediatelyFast Reforged 1.18.2 (1.1.10,
+  LGPL-3.0-or-later) for immediate-mode and HUD batching, fast text lookup, font atlas resizing,
+  map atlases and buffer-upload reuse. On by default
+  (`config/vault_render_optimization-immediatelyfast.json`); skipped entirely when the standalone
+  mod is installed; with Oculus it runs only if the Oculus members it needs are present. See
+  `docs/IMMEDIATELYFAST.md`. Not yet tested in game.
+- `/vro particles stress nova|frost <casts per second> <seconds> [radius]`: a client-only benchmark
+  driver that replays Nova or Frost Nova casts beside the player through the same client code a real
+  cast runs. Nothing is sent to the server and no sound plays.
+- Farsight chunk bound (`chunk_updates.farsight_chunk_bound`, default on, `/vro chunks farsight`):
+  with Farsight installed, forgets client chunks the server has already unloaded that lie beyond
+  `max(server view distance, render distance) + 1` once a second, releasing chunk, light and
+  Embeddium/Rubidium render-section memory that Farsight otherwise keeps until the level changes.
+  A chunk the server still counts as sent is never dropped, since the server would not resend it
+  and a fast-moving player would find an empty hole until relogging (VH Accelerator's fix
+  9909763, carried over). Ported from VH Accelerator; the
+  jar's `META-INF/vro-features/farsight-chunk-bound` marker makes VH Accelerator leave it to VRO.
+  Not affected by Compare Mode. Not yet tested in game.
+- `/vro chunks sorting status` reports how much translucent sort data Embeddium keeps on the
+  heap and what a centroid-based store would need. Measurement only, computed when the command
+  runs; see `docs/INDEX_ONLY_SORTING.md` for the proposed replacement and its prerequisites.
+- Opt-in experimental `/vro particles collision on|off`: bypass collision construction only inside a proven
+  vanilla-air section covering the entire swept search and its neighbor halo. Yields to Particle Core/Flerovium.
+- Opt-in experimental `/vro chunks sort_geometry on|off`: reuse decoded triangle centers for validated Embeddium
+  index-only sorting. Weak generation keys, 16 MiB global payload bound, native stable triangle order, and existing
+  stale-result rejection remain in force. Unknown/oversized data falls back to the original sorter.
+- Opt-in plain HUD text geometry reuse (`/vro experiments hud on|off|status`): exact live
+  draw-input keys, bounded replay, font/viewport invalidation and unchanged frame-rate drawing.
+  Formatted/animated text, HUD icons/bars and gear data remain on their original paths.
+- Opt-in CPU-native vertex buffer trimming (`/vro experiments memory on|off|status`):
+  30-second demand history and aggregate pressure, applied only by the owning worker at
+  its next safe build start. Existing per-buffer ceiling and deterministic destroy remain.
+
+The first development batch passed automated checks. The subsequent HUD/snapshot/trimming
+batch is compiler-checked only; its new regression cases and all in-game comparisons are
+deferred at the user's request. No measured FPS gains are claimed.
+
 ## [0.4.2] - 2026-09-07
 
 ### Added

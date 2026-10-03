@@ -22,12 +22,32 @@ final class ChunkUpdateBackendTest {
     }
 
     @Test
+    void exactInspectedCustomEmbeddiumBuildIsAcceptedWithoutWildcardingGitBuilds() {
+        assertEquals(ChunkUpdateBackend.EMBEDDIUM, select(RendererFamily.EMBEDDIUM, "0.3.19-git.7b0cf676+mc1.18.2"));
+        assertEquals(ChunkUpdateBackend.BLOCKED, select(RendererFamily.EMBEDDIUM, "0.3.19-git.deadbeef+mc1.18.2"));
+        assertEquals(ChunkUpdateBackend.BLOCKED, select(RendererFamily.EMBEDDIUM, "0.3.19-git.7b0cf676"));
+        assertEquals(ChunkUpdateBackend.BLOCKED, select(RendererFamily.EMBEDDIUM, "0.3.19-git.7b0cf676+mc1.20.1"));
+        assertEquals(ChunkUpdateBackend.BLOCKED, select(RendererFamily.EMBEDDIUM, "0.3.20-git.7b0cf676+mc1.18.2"));
+        assertEquals(ChunkUpdateBackend.BLOCKED, select(RendererFamily.RUBIDIUM, "0.3.19-git.7b0cf676+mc1.18.2"));
+        assertEquals(ChunkUpdateBackend.BLOCKED, select(RendererFamily.AMBIGUOUS, "0.3.19-git.7b0cf676+mc1.18.2"));
+    }
+
+    @Test
     void unknownAndAmbiguousRenderersNeverFallBackToVanillaInjection() {
         assertEquals(ChunkUpdateBackend.BLOCKED, select(RendererFamily.AMBIGUOUS, "0.5.6"));
         assertEquals(ChunkUpdateBackend.BLOCKED, select(RendererFamily.EMBEDDIUM, null));
         assertEquals(ChunkUpdateBackend.BLOCKED, select(RendererFamily.EMBEDDIUM, "0.3.19+mc1.20.1"));
         assertEquals(ChunkUpdateBackend.BLOCKED, select(RendererFamily.EMBEDDIUM, "0.3.180+mc1.18.2"));
         assertEquals(ChunkUpdateBackend.BLOCKED, select(RendererFamily.RUBIDIUM, "0.6.0"));
+    }
+
+    @Test
+    void postRemovalForkIsAcceptedAndPreRemovalForksAreNot() {
+        // ced34c84 is byte-identical to the 0.3.19 fork for every class the chunk gates hash.
+        assertEquals(ChunkUpdateBackend.EMBEDDIUM, select(RendererFamily.EMBEDDIUM, "0.3.18-git.ced34c84+mc1.18.2"));
+        assertEquals(ChunkUpdateBackend.BLOCKED, select(RendererFamily.EMBEDDIUM, "0.3.18-git.a8cebc3a.dirty+mc1.18.2"));
+        assertEquals(ChunkUpdateBackend.BLOCKED, select(RendererFamily.EMBEDDIUM, "0.3.18-git.14ef7988+mc1.18.2"));
+        assertEquals(ChunkUpdateBackend.BLOCKED, select(RendererFamily.RUBIDIUM, "0.5.60"));
     }
 
     @Test
