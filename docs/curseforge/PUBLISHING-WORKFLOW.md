@@ -47,32 +47,18 @@ Before opening CurseForge:
 Do not select the Server environment or advertise server support. The remote
 server does not need VRO.
 
-## Automated upload
+## Upload
 
-The standard uploader uses CurseForge's supported Upload API. Keep the author
-token only in the `CURSEFORGE_API_TOKEN` process environment; never place it in
-Git, Gradle properties, a command line, an upload kit, or the release ledger.
+The project file is submitted through CurseForge's supported Upload API by the
+maintainer's private release tooling, which is kept outside this repository.
+The author token is never stored in Git, Gradle properties, a command line or
+an upload kit. The upload uses the exact production JAR built from the release
+tag, Markdown notes, the Release channel, automatic publication, and the
+established 1.18.2 Forge client metadata, and it links the full GitHub release.
 
-First rehearse the exact artifact and metadata path without making a remote
-request:
-
-```powershell
-.\scripts\publish-curseforge.ps1 `
-  -Version X.Y.Z `
-  -ChangelogFile docs/curseforge/CHANGELOG-X.Y.Z.md `
-  -GitHubReleaseUrl https://github.com/HoYin1600p/The-Vault-Render-Optimization/releases/tag/vX.Y.Z `
-  -DryRun
-```
-
-Review `build/mod-publish-rehearsal/curseforge-upload-dry-run.json`, then remove
-`-DryRun` to submit once. The real path refuses a version that differs from
-`gradle.properties`, selects only the exact production JAR under `build/libs`,
-uses Markdown, Release, automatic publication, and the established 1.18.2
-Forge metadata, and appends the full GitHub release link when needed.
-
-After submission, record the returned file ID and verified artifact metadata in
-`docs/release-ledger.json` as `awaiting_approval`. Dispatch **CurseForge approval
-monitor** immediately; its scheduled checks continue every 15 minutes.
+`update.json` is updated in the release commit, so the in-game update notice
+switches to the new version as soon as the release is pushed. A version marked
+critical carries the `[CRITICAL] ` prefix on its message.
 
 ## Verification
 
@@ -85,20 +71,8 @@ After submission, return to the files list and verify:
 - Forge, Java 17, and Minecraft 1.18.2 are listed.
 - Processing or moderation has begun.
 
-The approval monitor builds the exact public Minecraft file-page URL from the
-project slug and upload-returned file ID. Without cookies, author credentials,
-or a read API key, it verifies the page's embedded file record, follows the
-page's public download action, and compares the downloaded JAR's filename,
-size, and SHA-256 with the release ledger. It also verifies the release channel,
-compatibility, relations, display name, and full GitHub changelog link.
-
-A 404 remains pending and cannot change `update.json`. Temporary 403, 429, or
-server failures are retried only within a bounded run; persistent access or
-page-format failures stop with `ATTENTION_REQUIRED`. Only a fully verified file
-advances to `public_verified`; the monitor then activates the existing Forge
-JSON fields, reads them back through the production raw URL, and finally records
-`activated`. Every public push is narrow and identity-scanned. Repeated runs are
-safe, and no CurseForge for Studios account or read secret is required.
+Once the file is public, download it and confirm its filename, size and SHA-256
+match the GitHub release asset.
 
 Do not delete, archive, replace, or alter older files unless explicitly
 requested. Correct editable metadata on the existing file rather than

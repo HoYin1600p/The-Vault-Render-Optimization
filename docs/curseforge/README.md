@@ -21,5 +21,5 @@ Assemble or refresh a local review kit with:
 .\scripts\assemble-curseforge-release.ps1 -Version X.Y.Z
 ```
 
-The durable moderation handoff is `docs/release-ledger.json`. Stable, non-secret
-publication settings are in `.codex/mod-publish.json`.
+Release tooling and records (upload settings and the release ledger) are kept
+privately outside this repository.
