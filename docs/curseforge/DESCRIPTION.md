@@ -1,12 +1,34 @@
 # The Vault Render Optimization
 
-**Client-side performance and stability improvements for Vault Hunters, large Create contraptions, crowded bases, particles, terrain, and long play sessions.**
+**Client-side performance and stability for Vault Hunters: GPU entity, particle and item rendering, an in-game settings screen, faster Create contraptions, particles, terrain and storage displays.**
 
-The Vault Render Optimization (VRO) is a Minecraft 1.18.2 Forge mod that cuts repeated client work while preserving normal models, textures, animations, effects, loot, and server gameplay. It works with official and custom Vault Hunters packs, and its generic optimizations remain available when Vault Hunters is not installed.
+The Vault Render Optimization (VRO) is a Minecraft 1.18.2 Forge mod that cuts repeated client work while preserving normal models, textures, animations, effects, loot, and server gameplay. Version 0.5 moves a large share of entity, item and particle drawing work onto your graphics card and adds an in-game settings screen. VRO works with official and custom Vault Hunters packs, and its generic optimizations remain available when Vault Hunters is not installed.
 
 VRO is client-side. The remote server does not need it.
 
-VRO can check its raw GitHub update manifest asynchronously and show an update row on the main menu plus occasional clickable CurseForge reminders in chat. Checks are enabled by default, while displayed update types default to critical only. The feature has bounded network behavior, fails closed, and never downloads or installs updates.
+## GPU rendering (new in 0.5)
+
+VRO writes repeated model vertices with a compute shader on your graphics card, straight into the buffer the game has just uploaded, instead of building them on the CPU. The result matches vanilla's exact output: every path passes a startup self-test, and `/vro gpuentity verify` compares the GPU output with vanilla's while you play. Nothing is hidden or skipped to gain speed.
+
+*   **Entity models** (on by default): mobs, armor stands, armor, chests, beds, shulker boxes, signs, Vault Hunters' GeckoLib mobs (knights, bosses, pets and more), GeckoLib block entities, and Citadel models.
+*   **Items** (on by default): items on the ground, in item frames, held in hands and on armor stands, including flat items such as gems and loot. Whole block models drawn by block entities use the same path. Enchanted items stay on the CPU.
+*   **Particles** (on by default without shaders): billboard particles are written the same way. Every particle is still drawn.
+*   **Shader packs:** with an Oculus shader pack the GPU paths pause by default, because shader packs usually make the graphics card the bottleneck already. Players held back by a slower CPU can keep them on in the settings screen.
+
+In test scenes this gave about +8-11% FPS in a crowded mob scene and about +50% with 192 GeckoLib mobs in view. Results depend on your hardware and scene. The GPU paths need OpenGL 4.3 (or the equivalent extensions) and switch themselves off on unsupported drivers, in Compare Mode, or when another mod changes the same rendering code; normal CPU rendering then takes over.
+
+## Settings screen (new in 0.5)
+
+Every VRO setting now has an in-game screen, grouped into tabs: GPU rendering, Chunks & terrain, Entities & particles, Interface & HUD, Mod compatibility, ImmediatelyFast, Updates and Diagnostics.
+
+*   Open it with a key you choose in **Options > Controls** under "The Vault Render Optimization" (unbound by default).
+*   Each setting has a short summary; click it to expand a plain-English explanation. Settings that need a restart are marked, and saving tells you which ones changed.
+*   **Default** resets everything to the shipped settings; **Experimental** turns on the experimental settings that ship off, listing them first. Both ask before applying.
+*   **Report a bug** (Diagnostics tab) previews a GitHub issue with your versions, rendering mods and VRO status, with your user folder and player name removed. It can copy your newest crash report to the clipboard and open the issue page; nothing is uploaded.
+*   The screen keeps the same layout at every resolution and GUI scale.
+*   Needs Cloth Config (included in the Vault Hunters packs). Without it, VRO runs normally and the key tells you where the settings live.
+
+VRO can also check its update manifest in the background and show an update row on the main menu plus occasional CurseForge reminders in chat; see Update notices below.
 
 ## Vault Hunters improvements
 
@@ -24,7 +46,7 @@ VRO can check its raw GitHub update manifest asynchronously and show an update r
 *   Keeps Flywheel GPU instancing available with supported Oculus shader stacks, avoiding the severe fallback-renderer slowdown seen around large moving contraptions.
 *   Works with supported Rubidium and Embeddium configurations.
 *   Allows shader packs to provide dedicated Flywheel scene and shadow programs. When they are unavailable or fail to compile, VRO automatically retries its generated compatibility path and then falls back safely.
-*   Restores Flywheel's normal instancing default when a pack ships it disabled, while retaining hardware and shader failure safeguards.
+*   Turns on Flywheel's instancing renderer for the current session when a pack ships it disabled, without changing Flywheel's own config file, while keeping its hardware and shader failure safeguards.
 *   Keeps Flywheel model formats synchronized across Oculus startup and resource-reload pipeline transitions.
 
 Use `/vro create status` to see the active Flywheel backend, shader path, and contraption-culling activity. Shader compatibility can be changed immediately with `/vro create shader_compat on|off|status`.
@@ -33,6 +55,9 @@ Use `/vro create status` to see the active Flywheel backend, shader path, and co
 
 *   Reduces client collision work around dense mob farms and rapid kill systems.
 *   Builds ordinary particle billboards from the camera basis, reuses Rubidium/Embeddium packed output, shares same-tick light results, and skips empty particle, toast, tutorial, debug, and renderer setup work without hiding visible effects.
+*   Makes particle-heavy moments such as Vault Hunters Nova bursts cheaper: collisions read each block once per tick instead of once per particle, dead particles are removed in one pass, particles share one random generator, and particle providers are looked up once. Every particle is kept.
+*   Includes a built-in copy of ImmediatelyFast for HUD, text, map and buffer-upload batching. It switches itself off when the standalone ImmediatelyFast mod is installed.
+*   With Farsight installed, releases client chunks the server has already unloaded once they are far outside your view, so memory no longer grows for the whole session.
 *   Adapts eleven later ModernFix render/model improvements for chunk meshing, model caches, profile textures, texture stitching, and Forge/CTM concurrency.
 *   Carries eight guarded Embeddium/Rubidium corrections for chunk rebuilds, bounded native buffers, arena growth, custom block faces, fluid lighting, shader color, vertex writers, and optional CodeChickenLib rendering.
 *   Uses renderer-native asynchronous chunk scheduling by default to reduce blocking rebuild stalls without changing another mod's settings.
@@ -68,6 +93,8 @@ Update checks are enabled by default, while displayed update types default to cr
 *   **Create shader path:** Create 0.5.1.i, Flywheel 0.6.11, Oculus 1.6.x, and supported Rubidium or Embeddium releases
 *   **Renderer-transfer baselines:** Embeddium 0.3.18/0.3.19 and Rubidium 0.5.6
 *   **Sophisticated Storage display path:** Sophisticated Storage 1.18.2-0.9.8.915 with Sophisticated Core 1.18.2-0.6.4.604
+*   **Oculus:** 1.6.4 and the 1.6.5, 1.6.7 and 1.6.8 dh-compat builds
+*   **Settings screen:** Cloth Config 6.5.102 or newer (optional; only the screen needs it)
 
 Optional integrations load only when their target mod is present. VRO yields overlapping work when Entity Collision FPS Fix, BadOptimizations, Particle Core, Flerovium, or Better Fps - Render Distance is installed.
 
@@ -84,7 +111,10 @@ No server installation, world migration, cache deletion, or settings reset is re
 
 | Command                                 |Purpose                                                        |
 | --------------------------------------- |-------------------------------------------------------------- |
+| Settings key (set in Controls)          |Open the VRO settings screen.                                  |
 | <code>/vro</code>                       |Show the current Compare Mode state.                           |
+| <code>/vro gpuentity status|stats|verify on|off</code> |Show GPU rendering status and counters, or compare GPU output with vanilla. |
+| <code>/vro feature list</code>          |List the GPU feature switches (`/vro feature <name> on|off`).  |
 | <code>/vro compare on|off|status</code> |Compare VRO optimizations without restarting Minecraft.        |
 | <code>/vro updates on|off|status|critical|all</code> |Control update checks and choose critical-only or all notices. |
 | <code>/vro backports</code>             |Show the startup owner and reason for each ModernFix-derived backport. |
@@ -119,4 +149,4 @@ Crash guards, world cleanup, and map-key compatibility remain active in Compare 
 
 VRO was developed by [HoYin1600p](https://github.com/HoYin1600p) and is licensed under GNU AGPL v3.0 or later. Complete adapted-source attribution and license notices are included in the public repository and release jar.
 
-No third-party mod jar, Vault Hunters source, shader pack, or decompiled class is bundled. Minecraft is a trademark of Microsoft. Vault Hunters belongs to its respective authors. This independent project is not affiliated with Mojang, Microsoft, Forge, Iskallia, or the credited projects.
+No third-party mod jar, Vault Hunters source, shader pack, or decompiled class is bundled. The built-in ImmediatelyFast copy is relocated, attributed source used under its license. Minecraft is a trademark of Microsoft. Vault Hunters belongs to its respective authors. This independent project is not affiliated with Mojang, Microsoft, Forge, Iskallia, or the credited projects.
