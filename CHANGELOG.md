@@ -7,6 +7,17 @@ and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+## [0.5.1] - 2026-10-03
+
+### Fixed
+
+- Fixed a crash (`IndexOutOfBoundsException` in `HoleBatch.fillItem`) with Oculus' batched entity
+  rendering. When Oculus drew a parked buffer segment with a different draw state than the one it was
+  reserved in, VRO filled the reserved vertices into Oculus' shorter upload slice using offsets from the
+  original buffer. It now fills the original buffer it reserved into, and every CPU fill checks its bounds:
+  a hole that does not fit is skipped and counted (`/vro gpuentity stats`, "writes skipped out of range")
+  instead of crashing the game.
+
 ## [0.5.0] - 2026-10-03
 
 ### Performance

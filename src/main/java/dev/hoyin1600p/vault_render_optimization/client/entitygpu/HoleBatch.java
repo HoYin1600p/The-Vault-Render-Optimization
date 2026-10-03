@@ -277,6 +277,16 @@ public final class HoleBatch {
         return (words[i * InstanceRecord.WORDS + InstanceRecord.OUTPUT] - base) >> 2;
     }
 
+    /** CPU fill writes skipped because the hole lay outside the buffer handed in (counted, never thrown). */
+    public static final java.util.concurrent.atomic.AtomicLong FILL_WRITES_SKIPPED = new java.util.concurrent.atomic.AtomicLong();
+
+    /** Whether {@code words} ints starting at byte {@code at} fit inside {@code popped}; counts a skip when not. */
+    private static boolean fits(ByteBuffer popped, int at, int words) {
+        if (at >= 0 && (long) at + (long) words * 4 <= popped.limit()) return true;
+        FILL_WRITES_SKIPPED.incrementAndGet();
+        return false;
+    }
+
     /** Writes every hole with {@link ReferenceExpander}: the same bytes the vanilla path writes. */
     public void fillOnCpu(ByteBuffer popped) {
         boolean swap = popped.order() != ByteOrder.LITTLE_ENDIAN;
@@ -284,6 +294,7 @@ public final class HoleBatch {
             int r = i * ParticleRecord.WORDS;
             ParticleReference.expand(particleWords, r, camera, particleScratch, 0);
             int at = particleWords[r + ParticleRecord.OUTPUT] - base;
+            if (!fits(popped, at, particleScratch.length)) continue;
             for (int w = 0; w < particleScratch.length; w++) {
                 popped.putInt(at + w * 4, swap ? Integer.reverseBytes(particleScratch[w]) : particleScratch[w]);
             }
@@ -316,6 +327,7 @@ public final class HoleBatch {
                 result = extended;
             }
             int at = words[r + InstanceRecord.OUTPUT] - base;
+            if (!fits(popped, at, resultWords)) continue;
             for (int w = 0; w < resultWords; w++) {
                 popped.putInt(at + w * 4, swap ? Integer.reverseBytes(result[w]) : result[w]);
             }
@@ -343,6 +355,7 @@ public final class HoleBatch {
             result = extended;
         }
         int at = segInts[s + 2] - base;
+        if (!fits(popped, at, resultWords)) return;
         for (int w = 0; w < resultWords; w++) {
             popped.putInt(at + w * 4, swap ? Integer.reverseBytes(result[w]) : result[w]);
         }

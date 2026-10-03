@@ -587,7 +587,8 @@ public final class GpuEntityModels {
     // builder's upload of that memory takes them to the GPU as usual. A parked batch is dropped as
     // soon as its builder starts writing again (the memory is being reused) and at every frame start.
 
-    private record Parked(HoleBatch batch, Object owner, int vertexCount, VertexFormat format) {
+    /** {@code slice} views the memory the batch was popped into, at the size it was popped with. */
+    private record Parked(HoleBatch batch, Object owner, int vertexCount, VertexFormat format, ByteBuffer slice) {
     }
 
     private static int segmentPopDepth;
@@ -657,7 +658,8 @@ public final class GpuEntityModels {
         }
         if (!armed && gpuReady && segmentPopDepth > 0 && RenderSystem.isOnRenderThread()) {
             long address = org.lwjgl.system.MemoryUtil.memAddress(slice);
-            Parked previous = PARKED.put(address, new Parked(batch, owner, drawState.vertexCount(), drawState.format()));
+            Parked previous = PARKED.put(address,
+                    new Parked(batch, owner, drawState.vertexCount(), drawState.format(), slice.duplicate()));
             if (previous != null) {
                 PARKED_DROPPED.incrementAndGet();
                 release(previous.batch());
@@ -727,9 +729,10 @@ public final class GpuEntityModels {
         if (parked == null) return;
         if (state != State.ACTIVE || drawState.vertexCount() != parked.vertexCount()
                 || drawState.format() != parked.format()) {
-            // Not the draw state it was parked with: never upload holes.
+            // Not the draw state it was parked with: never upload holes. Fill the memory the batch was popped into,
+            // at its own size: this upload's slice can be shorter, and the batch's offsets are relative to its own pop.
             LATE_FILLS.incrementAndGet();
-            fillOnCpu(parked.batch(), slice);
+            fillOnCpu(parked.batch(), parked.slice());
             return;
         }
         handoff = parked.batch();
@@ -926,7 +929,8 @@ public final class GpuEntityModels {
     public static String stats() {
         return "parts on GPU " + PARTS_GPU.get() + ", vertices on GPU " + VERTICES_GPU.get() + ", dispatches "
                 + DISPATCHES.get() + ", batches filled on CPU " + BATCHES_CPU_FILLED.get() + ", parts not eligible "
-                + PARTS_NOT_ELIGIBLE.get() + ", late fills " + LATE_FILLS.get() + ", fills outside the upload "
+                + PARTS_NOT_ELIGIBLE.get() + ", late fills " + LATE_FILLS.get() + " (writes skipped out of range "
+                + HoleBatch.FILL_WRITES_SKIPPED.get() + "), fills outside the upload "
                 + UNARMED_FILLS.get() + ", small batches filled on CPU " + SMALL_FILLS.get() + ", sorted item batches "
                 + SORTED_ITEM_BATCHES.get() + " (sort position mismatches " + SORT_POSITION_MISMATCHES.get() + "), model sort fills "
                 + SORT_FILLS_HINTED.get() + " hinted / " + SORT_FILLS_UNHINTED.get() + " never hinted" + ", ineffective pauses " + PAUSES.get() + ", Oculus segments parked "
