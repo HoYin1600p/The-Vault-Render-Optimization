@@ -79,7 +79,9 @@ repositories {
     mavenCentral()
 }
 
-def prismInstancesDirectory = new File(System.getProperty('user.home'), 'AppData/Roaming/PrismLauncher/instances')
+// Override with -Pvro.prismInstances=<folder> to search a different Prism instances root.
+def prismInstancesDirectory = findProperty('vro.prismInstances') ? file(findProperty('vro.prismInstances'))
+        : new File(System.getProperty('user.home'), 'AppData/Roaming/PrismLauncher/instances')
 def knownVaultInstances = [
         [name: 'Remastered Public Stack', folder: 'Remastered', minecraft: 'minecraft'],
         [name: 'VaultCrafters Bootstrap', folder: 'vaultcrafters-bootstrap-1.0.0', minecraft: '.minecraft'],
@@ -348,7 +350,6 @@ tasks.named('jar', Jar).configure {
                 "Implementation-Title"    : project.name,
                 "Implementation-Version"  : project.jar.archiveVersion,
                 "Implementation-Vendor"   : mod_authors,
-                "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ"),
                 "MixinConfigs"            : "mixins.${mod_id}.json,mixins.${mod_id}.flywheel.json,mixins.${mod_id}.oculus.json,mixins.${mod_id}.flywheel_forge.json,mixins.${mod_id}.immediatelyfast.json"
         ])
     }
@@ -359,4 +360,9 @@ tasks.named('jar', Jar).configure {
 tasks.withType(JavaCompile).configureEach {
     dependsOn tasks.named('extractBundledFlywheel')
     options.encoding = 'UTF-8'
+}
+
+tasks.withType(AbstractArchiveTask).configureEach {
+    preserveFileTimestamps = false
+    reproducibleFileOrder = true
 }

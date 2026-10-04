@@ -6,6 +6,7 @@ import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -90,11 +91,11 @@ public final class GpuEntitySelfTest {
         }
         int[] expected = new int[out];
         boolean[] written = new boolean[out];
-        java.util.Arrays.fill(expected, SENTINEL);
+        Arrays.fill(expected, SENTINEL);
         for (int i = 0; i < instances; i++) {
             int[] words = outputs.get(i);
             System.arraycopy(words, 0, expected, outOffsets[i], words.length);
-            java.util.Arrays.fill(written, outOffsets[i], outOffsets[i] + words.length, true);
+            Arrays.fill(written, outOffsets[i], outOffsets[i] + words.length, true);
         }
         return new Case(meshes, records, instances, out, expected, written);
     }
@@ -159,8 +160,18 @@ public final class GpuEntitySelfTest {
         return run(backend, seed, instances, false);
     }
 
+    /**
+     * Discards GL errors left by earlier rendering (menus, world load, other mods) so a self-test's own
+     * {@code glGetError} check reports only what the test itself caused.
+     */
+    static void clearGlErrors() {
+        for (int i = 0; i < 64 && GL11C.glGetError() != GL11C.GL_NO_ERROR; i++) {
+        }
+    }
+
     static String run(GpuEntityBackend backend, long seed, int instances, boolean iris) {
         Case test = build(seed, instances, iris);
+        clearGlErrors();
         int meshBuffer = GL15C.glGenBuffers();
         int outputBuffer = GL15C.glGenBuffers();
         ByteBuffer meshData = null;
@@ -283,11 +294,11 @@ public final class GpuEntitySelfTest {
         }
         int[] expected = new int[out];
         boolean[] written = new boolean[out];
-        java.util.Arrays.fill(expected, SENTINEL);
+        Arrays.fill(expected, SENTINEL);
         for (int i = 0; i < outputs.size(); i++) {
             int[] words = outputs.get(i);
             System.arraycopy(words, 0, expected, outOffsets.get(i), words.length);
-            java.util.Arrays.fill(written, outOffsets.get(i), outOffsets.get(i) + words.length, true);
+            Arrays.fill(written, outOffsets.get(i), outOffsets.get(i) + words.length, true);
         }
         return new ItemCase(meshes, records, recordWords.size(), out, expected, written);
     }
@@ -343,6 +354,7 @@ public final class GpuEntitySelfTest {
             return "the item program is unavailable: " + (iris ? backend.itemIrisFailure() : backend.itemFailure());
         }
         ItemCase test = buildItems(seed, instances, iris);
+        clearGlErrors();
         int meshBuffer = GL15C.glGenBuffers();
         int outputBuffer = GL15C.glGenBuffers();
         ByteBuffer meshData = null;

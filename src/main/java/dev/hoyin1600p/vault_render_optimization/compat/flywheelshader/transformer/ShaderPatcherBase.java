@@ -55,7 +55,6 @@ public abstract class ShaderPatcherBase {
 
         FileIndexImpl index = new FileIndexImpl();
 
-        //Templates.DIFFUSE_FILE.getFile().generateFinalSource(index, finalSource);
         //headerFile
         header.getFile().generateFinalSource(index, structBuilder);
 
@@ -67,7 +66,6 @@ public abstract class ShaderPatcherBase {
 
     protected void genHeadSource(StringBuilder headerBuilder, Context key) {
 
-        //key.ctx.getShaderConstants().writeInto(finalSource);
 
         headerBuilder.append("""
                                      struct Vertex {
@@ -93,14 +91,6 @@ public abstract class ShaderPatcherBase {
 
         public SourceFile getFile() {
             return file;
-        }
-
-        public StateSnapshot getCtx() {
-            return ctx;
-        }
-
-        public VertexType getVertexType() {
-            return vertexType;
         }
 
         @Override

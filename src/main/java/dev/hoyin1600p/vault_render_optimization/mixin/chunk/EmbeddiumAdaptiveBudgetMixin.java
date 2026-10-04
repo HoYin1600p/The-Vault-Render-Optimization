@@ -4,7 +4,13 @@
 package dev.hoyin1600p.vault_render_optimization.mixin.chunk;
 
 import dev.hoyin1600p.vault_render_optimization.client.chunk.ChunkUpdateState;
-import dev.hoyin1600p.vault_render_optimization.client.chunk.budget.*;
+import dev.hoyin1600p.vault_render_optimization.client.chunk.budget.AdaptiveBudgetState;
+import dev.hoyin1600p.vault_render_optimization.client.chunk.budget.AdaptiveChunkBudget;
+import dev.hoyin1600p.vault_render_optimization.client.chunk.budget.BudgetBuilderAccess;
+import dev.hoyin1600p.vault_render_optimization.client.chunk.budget.BudgetResults;
+import dev.hoyin1600p.vault_render_optimization.client.chunk.budget.BudgetedDrain;
+import dev.hoyin1600p.vault_render_optimization.client.chunk.budget.TerrainLoadingGuard;
+import dev.hoyin1600p.vault_render_optimization.client.chunk.budget.TimedChunkTask;
 import it.unimi.dsi.fastutil.PriorityQueue;
 import java.util.Map;
 import me.jellysquid.mods.sodium.client.gl.device.RenderDevice;
@@ -15,8 +21,15 @@ import me.jellysquid.mods.sodium.client.render.chunk.compile.ChunkBuildResult;
 import me.jellysquid.mods.sodium.client.render.chunk.compile.ChunkBuilder;
 import me.jellysquid.mods.sodium.client.render.chunk.region.RenderRegionManager;
 import me.jellysquid.mods.sodium.client.render.chunk.tasks.ChunkRenderBuildTask;
-import org.spongepowered.asm.mixin.*;
-import org.spongepowered.asm.mixin.injection.*;
+import org.spongepowered.asm.mixin.Final;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Pseudo;
+import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyVariable;
+import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 

@@ -48,8 +48,15 @@ public abstract class StorageBlockEntityRenderUpdateMixin implements StorageRend
             return;
         }
 
-        vro$beforePacketModel = BarrelModelSignature.capture(barrel);
         vro$deferredRenderUpdate = false;
+        try {
+            vro$beforePacketModel = BarrelModelSignature.capture(barrel);
+        } catch (RuntimeException unreadable) {
+            // A barrel that cannot be summarised is handled exactly as without the filter.
+            vro$beforePacketModel = null;
+            vro$filteringPacket = false;
+            return;
+        }
         vro$filteringPacket = true;
     }
 
@@ -78,8 +85,13 @@ public abstract class StorageBlockEntityRenderUpdateMixin implements StorageRend
         }
 
         BarrelBlockEntity barrel = (BarrelBlockEntity) (Object) this;
-        BarrelModelSignature.Snapshot after = BarrelModelSignature.capture(barrel);
-        if (!after.equals(before)) {
+        BarrelModelSignature.Snapshot after;
+        try {
+            after = BarrelModelSignature.capture(barrel);
+        } catch (RuntimeException unreadable) {
+            after = null; // cannot compare: rebuild, as vanilla would
+        }
+        if (after == null || !after.equals(before)) {
             SophisticatedStorageDiagnostics.recordModelRebuildAllowed();
             WorldHelper.notifyBlockUpdate(barrel);
         } else {

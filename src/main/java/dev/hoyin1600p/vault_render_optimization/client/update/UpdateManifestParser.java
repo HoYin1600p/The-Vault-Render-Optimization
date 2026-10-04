@@ -1,5 +1,7 @@
 package dev.hoyin1600p.vault_render_optimization.client.update;
 
+import dev.hoyin1600p.vault_render_optimization.config.model.UpdateNotice;
+
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;

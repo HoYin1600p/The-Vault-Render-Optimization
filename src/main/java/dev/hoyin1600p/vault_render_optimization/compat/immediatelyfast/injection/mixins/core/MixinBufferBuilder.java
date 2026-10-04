@@ -45,6 +45,8 @@ public abstract class MixinBufferBuilder implements IBufferBuilder {
     @Override
     public void release() {
         if (!this.isReleased()) {
+            // VRO: a GPU batch parked in this builder's memory must never be filled after the free.
+            dev.hoyin1600p.vault_render_optimization.client.entitygpu.GpuEntityModels.builderBegins(this);
             MemoryTracker.ALLOCATOR.free(MemoryUtil.memAddress0(this.buffer));
             this.buffer = null;
         }

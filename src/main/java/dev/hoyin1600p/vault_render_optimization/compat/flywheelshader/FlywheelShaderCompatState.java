@@ -2,7 +2,6 @@ package dev.hoyin1600p.vault_render_optimization.compat.flywheelshader;
 
 import com.jozufozu.flywheel.backend.Backend;
 import net.coderbot.iris.block_rendering.BlockRenderingSettings;
-import dev.hoyin1600p.vault_render_optimization.config.ClientOptimizationConfig;
 
 public final class FlywheelShaderCompatState {
     private static Object pipeline;
@@ -146,7 +145,6 @@ public final class FlywheelShaderCompatState {
     }
 
     private static boolean featureEnabled() {
-        return ClientOptimizationConfig.optimizationsEnabled()
-                && ClientOptimizationConfig.createFlywheelShaderCompat;
+        return FlywheelShaderCompatSwitch.isEnabled();
     }
 }

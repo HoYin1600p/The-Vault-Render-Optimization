@@ -12,6 +12,8 @@
  * The Vault Render Optimization modifications: Copyright (C) 2026 HoYin1600p
  * Modified: 2026-08-30; retargeted to VHA ownership and logging while retaining
  * the final 1.18-compatible STB binding selection and packing behavior.
+ * Modified: 2026-10-03; atlas sizing uses a long area and stops at the atlas limit
+ * (an int overflow could loop forever on very large atlases).
  */
 package dev.hoyin1600p.vault_render_optimization.backport.modernfix.texture;
 
@@ -183,7 +185,10 @@ public final class StbTextureStitcher {
 
             longestWidth = Mth.smallestEncompassingPowerOfTwo(longestWidth);
             longestHeight = Mth.smallestEncompassingPowerOfTwo(longestHeight);
-            while (longestWidth * longestHeight < totalArea) {
+            // VRO: long product, and stop once past the atlas limit (checked just below), so a huge atlas falls
+            // back to vanilla instead of overflowing int and looping forever.
+            while ((long) longestWidth * longestHeight < totalArea
+                    && longestWidth <= maxWidth && longestHeight <= maxHeight) {
                 if (longestWidth <= longestHeight) {
                     longestWidth *= 2;
                 } else {

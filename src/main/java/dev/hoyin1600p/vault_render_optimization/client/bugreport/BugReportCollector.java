@@ -8,6 +8,7 @@ import dev.hoyin1600p.vault_render_optimization.config.ClientOptimizationConfig;
 import dev.hoyin1600p.vault_render_optimization.config.ConfigSettingCatalog.Setting;
 import dev.hoyin1600p.vault_render_optimization.config.ConfigSettingCatalog.Storage;
 import dev.hoyin1600p.vault_render_optimization.config.ConfigSettingStore;
+import dev.hoyin1600p.vault_render_optimization.util.ModIds;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -55,8 +56,8 @@ public final class BugReportCollector {
                 "GPU: " + GlUtil.getRenderer() + " (" + GlUtil.getVendor() + ")",
                 "OpenGL and driver: " + GlUtil.getOpenGLVersion(),
                 RendererStackLine.build(BugReportCollector::modVersion, BugReportCollector::modFile),
-                "Oculus: " + modVersion("oculus") + oculusShaderPack(),
-                "Flywheel: " + modVersion("flywheel"),
+                "Oculus: " + modVersion(ModIds.OCULUS) + oculusShaderPack(),
+                "Flywheel: " + modVersion(ModIds.FLYWHEEL),
                 "ImmediatelyFast: " + immediatelyFast()
         );
         List<String> state = List.of(
@@ -110,7 +111,7 @@ public final class BugReportCollector {
     }
 
     private static String oculusShaderPack() {
-        if (!ModList.get().isLoaded("oculus")) {
+        if (!ModList.get().isLoaded(ModIds.OCULUS)) {
             return "";
         }
         try {

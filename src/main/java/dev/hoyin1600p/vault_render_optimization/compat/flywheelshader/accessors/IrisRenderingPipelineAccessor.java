@@ -21,5 +21,4 @@ public interface IrisRenderingPipelineAccessor {
     ShaderInstance callCreateShadowShader(String name, ProgramSource source, ProgramId programId, AlphaTest fallbackAlpha,
                                           VertexFormat vertexFormat, boolean isIntensity, boolean isFullbright, boolean isText) throws IOException;
 
-    //IrisShaderProgram getFlwShaderProgram(ProgramContext context);
 }

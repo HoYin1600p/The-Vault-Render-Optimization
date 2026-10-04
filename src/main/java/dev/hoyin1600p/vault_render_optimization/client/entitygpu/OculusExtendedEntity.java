@@ -1,6 +1,7 @@
 package dev.hoyin1600p.vault_render_optimization.client.entitygpu;
 
 import com.mojang.blaze3d.vertex.VertexFormat;
+import dev.hoyin1600p.vault_render_optimization.util.ModIds;
 import net.minecraftforge.fml.ModList;
 
 /**
@@ -17,7 +18,7 @@ public final class OculusExtendedEntity {
     private static boolean isLoaded() {
         try {
             ModList mods = ModList.get();
-            return mods != null && mods.isLoaded("oculus");
+            return mods != null && mods.isLoaded(ModIds.OCULUS);
         } catch (Throwable failure) {
             return false;
         }

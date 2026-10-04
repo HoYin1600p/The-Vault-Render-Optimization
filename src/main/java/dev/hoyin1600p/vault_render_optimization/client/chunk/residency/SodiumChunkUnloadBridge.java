@@ -1,6 +1,7 @@
 package dev.hoyin1600p.vault_render_optimization.client.chunk.residency;
 
 import dev.hoyin1600p.vault_render_optimization.VaultRenderOptimization;
+import dev.hoyin1600p.vault_render_optimization.util.ModIds;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
@@ -69,7 +70,7 @@ final class SodiumChunkUnloadBridge {
     private static boolean rendererInstalled() {
         try {
             ModList modList = ModList.get();
-            return modList != null && (modList.isLoaded("embeddium") || modList.isLoaded("rubidium"));
+            return modList != null && (modList.isLoaded(ModIds.EMBEDDIUM) || modList.isLoaded(ModIds.RUBIDIUM));
         } catch (RuntimeException | LinkageError failure) {
             return false;
         }

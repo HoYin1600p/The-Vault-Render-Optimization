@@ -1,7 +1,9 @@
 package dev.hoyin1600p.vault_render_optimization.client.entitygpu;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.AnnotationNode;
@@ -129,8 +131,15 @@ public final class GpuEntityAudit {
     private GpuEntityAudit() {
     }
 
-    /** One skipped or hooked method: accepted names (official and SRG) and its descriptor. */
-    record Target(String description, List<String> names, String descriptor) {
+    /**
+     * One skipped or hooked method: accepted names (official and SRG), its descriptor and, for a hooked method,
+     * how many distinct VRO handlers it must call (a HEAD/RETURN pair is two: one half alone is unsafe).
+     */
+    record Target(String description, List<String> names, String descriptor, int hooks) {
+        Target(String description, List<String> names, String descriptor) {
+            this(description, names, descriptor, 1);
+        }
+
         boolean matches(MethodNode method) {
             return names.contains(method.name) && method.desc.equals(descriptor);
         }
@@ -147,7 +156,7 @@ public final class GpuEntityAudit {
     static final Target SPRITE_UV = new Target("SpriteCoordinateExpander.uv", List.of("uv", "m_7421_"),
             "(FF)Lcom/mojang/blaze3d/vertex/VertexConsumer;");
     static final Target BUILDER_POP = new Target("BufferBuilder.popNextBuffer", List.of("popNextBuffer", "m_85728_"),
-            "()Lcom/mojang/datafixers/util/Pair;");
+            "()Lcom/mojang/datafixers/util/Pair;", 2);
     static final Target BUILDER_END = new Target("BufferBuilder.end", List.of("end", "m_85721_"), "()V");
     static final Target BUILDER_DISCARD = new Target("BufferBuilder.discard", List.of("discard", "m_85730_"), "()V");
     static final Target BUILDER_BEGIN = new Target("BufferBuilder.begin", List.of("begin", "m_166779_"),
@@ -155,7 +164,7 @@ public final class GpuEntityAudit {
     static final Target BUILDER_SORT = new Target("BufferBuilder.setQuadSortOrigin",
             List.of("setQuadSortOrigin", "m_166771_"), "(FFF)V");
     static final Target UPLOADER_END = new Target("BufferUploader.end", List.of("end", "m_85761_"),
-            "(Lcom/mojang/blaze3d/vertex/BufferBuilder;)V");
+            "(Lcom/mojang/blaze3d/vertex/BufferBuilder;)V", 2);
     static final Target UPLOADER_DRAW = new Target("BufferUploader._end", List.of("_end", "m_166838_"),
             "(Ljava/nio/ByteBuffer;Lcom/mojang/blaze3d/vertex/VertexFormat$Mode;Lcom/mojang/blaze3d/vertex/VertexFormat;"
                     + "ILcom/mojang/blaze3d/vertex/VertexFormat$IndexType;IZ)V");
@@ -378,16 +387,17 @@ public final class GpuEntityAudit {
             if (method == null) return target.description() + " is missing";
             String owner = mergedFrom(method);
             if (owner != null) return target.description() + " is overwritten by " + owner;
-            boolean hooked = false;
+            Set<String> handlers = new HashSet<>();
             for (AbstractInsnNode insn : method.instructions) {
                 if (!(insn instanceof MethodInsnNode call) || !call.owner.equals(node.name)) continue;
                 MethodNode callee = find(node, call.name, call.desc);
-                if (callee != null && vroMixin.equals(mergedFrom(callee))) {
-                    hooked = true;
-                    break;
-                }
+                if (callee != null && vroMixin.equals(mergedFrom(callee))) handlers.add(callee.name + callee.desc);
             }
-            if (!hooked) return target.description() + " does not contain VRO's GPU entity hook";
+            if (handlers.isEmpty()) return target.description() + " does not contain VRO's GPU entity hook";
+            if (handlers.size() < target.hooks()) {
+                return target.description() + " keeps " + handlers.size() + " of VRO's " + target.hooks()
+                        + " GPU entity hooks";
+            }
         }
         return null;
     }

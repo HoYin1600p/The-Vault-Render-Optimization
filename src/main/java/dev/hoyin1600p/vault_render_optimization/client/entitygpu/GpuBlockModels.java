@@ -47,7 +47,6 @@ public final class GpuBlockModels {
         final BakedQuad[] quads;
         final ItemMesh mesh;
         final int first;
-        int validatedFrame;
 
         Entry(int generation, List<?>[] lists, BakedQuad[] quads, ItemMesh mesh, int first) {
             this.generation = generation;
@@ -55,7 +54,6 @@ public final class GpuBlockModels {
             this.quads = quads;
             this.mesh = mesh;
             this.first = first;
-            this.validatedFrame = GpuEntityModels.frameIndex();
         }
 
         boolean gpu() {
@@ -80,6 +78,8 @@ public final class GpuBlockModels {
     public static final AtomicLong ORACLE_MISMATCHES = new AtomicLong();
     private static volatile String firstOracleMismatch;
     private static boolean oracleRunning;
+    /** Set while a model's own getQuads runs: a nested render from inside it stays on the CPU (LISTS is shared). */
+    private static boolean collecting;
     private static BufferBuilder oracleBuffer;
 
     private GpuBlockModels() {
@@ -93,7 +93,7 @@ public final class GpuBlockModels {
     public static boolean tryReserve(ModelBlockRenderer renderer, PoseStack.Pose pose, VertexConsumer consumer,
                                      BlockState state, BakedModel model, float red, float green, float blue, int light,
                                      int overlay, IModelData data) {
-        if (oracleRunning) return false;
+        if (oracleRunning || collecting) return false;
         ItemWriter active = writer();
         if (active == null || !ClientOptimizationConfig.gpuItems || !GpuEntityModels.itemFrameActive()
                 || !RenderSystem.isOnRenderThread() || consumer.getClass() != BufferBuilder.class) {
@@ -102,11 +102,17 @@ public final class GpuBlockModels {
         GpuHoleBuilder builder = (GpuHoleBuilder) consumer;
         if (!builder.vro$canReserveItem()) return false;
         if (builder.vro$format() != DefaultVertexFormat.NEW_ENTITY && !GpuEntityModels.itemsIrisActive()) return false;
-        for (int s = 0; s < 7; s++) {
-            RANDOM.setSeed(42L);
-            LISTS[s] = model.getQuads(state, s < 6 ? SIDES[s] : null, RANDOM, data);
+        Entry entry;
+        collecting = true;
+        try {
+            for (int s = 0; s < 7; s++) {
+                RANDOM.setSeed(42L);
+                LISTS[s] = model.getQuads(state, s < 6 ? SIDES[s] : null, RANDOM, data);
+            }
+            entry = entry(model, state, data, active);
+        } finally {
+            collecting = false;
         }
-        Entry entry = entry(model, state, data, active);
         if (entry == null || !entry.gpu()) {
             MODELS_NOT_ELIGIBLE.incrementAndGet();
             return false;
@@ -144,15 +150,11 @@ public final class GpuBlockModels {
     private static Entry entry(BakedModel model, BlockState state, IModelData data, ItemWriter active) {
         Entry entry = CACHE.get(model);
         int generation = GpuEntityModels.generation();
-        int frame = GpuEntityModels.frameIndex();
         if (entry != null && entry.generation == generation) {
-            if (entry.validatedFrame == frame && !GpuEntityModels.verifying()) return entry;
+            // Every use: one model can return different lists for different states or model data in one frame.
             boolean same = true;
             for (int s = 0; s < 7 && same; s++) same = entry.lists[s] == LISTS[s];
-            if (same) {
-                entry.validatedFrame = frame;
-                return entry;
-            }
+            if (same) return entry;
         }
         // Random-dependent models (weighted, multipart with random parts) would differ between the writers'
         // generators: require every side's list to be the same object under another seed.

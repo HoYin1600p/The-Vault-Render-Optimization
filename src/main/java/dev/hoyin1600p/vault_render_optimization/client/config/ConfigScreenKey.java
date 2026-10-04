@@ -2,6 +2,7 @@ package dev.hoyin1600p.vault_render_optimization.client.config;
 
 import com.mojang.blaze3d.platform.InputConstants;
 import dev.hoyin1600p.vault_render_optimization.VaultRenderOptimization;
+import dev.hoyin1600p.vault_render_optimization.util.ModIds;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.TranslatableComponent;
@@ -15,7 +16,7 @@ import net.minecraftforge.fml.ModList;
  * Cloth Config is optional; without it the key explains where the settings still live.
  */
 public final class ConfigScreenKey {
-    public static final String CLOTH_CONFIG_MOD_ID = "cloth_config";
+    public static final String CLOTH_CONFIG_MOD_ID = ModIds.CLOTH_CONFIG;
     public static final KeyMapping OPEN_CONFIG = new KeyMapping(
             "key.vault_render_optimization.open_config",
             KeyConflictContext.IN_GAME,
@@ -51,8 +52,9 @@ public final class ConfigScreenKey {
         try {
             // Only reached with Cloth installed, so its classes resolve.
             dev.hoyin1600p.vault_render_optimization.client.config.cloth.VroClothConfigScreen.open(minecraft.screen);
-        } catch (LinkageError incompatible) {
-            // Built against Cloth 6.5.102; an older or changed Cloth API must not crash the game.
+        } catch (LinkageError | RuntimeException incompatible) {
+            // Built against Cloth 6.5.102; an older or changed Cloth API (a missing class, or one that now
+            // throws while the screen is built) must not crash the game.
             VaultRenderOptimization.LOGGER.warn("Could not open the settings screen with this Cloth Config", incompatible);
             if (minecraft.player != null) {
                 minecraft.player.displayClientMessage(

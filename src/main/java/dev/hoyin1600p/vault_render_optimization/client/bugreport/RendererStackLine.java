@@ -1,5 +1,6 @@
 package dev.hoyin1600p.vault_render_optimization.client.bugreport;
 
+import dev.hoyin1600p.vault_render_optimization.util.ModIds;
 import java.util.Objects;
 import java.util.function.Function;
 
@@ -19,11 +20,11 @@ final class RendererStackLine {
      * @param fileOf    identity of the file providing a mod ID (a path, for example), or null
      */
     static String build(Function<String, String> versionOf, Function<String, Object> fileOf) {
-        String embeddium = versionOf.apply("embeddium");
-        String rubidium = versionOf.apply("rubidium");
+        String embeddium = versionOf.apply(ModIds.EMBEDDIUM);
+        String rubidium = versionOf.apply(ModIds.RUBIDIUM);
         if (!NOT_INSTALLED.equals(embeddium) && !NOT_INSTALLED.equals(rubidium)) {
-            Object embeddiumFile = fileOf.apply("embeddium");
-            if (embeddiumFile != null && Objects.equals(embeddiumFile, fileOf.apply("rubidium"))) {
+            Object embeddiumFile = fileOf.apply(ModIds.EMBEDDIUM);
+            if (embeddiumFile != null && Objects.equals(embeddiumFile, fileOf.apply(ModIds.RUBIDIUM))) {
                 rubidium = NOT_INSTALLED;
             }
         }

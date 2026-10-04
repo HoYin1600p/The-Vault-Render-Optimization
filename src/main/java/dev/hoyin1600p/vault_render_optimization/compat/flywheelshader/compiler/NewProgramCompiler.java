@@ -42,7 +42,6 @@ public class NewProgramCompiler <TP extends ShaderPatcherBase,P extends WorldPro
     private final Iterable<StringPair> environmentDefines;
     public NewProgramCompiler(GlProgram.Factory<P> factory, Template<? extends VertexData> template, FileResolution header,Class<TP> patcherClass) throws NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
         super(factory, template, header);
-        //environmentDefines = StandardMacros.createStandardEnvironmentDefines();
         Method method = StandardMacros.class.getMethod("createStandardEnvironmentDefines");
         environmentDefines =(Iterable<StringPair>) method.invoke(null);
         patcher = patcherClass.getDeclaredConstructor(Template.class, FileResolution.class).newInstance(template,header);

@@ -1,5 +1,7 @@
 package dev.hoyin1600p.vault_render_optimization.client.entitygpu;
 
+import com.mojang.blaze3d.vertex.VertexFormat;
+
 /** Added to {@code BufferBuilder} by VRO's GPU entity mixin. */
 public interface GpuHoleBuilder {
     /**
@@ -32,7 +34,7 @@ public interface GpuHoleBuilder {
                      float[] sprite, int flips);
 
     /** The builder's current vertex format (Oculus may have switched {@code NEW_ENTITY} to its own). */
-    com.mojang.blaze3d.vertex.VertexFormat vro$format();
+    VertexFormat vro$format();
 
     /**
      * Reserves {@code vertexCount} vertices of an item mesh (starting at {@code firstVertex} of the mesh) with

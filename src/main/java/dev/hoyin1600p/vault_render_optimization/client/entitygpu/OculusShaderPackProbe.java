@@ -1,5 +1,6 @@
 package dev.hoyin1600p.vault_render_optimization.client.entitygpu;
 
+import dev.hoyin1600p.vault_render_optimization.util.ModIds;
 import net.minecraftforge.fml.ModList;
 
 /** True when an Oculus shader pack is active; any doubt counts as active (the GPU path then stays off). */
@@ -12,7 +13,7 @@ final class OculusShaderPackProbe {
     private static boolean isLoaded() {
         try {
             ModList mods = ModList.get();
-            return mods == null || mods.isLoaded("oculus");
+            return mods == null || mods.isLoaded(ModIds.OCULUS);
         } catch (Throwable failure) {
             return true;
         }

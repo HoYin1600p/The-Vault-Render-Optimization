@@ -1,7 +1,7 @@
 package dev.hoyin1600p.vault_render_optimization.mixin;
 
 import com.mojang.blaze3d.vertex.PoseStack;
-import dev.hoyin1600p.vault_render_optimization.client.render.ToastVisibilityProbe;
+import dev.hoyin1600p.vault_render_optimization.client.diagnostics.ToastVisibilityProbe;
 import dev.hoyin1600p.vault_render_optimization.config.ClientOptimizationConfig;
 import net.minecraft.client.gui.components.toasts.Toast;
 import net.minecraft.client.gui.components.toasts.ToastComponent;

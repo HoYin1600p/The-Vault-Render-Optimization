@@ -30,9 +30,7 @@ public final class InstanceRecord {
     /** Item records only: the vertices follow Embeddium's renderQuadList writer (else Forge's putBulkData). */
     public static final int FLAG_ITEM_EMBEDDIUM = 16;
     public static final int SPRITE_U0 = 32;
-    public static final int SPRITE_U_SPAN = 33;
-    public static final int SPRITE_V0 = 34;
-    public static final int SPRITE_V_SPAN = 35;
+    // Words 33 to 35 are unused.
     /** Oculus extended vertices only: {@link IrisEntityExtension#idsWord} and {@link IrisEntityExtension#itemWord}. */
     public static final int IRIS_IDS = 36;
     public static final int IRIS_ITEM = 37;

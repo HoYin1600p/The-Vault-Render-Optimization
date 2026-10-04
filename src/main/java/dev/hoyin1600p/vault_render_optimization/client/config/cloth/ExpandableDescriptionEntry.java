@@ -1,6 +1,7 @@
 package dev.hoyin1600p.vault_render_optimization.client.config.cloth;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+import dev.hoyin1600p.vault_render_optimization.util.VroGuiColors;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -27,9 +28,6 @@ final class ExpandableDescriptionEntry extends AbstractConfigListEntry<Object> {
     private static final int LINE_HEIGHT = 10;
     private static final int PADDING = 2;
     private static final int INDENT = 8;
-    private static final int SUMMARY_COLOR = 0xA0A0A0;
-    private static final int SUMMARY_HOVER_COLOR = 0xD0D0D0;
-    private static final int DESCRIPTION_COLOR = 0xC4C4C4;
 
     private final Component summary;
     private final Component description;
@@ -82,13 +80,13 @@ final class ExpandableDescriptionEntry extends AbstractConfigListEntry<Object> {
         layout(Math.min(entryWidth, MAX_WIDTH));
         Font font = Minecraft.getInstance().font;
         int lineY = y + PADDING / 2;
-        int summaryColor = hovered ? SUMMARY_HOVER_COLOR : SUMMARY_COLOR;
+        int summaryColor = hovered ? VroGuiColors.SUMMARY_HOVER : VroGuiColors.SUMMARY;
         for (FormattedCharSequence line : summaryLines) {
             font.drawShadow(poseStack, line, x, lineY, summaryColor);
             lineY += LINE_HEIGHT;
         }
         for (FormattedCharSequence line : descriptionLines) {
-            font.drawShadow(poseStack, line, x + INDENT, lineY, DESCRIPTION_COLOR);
+            font.drawShadow(poseStack, line, x + INDENT, lineY, VroGuiColors.DESCRIPTION);
             lineY += LINE_HEIGHT;
         }
     }

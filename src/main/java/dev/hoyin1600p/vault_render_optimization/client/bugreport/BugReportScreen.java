@@ -1,6 +1,7 @@
 package dev.hoyin1600p.vault_render_optimization.client.bugreport;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+import dev.hoyin1600p.vault_render_optimization.util.VroGuiColors;
 import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.ChatFormatting;
@@ -22,9 +23,6 @@ public final class BugReportScreen extends Screen {
     private static final int TOP = 32;
     private static final int BOTTOM_SPACE = 56;
     private static final int LINE_HEIGHT = 10;
-    private static final int HEADING_COLOR = 0xFFFF55;
-    private static final int TEXT_COLOR = 0xE0E0E0;
-    private static final int STATUS_COLOR = 0xA0A0A0;
 
     private final Screen parent;
     private final BugReportCollector.Collected collected;
@@ -55,7 +53,7 @@ public final class BugReportScreen extends Screen {
         hintLines = font.split(new TranslatableComponent("vro.bugreport.status.hint"), width);
         heading(new TranslatableComponent("vro.bugreport.issue_heading"));
         text(bodyWithCrash, width);
-        lines.add(new Line(FormattedCharSequence.EMPTY, TEXT_COLOR));
+        lines.add(new Line(FormattedCharSequence.EMPTY, VroGuiColors.TEXT));
         if (collected.crash().isPresent()) {
             BugReportCollector.CrashFile crash = collected.crash().get();
             heading(new TranslatableComponent("vro.bugreport.crash_heading", crash.fileName()));
@@ -100,18 +98,18 @@ public final class BugReportScreen extends Screen {
 
     private void heading(Component text) {
         for (FormattedCharSequence line : font.split(text.copy().withStyle(ChatFormatting.BOLD), this.width - 40)) {
-            lines.add(new Line(line, HEADING_COLOR));
+            lines.add(new Line(line, VroGuiColors.HEADING));
         }
     }
 
     private void text(String text, int width) {
         for (String raw : text.split("\\R", -1)) {
             if (raw.isEmpty()) {
-                lines.add(new Line(FormattedCharSequence.EMPTY, TEXT_COLOR));
+                lines.add(new Line(FormattedCharSequence.EMPTY, VroGuiColors.TEXT));
                 continue;
             }
             for (FormattedCharSequence line : font.split(new TextComponent(raw), width)) {
-                lines.add(new Line(line, TEXT_COLOR));
+                lines.add(new Line(line, VroGuiColors.TEXT));
             }
         }
     }
@@ -151,7 +149,7 @@ public final class BugReportScreen extends Screen {
     @Override
     public void render(PoseStack poseStack, int mouseX, int mouseY, float partialTick) {
         renderBackground(poseStack);
-        drawCenteredString(poseStack, font, title, this.width / 2, 12, 0xFFFFFF);
+        drawCenteredString(poseStack, font, title, this.width / 2, 12, VroGuiColors.WHITE);
         int bottom = this.height - BOTTOM_SPACE;
         int first = (int) (scroll / LINE_HEIGHT);
         int y = TOP - (int) (scroll % LINE_HEIGHT);
@@ -165,7 +163,7 @@ public final class BugReportScreen extends Screen {
         int hintY = this.height - (hintLines.size() > 1 ? 52 : 46);
         for (int i = 0; i < Math.min(2, hintLines.size()); i++, hintY += LINE_HEIGHT) {
             FormattedCharSequence hint = hintLines.get(i);
-            font.draw(poseStack, hint, (this.width - font.width(hint)) / 2f, hintY, STATUS_COLOR);
+            font.draw(poseStack, hint, (this.width - font.width(hint)) / 2f, hintY, VroGuiColors.STATUS);
         }
         super.render(poseStack, mouseX, mouseY, partialTick);
     }

@@ -24,6 +24,8 @@ import dev.hoyin1600p.vault_render_optimization.renderertransfer.RendererFamilyD
 import dev.hoyin1600p.vault_render_optimization.renderertransfer.RendererTransferBytecode;
 import dev.hoyin1600p.vault_render_optimization.renderertransfer.RendererTransferFeature;
 import dev.hoyin1600p.vault_render_optimization.renderertransfer.RendererTransferOwnershipRegistry;
+import dev.hoyin1600p.vault_render_optimization.util.ClassBytes;
+import dev.hoyin1600p.vault_render_optimization.util.ModIds;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import net.minecraftforge.fml.loading.FMLLoader;
@@ -39,7 +41,7 @@ import java.util.Map;
 import java.util.Set;
 
 public final class VaultRenderOptimizationMixinPlugin implements IMixinConfigPlugin {
-    private static final String COLLISION_FIX_MOD_ID = "entitycollisionfpsfix";
+    private static final String COLLISION_FIX_MOD_ID = ModIds.ENTITY_COLLISION_FPS_FIX;
     private static final Set<String> COLLISION_MIXINS = Set.of(
             "ClientEntityCollisionMixin",
             "ClientLivingEntityCollisionMixin"
@@ -57,13 +59,13 @@ public final class VaultRenderOptimizationMixinPlugin implements IMixinConfigPlu
     );
     // Mods that replace or parallelize ParticleEngine ticking own the whole tick loop.
     private static final Set<String> PARTICLE_TICK_OWNER_MOD_IDS = Set.of(
-            "particle_core",
-            "flerovium",
-            "asyncparticles"
+            ModIds.PARTICLE_CORE,
+            ModIds.FLEROVIUM,
+            ModIds.ASYNC_PARTICLES
     );
     private static final Set<String> PARTICLE_LIGHT_CACHE_MOD_IDS = Set.of(
-            "particle_core",
-            "flerovium"
+            ModIds.PARTICLE_CORE,
+            ModIds.FLEROVIUM
     );
     private static final Set<String> SECTION_CULLING_MIXINS = Set.of(
             "LevelRendererSectionCullingMixin",
@@ -76,11 +78,11 @@ public final class VaultRenderOptimizationMixinPlugin implements IMixinConfigPlu
             "SodiumRenderSectionManagerCullingMixin"
     );
     private static final Set<String> SODIUM_RENDER_MOD_IDS = Set.of(
-            "embeddium",
-            "rubidium",
-            "sodium"
+            ModIds.EMBEDDIUM,
+            ModIds.RUBIDIUM,
+            ModIds.SODIUM
     );
-    private static final Set<String> UNOBTANIUM_EQUIVALENT_MIXINS = Set.of(
+    private static final Set<String> UNOBTAINIUM_EQUIVALENT_MIXINS = Set.of(
             "EmptyItemStackEntityReferenceMixin",
             "ISpawnerRendererMixin",
             "VaultLootBeamsCacheAccessor",
@@ -88,41 +90,41 @@ public final class VaultRenderOptimizationMixinPlugin implements IMixinConfigPlu
     );
     private static final Map<String, String> OPTIONAL_MIXIN_MODS = Map.ofEntries(
             Map.entry("AltarConduitClientCrashGuardMixin", "vaultintegrations"),
-            Map.entry("ClientAbilityDataMixin", "the_vault"),
-            Map.entry("ClientPacketListenerFarsightMixin", "farsight_view"),
-            Map.entry("ForgetLevelChunkPacketFarsightMixin", "farsight_view"),
-            Map.entry("CreateArmBoundsMixin", "create"),
-            Map.entry("CreateBeltBoundsMixin", "create"),
-            Map.entry("CreateCachedRenderBoundsAccessor", "create"),
-            Map.entry("CreateBlockEntityRenderHelperMixin", "create"),
-            Map.entry("CreateContraptionRenderDispatcherMixin", "create"),
-            Map.entry("CreateContraptionRenderingWorldMixin", "create"),
-            Map.entry("CreateDeployerBoundsMixin", "create"),
-            Map.entry("CreateFlwContraptionMixin", "create"),
-            Map.entry("FlywheelBackendOverrideMixin", "flywheel"),
-            Map.entry("CreatePortableStorageInterfaceBoundsMixin", "create"),
-            Map.entry("CreateRollerBoundsMixin", "create"),
-            Map.entry("CreateSbbContraptionManagerMixin", "create"),
-            Map.entry("Matrix4fAccessor", "create"),
-            Map.entry("ElixirOrbParticleMixin", "the_vault"),
-            Map.entry("NovaCloudParticleRandomMixin", "the_vault"),
-            Map.entry("NovaExplosionProviderRandomMixin", "the_vault"),
-            Map.entry("NovaSpeedParticleRandomMixin", "the_vault"),
-            Map.entry("ISpawnerRendererMixin", "ispawner"),
-            Map.entry("CreateAdditionEnergyNetworkManagerAccessor", "createaddition"),
-            Map.entry("PowahCableNetAccessor", "powah"),
-            Map.entry("PowahCableNetClientCrashGuardMixin", "powah"),
-            Map.entry("ToolItemRendererMixin", "the_vault"),
-            Map.entry("VaultArmorItemMixin", "the_vault"),
-            Map.entry("VaultArmorRenderPropertiesMixin", "the_vault"),
-            Map.entry("VaultDamageNumberRendererMixin", "the_vault"),
-            Map.entry("VaultEventMixin", "the_vault"),
-            Map.entry("VaultMapKeybindMixin", "the_vault"),
-            Map.entry("VaultNativeShaderUniformMixin", "the_vault"),
-            Map.entry("VaultLootBeamsCacheAccessor", "vaultlootbeams"),
-            Map.entry("VaultLootBeamsLazyTooltipMixin", "vaultlootbeams"),
-            Map.entry("XaeroLeveledRegionAccess", "xaeroworldmap"),
-            Map.entry("XaeroMapCacheWriteGuardMixin", "xaeroworldmap")
+            Map.entry("ClientAbilityDataMixin", ModIds.THE_VAULT),
+            Map.entry("ClientPacketListenerFarsightMixin", ModIds.FARSIGHT_VIEW),
+            Map.entry("ForgetLevelChunkPacketFarsightMixin", ModIds.FARSIGHT_VIEW),
+            Map.entry("CreateArmBoundsMixin", ModIds.CREATE),
+            Map.entry("CreateBeltBoundsMixin", ModIds.CREATE),
+            Map.entry("CreateCachedRenderBoundsAccessor", ModIds.CREATE),
+            Map.entry("CreateBlockEntityRenderHelperMixin", ModIds.CREATE),
+            Map.entry("CreateContraptionRenderDispatcherMixin", ModIds.CREATE),
+            Map.entry("CreateContraptionRenderingWorldMixin", ModIds.CREATE),
+            Map.entry("CreateDeployerBoundsMixin", ModIds.CREATE),
+            Map.entry("CreateFlwContraptionMixin", ModIds.CREATE),
+            Map.entry("FlywheelBackendOverrideMixin", ModIds.FLYWHEEL),
+            Map.entry("CreatePortableStorageInterfaceBoundsMixin", ModIds.CREATE),
+            Map.entry("CreateRollerBoundsMixin", ModIds.CREATE),
+            Map.entry("CreateSbbContraptionManagerMixin", ModIds.CREATE),
+            Map.entry("Matrix4fAccessor", ModIds.CREATE),
+            Map.entry("ElixirOrbParticleMixin", ModIds.THE_VAULT),
+            Map.entry("NovaCloudParticleRandomMixin", ModIds.THE_VAULT),
+            Map.entry("NovaExplosionProviderRandomMixin", ModIds.THE_VAULT),
+            Map.entry("NovaSpeedParticleRandomMixin", ModIds.THE_VAULT),
+            Map.entry("ISpawnerRendererMixin", ModIds.ISPAWNER),
+            Map.entry("CreateAdditionEnergyNetworkManagerAccessor", ModIds.CREATE_ADDITION),
+            Map.entry("PowahCableNetAccessor", ModIds.POWAH),
+            Map.entry("PowahCableNetClientCrashGuardMixin", ModIds.POWAH),
+            Map.entry("ToolItemRendererMixin", ModIds.THE_VAULT),
+            Map.entry("VaultArmorItemMixin", ModIds.THE_VAULT),
+            Map.entry("VaultArmorRenderPropertiesMixin", ModIds.THE_VAULT),
+            Map.entry("VaultDamageNumberRendererMixin", ModIds.THE_VAULT),
+            Map.entry("VaultEventMixin", ModIds.THE_VAULT),
+            Map.entry("VaultMapKeybindMixin", ModIds.THE_VAULT),
+            Map.entry("VaultNativeShaderUniformMixin", ModIds.THE_VAULT),
+            Map.entry("VaultLootBeamsCacheAccessor", ModIds.VAULT_LOOT_BEAMS),
+            Map.entry("VaultLootBeamsLazyTooltipMixin", ModIds.VAULT_LOOT_BEAMS),
+            Map.entry("XaeroLeveledRegionAccess", ModIds.XAERO_WORLD_MAP),
+            Map.entry("XaeroMapCacheWriteGuardMixin", ModIds.XAERO_WORLD_MAP)
     );
 
     private LoadingModList loadingModList;
@@ -150,24 +152,24 @@ public final class VaultRenderOptimizationMixinPlugin implements IMixinConfigPlu
         physicalClient = FMLEnvironment.dist == Dist.CLIENT;
         try {
             loadingModList = FMLLoader.getLoadingModList();
-            modernFixLoaded = isModLoaded("modernfix");
-            fluidloggedLoaded = isModLoaded("fluidlogged");
-            isometricRendersLoaded = isModLoaded("isometric-renders");
-            witherStormModLoaded = isModLoaded("witherstormmod");
-            rubidiumLoaded = isModLoaded("rubidium");
-            embeddiumLoaded = isModLoaded("embeddium");
-            sodiumLoaded = isModLoaded("sodium");
-            fleroviumLoaded = isModLoaded("flerovium");
+            modernFixLoaded = isModLoaded(ModIds.MODERNFIX);
+            fluidloggedLoaded = isModLoaded(ModIds.FLUIDLOGGED);
+            isometricRendersLoaded = isModLoaded(ModIds.ISOMETRIC_RENDERS);
+            witherStormModLoaded = isModLoaded(ModIds.WITHER_STORM_MOD);
+            rubidiumLoaded = isModLoaded(ModIds.RUBIDIUM);
+            embeddiumLoaded = isModLoaded(ModIds.EMBEDDIUM);
+            sodiumLoaded = isModLoaded(ModIds.SODIUM);
+            fleroviumLoaded = isModLoaded(ModIds.FLEROVIUM);
             ctmCompatible = hasVersion("ctm", "1.18.2-1.1.5+5");
-            codeChickenLibLoaded = isModLoaded("codechickenlib");
+            codeChickenLibLoaded = isModLoaded(ModIds.CODE_CHICKEN_LIB);
             sophisticatedStorageCompatible = SophisticatedStorageCompatibility.supports(
-                    modVersion("sophisticatedstorage"),
-                    modVersion("sophisticatedcore")
+                    modVersion(ModIds.SOPHISTICATED_STORAGE),
+                    modVersion(ModIds.SOPHISTICATED_CORE)
             );
             rendererFamily = resolveRendererFamily();
             rendererVersion = rendererFamily == RendererFamily.EMBEDDIUM
-                    ? modVersion("embeddium")
-                    : rendererFamily == RendererFamily.RUBIDIUM ? modVersion("rubidium") : null;
+                    ? modVersion(ModIds.EMBEDDIUM)
+                    : rendererFamily == RendererFamily.RUBIDIUM ? modVersion(ModIds.RUBIDIUM) : null;
         } catch (RuntimeException | LinkageError failure) {
             modDiscoveryFailed = true;
             loadingModList = null;
@@ -184,23 +186,9 @@ public final class VaultRenderOptimizationMixinPlugin implements IMixinConfigPlu
                 rendererFamily, rendererVersion
         );
         ChunkUpdateState.configure(chunkUpdateBackend);
-        String indexSortBlocker = IndexSortCompatibility.blocker(chunkUpdateBackend, path -> {
-            try {
-                var resource = loadingModList.findResource(path);
-                return resource == null ? null : java.nio.file.Files.readAllBytes(resource);
-            } catch (java.io.IOException failure) {
-                throw new java.io.UncheckedIOException(failure);
-            }
-        });
+        String indexSortBlocker = IndexSortCompatibility.blocker(chunkUpdateBackend, path -> ClassBytes.read(loadingModList, path));
         indexSortCompatible = indexSortBlocker == null;
-        String budgetBlocker = AdaptiveBudgetCompatibility.blocker(indexSortBlocker, path -> {
-            try {
-                var resource = loadingModList.findResource(path);
-                return resource == null ? null : java.nio.file.Files.readAllBytes(resource);
-            } catch (java.io.IOException failure) {
-                throw new java.io.UncheckedIOException(failure);
-            }
-        });
+        String budgetBlocker = AdaptiveBudgetCompatibility.blocker(indexSortBlocker, path -> ClassBytes.read(loadingModList, path));
         adaptiveBudgetCompatible = budgetBlocker == null;
         AdaptiveBudgetState.configure(adaptiveBudgetCompatible, adaptiveBudgetCompatible
                 ? "validated Embeddium; requires effective deferred updates" : budgetBlocker);
@@ -270,7 +258,7 @@ public final class VaultRenderOptimizationMixinPlugin implements IMixinConfigPlu
     @Override
     public boolean shouldApplyMixin(String targetClassName, String mixinClassName) {
         if (mixinClassName.endsWith(".FrustumFastloadMixin")) {
-            return physicalClient && !modDiscoveryFailed && isModLoaded("fastload");
+            return physicalClient && !modDiscoveryFailed && isModLoaded(ModIds.FASTLOAD);
         }
         if (mixinClassName.contains(".entitygpu.")) {
             // Passive until the runtime gate (config, capabilities, self-test, audit) turns the path on.
@@ -278,9 +266,9 @@ public final class VaultRenderOptimizationMixinPlugin implements IMixinConfigPlu
                     && !resourceExists("optifine.OptiFineTransformationService");
         }
         if (mixinClassName.endsWith(".HudFontGeometryMixin") || mixinClassName.endsWith(".HudFontGenerationMixin")) {
-            return physicalClient && !modDiscoveryFailed && !isModLoaded("modernui")
-                    && !VroImmediatelyFast.ownsText() && !isModLoaded("exordium")
-                    && !isModLoaded("smoothfont");
+            return physicalClient && !modDiscoveryFailed && !isModLoaded(ModIds.MODERN_UI)
+                    && !VroImmediatelyFast.ownsText() && !isModLoaded(ModIds.EXORDIUM)
+                    && !isModLoaded(ModIds.SMOOTH_FONT);
         }
         if (mixinClassName.contains(".sophisticatedstorage.")) {
             return physicalClient && !modDiscoveryFailed && sophisticatedStorageCompatible;
@@ -317,7 +305,7 @@ public final class VaultRenderOptimizationMixinPlugin implements IMixinConfigPlu
             return !isModLoaded(COLLISION_FIX_MOD_ID);
         }
 
-        if (BAD_OPTIMIZATIONS_EQUIVALENT_MIXINS.contains(simpleName) && isModLoaded("badoptimizations")) {
+        if (BAD_OPTIMIZATIONS_EQUIVALENT_MIXINS.contains(simpleName) && isModLoaded(ModIds.BAD_OPTIMIZATIONS)) {
             return false;
         }
 
@@ -353,7 +341,7 @@ public final class VaultRenderOptimizationMixinPlugin implements IMixinConfigPlu
         }
 
         if (SECTION_CULLING_MIXINS.contains(simpleName)) {
-            if (isModLoaded("betterfpsdist")) {
+            if (isModLoaded(ModIds.BETTER_FPS_DIST)) {
                 return false;
             }
             if (SODIUM_SECTION_CULLING_MIXINS.contains(simpleName)) {
@@ -361,7 +349,7 @@ public final class VaultRenderOptimizationMixinPlugin implements IMixinConfigPlu
             }
         }
 
-        if (UNOBTANIUM_EQUIVALENT_MIXINS.contains(simpleName) && isModLoaded("unobtainium")) {
+        if (UNOBTAINIUM_EQUIVALENT_MIXINS.contains(simpleName) && isModLoaded(ModIds.UNOBTAINIUM)) {
             return false;
         }
 
@@ -488,12 +476,7 @@ public final class VaultRenderOptimizationMixinPlugin implements IMixinConfigPlu
     }
 
     private byte[] resourceBytes(String path) {
-        try {
-            var resource = loadingModList.findResource(path);
-            return resource == null ? null : java.nio.file.Files.readAllBytes(resource);
-        } catch (java.io.IOException failure) {
-            throw new java.io.UncheckedIOException(failure);
-        }
+        return ClassBytes.read(loadingModList, path);
     }
 
     private RendererFamily resolveRendererFamily() {
@@ -501,8 +484,8 @@ public final class VaultRenderOptimizationMixinPlugin implements IMixinConfigPlu
                 embeddiumLoaded,
                 rubidiumLoaded,
                 embeddiumLoaded && rubidiumLoaded
-                        && loadingModList.getModFileById("embeddium")
-                        == loadingModList.getModFileById("rubidium")
+                        && loadingModList.getModFileById(ModIds.EMBEDDIUM)
+                        == loadingModList.getModFileById(ModIds.RUBIDIUM)
         );
     }
 

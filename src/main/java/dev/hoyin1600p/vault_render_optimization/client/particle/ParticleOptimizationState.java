@@ -1,5 +1,7 @@
 package dev.hoyin1600p.vault_render_optimization.client.particle;
 
+import dev.hoyin1600p.vault_render_optimization.config.model.ParticleBillboardOwner;
+
 import dev.hoyin1600p.vault_render_optimization.config.ClientOptimizationConfig;
 
 public final class ParticleOptimizationState {

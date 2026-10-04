@@ -6,6 +6,7 @@ import com.simibubi.create.content.contraptions.Contraption;
 import com.simibubi.create.content.contraptions.ContraptionHandler;
 import dev.hoyin1600p.vault_render_optimization.compat.flywheelshader.FlywheelShaderCompatState;
 import dev.hoyin1600p.vault_render_optimization.config.ClientOptimizationConfig;
+import dev.hoyin1600p.vault_render_optimization.util.CommandText;
 import net.minecraft.client.Minecraft;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.network.chat.TextComponent;
@@ -64,7 +65,7 @@ public final class CreateDiagnostics {
         ), false);
         source.sendSuccess(new TextComponent(
                 "[VRO] Flywheel automatic instancing "
-                        + (ClientOptimizationConfig.createFlywheelAutoEnable ? "ON" : "OFF")
+                        + CommandText.onOff(ClientOptimizationConfig.createFlywheelAutoEnable)
                         + (FlywheelBackendManager.promotedBackend()
                                 ? "; instancing on for this session (the pack's setting is OFF, left unchanged)." : ".")
         ), false);

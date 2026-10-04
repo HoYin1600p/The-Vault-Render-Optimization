@@ -240,6 +240,15 @@ public final class GpuEntityBackend {
         return buffer;
     }
 
+    /** Drains the GL error queue (only after an arena growth, which is rare): true if any was out of memory. */
+    private static boolean outOfMemory() {
+        boolean oom = false;
+        for (int i = 0, error; i < 16 && (error = GL11C.glGetError()) != GL11C.GL_NO_ERROR; i++) {
+            if (error == GL11C.GL_OUT_OF_MEMORY) oom = true;
+        }
+        return oom;
+    }
+
     /**
      * Appends a mesh to the arena.
      *
@@ -301,6 +310,11 @@ public final class GpuEntityBackend {
             GL15C.glBindBuffer(GL31C.GL_COPY_READ_BUFFER, 0);
             GL15C.glBindBuffer(GL31C.GL_COPY_WRITE_BUFFER, 0);
         }
+        if (outOfMemory()) {
+            // The driver could not allocate or copy: keep the old arena; new meshes stay on the CPU.
+            GL15C.glDeleteBuffers(grown);
+            return false;
+        }
         GL15C.glDeleteBuffers(itemArena);
         itemArena = grown;
         itemArenaCapacity = capacity;
@@ -327,6 +341,11 @@ public final class GpuEntityBackend {
             GL31C.glCopyBufferSubData(GL31C.GL_COPY_READ_BUFFER, GL31C.GL_COPY_WRITE_BUFFER, 0, 0, used);
             GL15C.glBindBuffer(GL31C.GL_COPY_READ_BUFFER, 0);
             GL15C.glBindBuffer(GL31C.GL_COPY_WRITE_BUFFER, 0);
+        }
+        if (outOfMemory()) {
+            // The driver could not allocate or copy: keep the old arena; new meshes stay on the CPU.
+            GL15C.glDeleteBuffers(grown);
+            return false;
         }
         GL15C.glDeleteBuffers(arena);
         arena = grown;
@@ -464,8 +483,10 @@ public final class GpuEntityBackend {
 
     IntBuffer stageWords(int[] words, int needed) {
         if (staging.capacity() < needed) {
+            // Allocate before freeing: a failed allocation must leave staging valid for close().
+            IntBuffer grown = MemoryUtil.memAllocInt(Math.max(needed, staging.capacity() * 2));
             MemoryUtil.memFree(staging);
-            staging = MemoryUtil.memAllocInt(Math.max(needed, staging.capacity() * 2));
+            staging = grown;
         }
         staging.clear();
         staging.put(words, 0, needed);

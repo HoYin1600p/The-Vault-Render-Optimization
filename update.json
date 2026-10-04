@@ -6,10 +6,11 @@
     "0.4.1": "Renderer, particle, and chunk performance improvements",
     "0.4.2": "Sophisticated Storage barrel display optimizations",
     "0.5.0": "[CRITICAL] GPU entity, particle and item rendering, settings screen, built-in ImmediatelyFast",
-    "0.5.1": "[CRITICAL] Fixes a crash with Oculus in 0.5.0"
+    "0.5.1": "[CRITICAL] Fixes a crash with Oculus in 0.5.0",
+    "0.5.2": "GPU rendering stability fixes and code tidy-up"
   },
   "promos": {
-    "1.18.2-latest": "0.5.1",
-    "1.18.2-recommended": "0.5.1"
+    "1.18.2-latest": "0.5.2",
+    "1.18.2-recommended": "0.5.2"
   }
 }

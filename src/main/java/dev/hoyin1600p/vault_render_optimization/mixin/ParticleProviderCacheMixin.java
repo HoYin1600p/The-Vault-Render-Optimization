@@ -44,6 +44,12 @@ public abstract class ParticleProviderCacheMixin {
         this.vro$providerCache.invalidate();
     }
 
+    /** A resource reload may swap providers in place (same map size), which the size guard cannot see. */
+    @Inject(method = "reload", at = @At("HEAD"), require = 0)
+    private void vro$invalidateOnReload(CallbackInfoReturnable<?> cir) {
+        this.vro$providerCache.invalidate();
+    }
+
     @SuppressWarnings({"unchecked", "rawtypes"})
     @Inject(method = "makeParticle", at = @At("HEAD"), cancellable = true)
     private void vro$cachedProvider(ParticleOptions options, double x, double y, double z,

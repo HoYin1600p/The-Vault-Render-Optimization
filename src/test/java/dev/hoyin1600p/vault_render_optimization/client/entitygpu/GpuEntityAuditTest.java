@@ -165,6 +165,16 @@ class GpuEntityAuditTest {
             MethodNode handler = merged(node, "vro$" + target.names().get(0), HANDLER_DESC, mixin);
             callFromHead(node, method(node, target), handler);
         }
+        // popNextBuffer's HEAD/RETURN pair: one half alone must not pass.
+        String half = GpuEntityAudit.hooksPresent(node, mixin, targets);
+        assertNotNull(half, "only one of popNextBuffer's two hooks");
+        assertTrue(half.contains("popNextBuffer"), half);
+        for (GpuEntityAudit.Target target : targets) {
+            for (int h = 1; h < target.hooks(); h++) {
+                MethodNode handler = merged(node, "vro$" + target.names().get(0) + "$" + h, HANDLER_DESC, mixin);
+                callFromHead(node, method(node, target), handler);
+            }
+        }
         assertNull(GpuEntityAudit.hooksPresent(node, mixin, targets));
         // A hook contributed by another mod's mixin does not count as VRO's.
         ClassNode other = vanilla(GpuEntityAudit.BUFFER_BUILDER);

@@ -3,6 +3,7 @@ package dev.hoyin1600p.vault_render_optimization.client.render;
 import dev.hoyin1600p.vault_render_optimization.VaultRenderOptimization;
 import dev.hoyin1600p.vault_render_optimization.config.ClientOptimizationConfig;
 import java.lang.reflect.Method;
+import java.util.Arrays;
 import java.util.List;
 import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.AnnotationNode;
@@ -95,7 +96,7 @@ public final class FastloadFrustum {
     }
 
     private static String mergedFrom(MethodNode method) {
-        for (List<AnnotationNode> list : java.util.Arrays.asList(method.visibleAnnotations, method.invisibleAnnotations)) {
+        for (List<AnnotationNode> list : Arrays.asList(method.visibleAnnotations, method.invisibleAnnotations)) {
             if (list == null) continue;
             for (AnnotationNode annotation : list) {
                 if (!"Lorg/spongepowered/asm/mixin/transformer/meta/MixinMerged;".equals(annotation.desc) || annotation.values == null) continue;

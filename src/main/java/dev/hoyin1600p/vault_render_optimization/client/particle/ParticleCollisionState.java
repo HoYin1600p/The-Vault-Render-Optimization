@@ -2,6 +2,7 @@ package dev.hoyin1600p.vault_render_optimization.client.particle;
 
 import dev.hoyin1600p.vault_render_optimization.VaultRenderOptimization;
 import dev.hoyin1600p.vault_render_optimization.config.ClientOptimizationConfig;
+import dev.hoyin1600p.vault_render_optimization.util.CommandText;
 import java.util.concurrent.atomic.LongAdder;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
@@ -75,7 +76,7 @@ public final class ParticleCollisionState {
         return (compatible ? enabled() ? "APPLIED" : "YIELDED" : "BLOCKED") + ": " + reason
                 + "; cached " + cached.sum() + " (no shapes " + cachedFree.sum() + "), vanilla " + vanilla.sum()
                 + (verify || verified.sum() > 0
-                        ? "; verify " + (verify ? "ON" : "OFF") + ": checked " + verified.sum()
+                        ? "; verify " + CommandText.onOff(verify) + ": checked " + verified.sum()
                                 + ", mismatches " + mismatches.sum()
                         : "")
                 + " (counters need particle diagnostics or verify)";

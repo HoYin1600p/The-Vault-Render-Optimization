@@ -5,7 +5,51 @@ All notable changes to The Vault Render Optimization are recorded here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.5.2] - 2026-10-04
+
+### Added
+
+- Diagnostics for Oculus' batched entity rendering: when a parked buffer segment is filled on the CPU
+  instead of going to the GPU, VRO logs why once per distinct reason (the GPU path state, both vertex
+  counts, both vertex formats, the batch kind, the builder and both byte sizes), and `/vro gpuentity stats`
+  shows the latest reason. Investigates the 0.5.0 Oculus crash fixed in 0.5.1.
+
+### Fixed
+
+- GPU entity models: buffer pops and uploads on threads other than the render thread no longer consume or
+  fill the render thread's pending GPU hand-off; such pops are filled on the CPU.
+- GPU block models and GPU items: cached meshes are checked against the model's quads on every use, not
+  once per frame, so a model that returns different quads for different blocks or stacks in one frame is
+  no longer drawn with another one's geometry. A model or tint callback that renders another item from
+  inside VRO's capture now leaves that nested render on the CPU.
+- The startup GPU audit now requires both halves of each paired hook (`BufferBuilder.popNextBuffer`,
+  `BufferUploader.end`); a mod that removes one half turns the GPU path off instead of leaving it half hooked.
+- The Oculus segment window resets every frame, so a lost hook can no longer park unrelated buffers.
+- Batches whose instance data exceeds the GPU's storage block limit stay on the CPU.
+- Native memory: a failed staging-buffer growth can no longer free the same memory twice, verify mode no
+  longer leaks on a failed allocation, and a model arena that the driver cannot grow keeps its old contents.
+- Texture atlas stitching (ModernFix backport): a very large atlas falls back to vanilla instead of
+  overflowing and hanging the loading screen.
+- The GPU self-tests ignore GL errors left over from earlier rendering, which could turn the GPU path off
+  for the session with a misleading "self-test" reason.
+- A model part or upload that throws is left on the CPU instead of crashing the frame.
+- ImmediatelyFast port: a pooled buffer is never freed while still building (for example after the PC sleeps
+  mid-frame), and a parked GPU batch is dropped before its builder's memory is released.
+- The particle provider cache is cleared on resource reload.
+- Opening the settings screen with an incompatible Cloth Config shows a message instead of crashing.
+- The update reminder is posted on the client thread when a config file edit triggers it.
+- Sophisticated Storage: a barrel whose render state cannot be read is updated as without VRO.
+
+### Changed
+
+- Code tidy-up with no change in behaviour: shared mod-id, config-key and command-text constants, commands and
+  diagnostics grouped into their own packages, the GPU rendering runtime and the client config definition split
+  into smaller classes, and two package dependency cycles removed. A golden test now pins every config key,
+  comment and default.
+- The jar is reproducible (no build timestamp, fixed file order and times) and its mod metadata lists the issue
+  tracker, credits and a logo.
+- `/vro particles` no longer names a version in its status line ("[VRO] Particle optimizations ...").
+- A failing Vault event listener is logged through the mod log instead of printed to standard error.
 
 ## [0.5.1] - 2026-10-03
 

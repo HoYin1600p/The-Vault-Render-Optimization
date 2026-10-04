@@ -2,6 +2,8 @@ package dev.hoyin1600p.vault_render_optimization.backport;
 
 import com.electronwill.nightconfig.core.file.CommentedFileConfig;
 import dev.hoyin1600p.vault_render_optimization.VaultRenderOptimization;
+import dev.hoyin1600p.vault_render_optimization.util.ConfigKeys;
+import dev.hoyin1600p.vault_render_optimization.util.ConfigSections;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.EnumMap;
@@ -12,7 +14,7 @@ import net.minecraftforge.fml.loading.FMLPaths;
 
 /** Captures restart-bound mixin options before Forge attaches the client config. */
 public final class BootstrapRenderBackportConfig {
-    private static final String CLIENT_CONFIG = "vault_render_optimization-client.toml";
+    private static final String CLIENT_CONFIG = ConfigKeys.CLIENT_CONFIG_FILE;
     private static volatile Snapshot launchSnapshot;
 
     private BootstrapRenderBackportConfig() {
@@ -39,10 +41,10 @@ public final class BootstrapRenderBackportConfig {
         EnumMap<RenderBackportFeature, Boolean> options =
                 new EnumMap<>(RenderBackportFeature.class);
         for (RenderBackportFeature feature : RenderBackportFeature.values()) {
-            Object configured = lookup.apply(List.of("modernfix_backports", feature.configKey()));
+            Object configured = lookup.apply(List.of(ConfigSections.MODERNFIX_BACKPORTS, feature.configKey()));
             options.put(feature, configured instanceof Boolean enabled ? enabled : true);
         }
-        Object compare = lookup.apply(List.of("benchmark", "compare_mode"));
+        Object compare = lookup.apply(List.of(ConfigSections.BENCHMARK, ConfigKeys.COMPARE_MODE));
         return new Snapshot(Map.copyOf(options), compare instanceof Boolean enabled && enabled);
     }
 

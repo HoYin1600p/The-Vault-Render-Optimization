@@ -3,7 +3,6 @@ package dev.hoyin1600p.vault_render_optimization.compat.flywheelshader.mixin.iri
 import com.google.common.collect.ImmutableList;
 import net.coderbot.iris.shaderpack.include.ShaderPackSourceNames;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.gen.Invoker;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;

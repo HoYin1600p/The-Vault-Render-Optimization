@@ -1,5 +1,10 @@
 package dev.hoyin1600p.vault_render_optimization.client.update;
 
+import dev.hoyin1600p.vault_render_optimization.config.model.UpdateNoticeFilter;
+
+import dev.hoyin1600p.vault_render_optimization.config.model.UpdateNotice;
+
+import dev.hoyin1600p.vault_render_optimization.util.ModIds;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -264,7 +269,7 @@ public final class UpdateNoticeService {
                 true,
                 (line, text) -> brandingLines[0] = line + 1
         );
-        int launchTimerRows = ModList.get().isLoaded("vhaccelerator") ? 1 : 0;
+        int launchTimerRows = ModList.get().isLoaded(ModIds.VH_ACCELERATOR) ? 1 : 0;
         int y = event.getScreen().height
                 - (10 + brandingLines[0] * 10)
                 - ((slot + launchTimerRows) * 10);
@@ -344,7 +349,11 @@ public final class UpdateNoticeService {
         if (minecraft.player != null
                 && minecraft.level != null
                 && SESSION.claimReminderDelivery()) {
-            showChatNotice(minecraft, currentNotice);
+            // Also reached from a config reload on Forge's file-watcher thread: chat belongs to the client thread.
+            UpdateNotice notice = currentNotice;
+            minecraft.execute(() -> {
+                if (minecraft.player != null) showChatNotice(minecraft, notice);
+            });
         }
     }
 

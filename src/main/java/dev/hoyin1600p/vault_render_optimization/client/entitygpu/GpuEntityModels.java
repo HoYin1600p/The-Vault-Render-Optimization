@@ -2,8 +2,8 @@ package dev.hoyin1600p.vault_render_optimization.client.entitygpu;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.BufferBuilder;
-import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import dev.hoyin1600p.vault_render_optimization.VaultRenderOptimization;
 import dev.hoyin1600p.vault_render_optimization.config.ClientOptimizationConfig;
@@ -11,9 +11,16 @@ import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.util.ArrayDeque;
 import java.util.List;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.geom.ModelPart;
-import org.lwjgl.opengl.GL15C;
+import net.minecraft.client.renderer.texture.TextureAtlasSprite;
+import org.lwjgl.opengl.GL20C;
+import static dev.hoyin1600p.vault_render_optimization.client.entitygpu.GpuMeshCache.*;
+import static dev.hoyin1600p.vault_render_optimization.client.entitygpu.GpuVerifier.*;
+import static dev.hoyin1600p.vault_render_optimization.client.entitygpu.ParkedSegments.*;
 
 /**
  * GPU entity models: a model part drawn into a vanilla entity buffer reserves its vertices instead
@@ -35,18 +42,18 @@ import org.lwjgl.opengl.GL15C;
 public final class GpuEntityModels {
     public enum State { UNINITIALIZED, ACTIVE, BLOCKED, FAILED }
 
-    private static State state = State.UNINITIALIZED;
-    private static String reason = "not initialized";
-    private static GpuEntityCapabilities.Snapshot snapshot;
-    private static GpuEntityBackend backend;
-    private static long maxDrawBytes;
+    static State state = State.UNINITIALIZED;
+    static String reason = "not initialized";
+    static GpuEntityCapabilities.Snapshot snapshot;
+    static GpuEntityBackend backend;
+    static long maxDrawBytes;
 
     /** Read on every model part: true only while the whole path is usable for this frame. */
-    private static boolean frameActive;
-    private static boolean watchXaeroTracing;
-    private static int generation = 1;
+    static boolean frameActive;
+    static boolean watchXaeroTracing;
+    static int generation = 1;
     private static boolean resetRequested;
-    private static boolean arenaFullLogged;
+    static boolean arenaFullLogged;
 
     // Upload hand-off between BufferUploader.end, BufferBuilder.popNextBuffer and BufferUploader._end.
     private static boolean uploadArmed;
@@ -88,21 +95,19 @@ public final class GpuEntityModels {
     public static final AtomicLong CITADEL_PARTS_GPU = new AtomicLong();
     /** Particle quads reserved for the GPU. */
     public static final AtomicLong PARTICLES_GPU = new AtomicLong();
-    private static volatile boolean particlesActive;
+    static volatile boolean particlesActive;
     /** Oculus extended entity vertices: the format when that program passed its self-test, else null. */
-    private static volatile VertexFormat irisFormat;
-    private static volatile String irisReason = "not initialized";
+    static volatile VertexFormat irisFormat;
+    static volatile String irisReason = "not initialized";
     /** Items: the self-tests of the item program without and with Oculus' extended format. */
-    private static volatile boolean itemsActive;
-    private static volatile boolean itemsIrisActive;
-    private static volatile String itemReason = "not initialized";
+    static volatile boolean itemsActive;
+    static volatile boolean itemsIrisActive;
+    static volatile String itemReason = "not initialized";
 
     /** Draws of Oculus extended entity vertices written by the GPU. */
     public static final AtomicLong IRIS_DISPATCHES = new AtomicLong();
-    private static volatile String particleReason = "not initialized";
+    static volatile String particleReason = "not initialized";
     public static final AtomicLong CITADEL_NOT_ELIGIBLE = new AtomicLong();
-    private static volatile boolean verify;
-    private static String firstMismatch;
 
     private GpuEntityModels() {
     }
@@ -209,7 +214,7 @@ public final class GpuEntityModels {
     }
 
     /** Shader pack on, models paused: particles may still use the GPU (gpu_particles_with_shaders). */
-    private static boolean particlesOnlyFrame;
+    static boolean particlesOnlyFrame;
 
     /** True while an Oculus shader pack keeps models on the CPU but particles on the GPU. */
     static boolean shaderMode(boolean all) {
@@ -227,6 +232,9 @@ public final class GpuEntityModels {
         particlesOnlyFrame = false;
         frameIndex++;
         dropAllParked();
+        // getSegments always returns within a frame; a depth left over (a lost RETURN hook or an exception
+        // thrown out of getSegments) would otherwise park unrelated pops forever.
+        segmentPopDepth = 0;
         if (!ClientOptimizationConfig.gpuEntityModels || ClientOptimizationConfig.compareModeEnabled()) return;
         if (state == State.UNINITIALIZED) initialize();
         if (state != State.ACTIVE) return;
@@ -308,11 +316,11 @@ public final class GpuEntityModels {
         }
     }
 
-    private static final Effectiveness effectiveness = new Effectiveness();
+    static final Effectiveness effectiveness = new Effectiveness();
 
     private static String bufferSourceName() {
         try {
-            return net.minecraft.client.Minecraft.getInstance().renderBuffers().bufferSource().getClass().getName();
+            return Minecraft.getInstance().renderBuffers().bufferSource().getClass().getName();
         } catch (Throwable failure) {
             return "unknown";
         }
@@ -377,7 +385,7 @@ public final class GpuEntityModels {
         VaultRenderOptimization.LOGGER.info("GPU entity models: BLOCKED - {}", why);
     }
 
-    private static void fail(String why, Throwable failure) {
+    static void fail(String why, Throwable failure) {
         frameActive = false;
         if (state == State.FAILED) return;
         state = State.FAILED;
@@ -390,13 +398,13 @@ public final class GpuEntityModels {
      * Hot path: the compute program stays bound until vanilla's {@code apply()}, which rebinds its
      * own program because its cache is reset here.
      */
-    private static void forgetProgram() {
+    static void forgetProgram() {
         dev.hoyin1600p.vault_render_optimization.mixin.entitygpu.ShaderInstanceGpuAccessor.vro$setLastProgramId(-1);
     }
 
     /** The next {@code ShaderInstance.apply()} must bind its own program again. */
-    private static void restoreProgram() {
-        org.lwjgl.opengl.GL20C.glUseProgram(0);
+    static void restoreProgram() {
+        GL20C.glUseProgram(0);
         dev.hoyin1600p.vault_render_optimization.mixin.entitygpu.ShaderInstanceGpuAccessor.vro$setLastProgramId(-1);
     }
 
@@ -407,48 +415,7 @@ public final class GpuEntityModels {
 
     // ---- model parts ----------------------------------------------------------------------------
 
-    /** Returns the part's mesh for this generation, capturing and uploading it on first use. */
-    public static CachedMesh mesh(ModelPart part, CachedMesh cached) {
-        if (cached != null && cached.generation() == generation && cached.cubes() == part.cubes
-                && cached.cubeCount() == part.cubes.size()) {
-            return cached;
-        }
-        ModelMesh mesh = ModelMeshCapture.capture(part);
-        int first = mesh == null ? -1 : uploadMesh(mesh);
-        return new CachedMesh(generation, part.cubes, part.cubes.size(), mesh == null ? ModelMesh.EMPTY : mesh, first);
-    }
-
-    /** Arena contents by geometry (float or int words compared exactly), for reuse across equal meshes. */
-    private static final java.util.Map<MeshKey, Integer> UPLOADED = new java.util.HashMap<>();
-    private static final java.util.Map<MeshKey, Integer> UPLOADED_ITEMS = new java.util.HashMap<>();
     public static final AtomicLong MESHES_SHARED = new AtomicLong();
-
-    /** Exact content key: equal only when every word's bits are equal. */
-    static final class MeshKey {
-        private final int[] bits;
-        private final int hash;
-
-        MeshKey(float[] data, int length) {
-            bits = new int[length];
-            for (int i = 0; i < length; i++) bits[i] = Float.floatToRawIntBits(data[i]);
-            hash = java.util.Arrays.hashCode(bits);
-        }
-
-        MeshKey(int[] data, int length) {
-            bits = java.util.Arrays.copyOf(data, length);
-            hash = java.util.Arrays.hashCode(bits);
-        }
-
-        @Override
-        public boolean equals(Object other) {
-            return other instanceof MeshKey key && key.hash == hash && java.util.Arrays.equals(key.bits, bits);
-        }
-
-        @Override
-        public int hashCode() {
-            return hash;
-        }
-    }
 
     /** The arena generation; cached meshes from an older generation must be uploaded again. */
     public static int generation() {
@@ -458,54 +425,6 @@ public final class GpuEntityModels {
     /** True while the live verifier runs (GeckoLib then re-checks cached meshes against live cubes). */
     public static boolean verifying() {
         return verify;
-    }
-
-    /**
-     * Uploads a captured mesh to the arena (only while the path is active on the render thread).
-     *
-     * @return its first arena vertex, 0 for an empty mesh, or -1 when the arena is full
-     */
-    public static int uploadMesh(ModelMesh mesh) {
-        if (mesh.vertexCount() == 0) return 0;
-        // Identical geometry reuses its arena range: renderers that build a new ModelPart every frame (or many
-        // parts with the same cubes) would otherwise grow the arena without bound.
-        MeshKey key = new MeshKey(mesh.data(), mesh.vertexCount() * ModelMesh.FLOATS_PER_VERTEX);
-        Integer known = UPLOADED.get(key);
-        if (known != null) {
-            MESHES_SHARED.incrementAndGet();
-            return known;
-        }
-        int first = backend.upload(mesh);
-        if (first >= 0) UPLOADED.put(key, first);
-        if (first < 0 && !arenaFullLogged) {
-            arenaFullLogged = true;
-            VaultRenderOptimization.LOGGER.warn("GPU entity models: mesh arena is full ({} vertices); "
-                    + "further new models use the CPU path until the next resource reload", backend.arenaVertices());
-        }
-        return first;
-    }
-
-    /**
-     * Uploads a captured item mesh to the item arena.
-     *
-     * @return its first arena vertex, 0 for an empty mesh, or -1 when the arena is full
-     */
-    public static int uploadItemMesh(ItemMesh mesh) {
-        if (mesh.vertexCount() == 0) return 0;
-        MeshKey key = new MeshKey(mesh.words(), mesh.vertexCount() * ItemMesh.WORDS_PER_VERTEX);
-        Integer known = UPLOADED_ITEMS.get(key);
-        if (known != null) {
-            MESHES_SHARED.incrementAndGet();
-            return known;
-        }
-        int first = backend.uploadItem(mesh);
-        if (first >= 0) UPLOADED_ITEMS.put(key, first);
-        if (first < 0 && !arenaFullLogged) {
-            arenaFullLogged = true;
-            VaultRenderOptimization.LOGGER.warn("GPU entity models: item arena is full; further new item models use the CPU path "
-                    + "until the next resource reload");
-        }
-        return first;
     }
 
     /**
@@ -523,7 +442,7 @@ public final class GpuEntityModels {
     /** Reserves {@code mesh}'s vertices in {@code builder} for the current pose. */
     public static void reserve(GpuHoleBuilder builder, CachedMesh mesh, PoseStack.Pose pose, int light, int overlay,
                                float red, float green, float blue, float alpha,
-                               net.minecraft.client.renderer.texture.TextureAtlasSprite atlasSprite) {
+                               TextureAtlasSprite atlasSprite) {
         pose.pose().store(POSE_BUFFER);
         pose.normal().store(NORMAL_BUFFER);
         int color = EntityVertexPacking.color(red, green, blue, alpha);
@@ -544,7 +463,7 @@ public final class GpuEntityModels {
      * Called when a buffer source hands out {@code consumer} for a render type: sorted (translucent)
      * types go straight to vanilla's path, since sorting would force a CPU fill anyway.
      */
-    public static void hintSorting(com.mojang.blaze3d.vertex.VertexConsumer consumer, boolean sorting) {
+    public static void hintSorting(VertexConsumer consumer, boolean sorting) {
         if (consumer instanceof GpuHoleBuilder builder) builder.vro$setSortingHint(sorting);
     }
 
@@ -555,120 +474,18 @@ public final class GpuEntityModels {
 
     public static void release(HoleBatch batch) {
         batch.reset();
-        if (POOL.size() < 64) POOL.push(batch);
+        // The pool is render-thread state; a batch filled on another thread is simply not reused.
+        if (POOL.size() < 64 && RenderSystem.isOnRenderThread()) POOL.push(batch);
     }
 
     // ---- upload hand-off ------------------------------------------------------------------------
 
-    /** {@code BufferUploader.end} HEAD: the next pop on this thread feeds the immediate upload. */
-    public static void armUpload() {
-        uploadArmed = RenderSystem.isOnRenderThread();
-    }
-
-    /** {@code BufferUploader.end} RETURN. */
-    public static void disarmUpload() {
-        uploadArmed = false;
-        if (handoff != null) {
-            // Only reachable if _end skipped its hook; fill so the buffer is at least never left with holes.
-            LATE_FILLS.incrementAndGet();
-            handoff.fillOnCpu(handoffBuffer);
-            release(handoff);
-            handoff = null;
-            handoffBuffer = null;
-        }
-    }
-
-    // ---- Oculus batched entity rendering (public Oculus 1.6.x) ----------------------------------
-    //
-    // Oculus' FullyBufferedMultiBufferSource pops every render type's slice in
-    // SegmentedBufferBuilder.getSegments() and draws the slices later in the same flush through
-    // BufferUploader.end with a stand-in builder pointed at the same memory. Batches popped inside
-    // getSegments are parked by slice address instead of being filled on the CPU; the stand-in
-    // builder's upload of that memory takes them to the GPU as usual. A parked batch is dropped as
-    // soon as its builder starts writing again (the memory is being reused) and at every frame start.
-
-    /** {@code slice} views the memory the batch was popped into, at the size it was popped with. */
-    private record Parked(HoleBatch batch, Object owner, int vertexCount, VertexFormat format, ByteBuffer slice) {
-    }
-
-    private static int segmentPopDepth;
-    private static final it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap<Parked> PARKED =
-            new it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap<>();
     public static final AtomicLong PARKED_BATCHES = new AtomicLong();
     public static final AtomicLong PARKED_DROPPED = new AtomicLong();
-
-    /** Oculus SegmentedBufferBuilder.getSegments HEAD/RETURN. */
-    public static void beginSegmentPops() {
-        segmentPopDepth++;
-    }
-
-    public static void endSegmentPops() {
-        if (segmentPopDepth > 0) segmentPopDepth--;
-    }
-
-    /** {@code BufferBuilder.begin} HEAD: memory this builder handed out is about to be reused. */
-    public static void builderBegins(Object owner) {
-        if (PARKED.isEmpty()) return;
-        var iterator = PARKED.long2ObjectEntrySet().fastIterator();
-        while (iterator.hasNext()) {
-            Parked parked = iterator.next().getValue();
-            if (parked.owner() == owner) {
-                PARKED_DROPPED.incrementAndGet();
-                release(parked.batch());
-                iterator.remove();
-            }
-        }
-    }
-
-    private static void dropAllParked() {
-        if (PARKED.isEmpty()) return;
-        for (Parked parked : PARKED.values()) {
-            PARKED_DROPPED.incrementAndGet();
-            release(parked.batch());
-        }
-        PARKED.clear();
-    }
 
     /** Increases at every frame start (GPU items revalidate cached quad lists once per frame). */
     public static int frameIndex() {
         return frameIndex;
-    }
-
-    /** {@code BufferBuilder.popNextBuffer} RETURN for a draw state that has holes. */
-    public static void popped(HoleBatch batch, BufferBuilder.DrawState drawState, ByteBuffer slice, Object owner) {
-        boolean armed = uploadArmed;
-        uploadArmed = false;
-        boolean small = batch.vertices() < MIN_GPU_VERTICES;
-        if (owner instanceof GpuHoleBuilder builder) builder.vro$noteBatch(small);
-        if (small && !verify) {
-            SMALL_FILLS.incrementAndGet();
-            fillOnCpu(batch, slice);
-            return;
-        }
-        long bytes = (long) drawState.vertexCount() * drawState.format().getVertexSize();
-        boolean gpuReady = state == State.ACTIVE && bytes <= maxDrawBytes && (batch.particles()
-                ? drawState.format() == DefaultVertexFormat.PARTICLE && particlesActive
-                : batch.items() && !(batch.iris() ? itemsIrisActive : itemsActive) ? false
-                : batch.iris() ? irisFormat != null && drawState.format() == irisFormat
-                : drawState.format() == DefaultVertexFormat.NEW_ENTITY);
-        if (armed && gpuReady && handoff == null) {
-            handoff = batch;
-            handoffBuffer = slice;
-            return;
-        }
-        if (!armed && gpuReady && segmentPopDepth > 0 && RenderSystem.isOnRenderThread()) {
-            long address = org.lwjgl.system.MemoryUtil.memAddress(slice);
-            Parked previous = PARKED.put(address,
-                    new Parked(batch, owner, drawState.vertexCount(), drawState.format(), slice.duplicate()));
-            if (previous != null) {
-                PARKED_DROPPED.incrementAndGet();
-                release(previous.batch());
-            }
-            PARKED_BATCHES.incrementAndGet();
-            return;
-        }
-        if (!armed) UNARMED_FILLS.incrementAndGet();
-        fillOnCpu(batch, slice);
     }
 
     /** Item batches in sorted buffers that kept their holes (only their sort positions written on the CPU). */
@@ -692,7 +509,7 @@ public final class GpuEntityModels {
     /** Model holes filled on the CPU right before a sort, by whether the builder's source hinted at all. */
     public static final AtomicLong SORT_FILLS_HINTED = new AtomicLong();
     public static final AtomicLong SORT_FILLS_UNHINTED = new AtomicLong();
-    private static final java.util.Set<String> SORT_FILL_CALLERS = java.util.concurrent.ConcurrentHashMap.newKeySet();
+    private static final Set<String> SORT_FILL_CALLERS = ConcurrentHashMap.newKeySet();
 
     /**
      * {@code setQuadSortOrigin} is about to sort a builder that holds model holes (a reservation into a sorted
@@ -717,262 +534,116 @@ public final class GpuEntityModels {
         release(batch);
     }
 
-    /**
-     * A pop without holes of its own. If it is the immediate upload of memory a parked batch belongs
-     * to (Oculus' stand-in builder), hand that batch to the GPU; either way the arm is consumed.
-     */
-    public static void poppedWithoutHoles(BufferBuilder.DrawState drawState, ByteBuffer slice) {
-        boolean armed = uploadArmed;
-        uploadArmed = false;
-        if (!armed || PARKED.isEmpty() || handoff != null) return;
-        Parked parked = PARKED.remove(org.lwjgl.system.MemoryUtil.memAddress(slice));
-        if (parked == null) return;
-        if (state != State.ACTIVE || drawState.vertexCount() != parked.vertexCount()
-                || drawState.format() != parked.format()) {
-            // Not the draw state it was parked with: never upload holes. Fill the memory the batch was popped into,
-            // at its own size: this upload's slice can be shorter, and the batch's offsets are relative to its own pop.
-            LATE_FILLS.incrementAndGet();
-            fillOnCpu(parked.batch(), parked.slice());
-            return;
-        }
-        handoff = parked.batch();
-        handoffBuffer = slice;
-    }
-
-    /**
-     * Replaces {@code BufferUploader._end}'s vertex {@code glBufferData}. When this upload carries a
-     * reserved batch, only the bytes the CPU wrote are copied: the buffer is allocated at full size
-     * and each range between reserved vertices is uploaded, so reserved vertices (overwritten by the
-     * GPU right after) are never copied by the driver. Any other upload is vanilla's call unchanged.
-     */
-    public static void uploadVertices(int target, ByteBuffer buffer, int usage, VertexFormat format) {
-        HoleBatch batch = handoff;
-        if (batch == null || handoffBuffer != buffer) {
-            com.mojang.blaze3d.platform.GlStateManager._glBufferData(target, buffer, usage);
-            if (batch != null) uploaded(buffer, format);
-            return;
-        }
-        if (!uploadGaps(target, buffer, usage, batch)) {
-            com.mojang.blaze3d.platform.GlStateManager._glBufferData(target, buffer, usage);
-        }
-        uploaded(buffer, format);
-    }
-
-    /** @return false when the holes are not in ascending order (never expected): upload everything */
-    static boolean uploadGaps(int target, ByteBuffer buffer, int usage, HoleBatch batch) {
-        int size = buffer.remaining();
-        int cursor = 0;
-        for (int i = 0; i < batch.holeCount(); i++) {
-            int start = batch.holeStart(i);
-            if (start < cursor) return false;
-            cursor = batch.holeEnd(i);
-        }
-        if (cursor > size) return false;
-        GL15C.glBufferData(target, size, usage);
-        long address = org.lwjgl.system.MemoryUtil.memAddress(buffer);
-        cursor = 0;
-        long skipped = 0;
-        for (int i = 0; i < batch.holeCount(); i++) {
-            int start = batch.holeStart(i);
-            int end = batch.holeEnd(i);
-            if (start > cursor) GL15C.nglBufferSubData(target, cursor, start - cursor, address + cursor);
-            skipped += end - start;
-            cursor = end;
-        }
-        if (cursor < size) GL15C.nglBufferSubData(target, cursor, size - cursor, address + cursor);
-        BYTES_NOT_UPLOADED.addAndGet(skipped);
-        return true;
-    }
-
-    /** {@code BufferUploader._end}, right after the vertex upload and before the draw. */
-    public static void uploaded(ByteBuffer buffer, VertexFormat format) {
-        HoleBatch batch = handoff;
-        if (batch == null) return;
-        ByteBuffer expected = handoffBuffer;
-        handoff = null;
-        handoffBuffer = null;
-        if (expected != buffer) {
-            // Not the buffer that was popped for this upload; never draw holes.
-            LATE_FILLS.incrementAndGet();
-            fillOnCpu(batch, expected);
-            return;
-        }
-        try {
-            if (batch.particles()) {
-                backend.dispatchParticles(batch, format.getOrCreateVertexBufferObject(), verify);
-                PARTICLES_GPU.addAndGet(batch.particleCount());
-            } else {
-                backend.dispatch(batch, format.getOrCreateVertexBufferObject(), verify);
-                if (batch.iris()) IRIS_DISPATCHES.incrementAndGet();
-            }
-            forgetProgram();
-            if (verify) verify(batch, buffer, format);
-            DISPATCHES.incrementAndGet();
-            VERTICES_GPU.addAndGet(batch.vertices());
-            release(batch);
-        } catch (Throwable failure) {
-            try {
-                restoreProgram();
-                batch.fillOnCpu(buffer);
-                // The vertex buffer is still bound by BufferUploader; replace the uploaded bytes.
-                int limit = buffer.limit();
-                buffer.position(0);
-                GL15C.glBufferSubData(GL15C.GL_ARRAY_BUFFER, 0L, buffer);
-                buffer.position(0).limit(limit);
-                release(batch);
-            } catch (Throwable secondary) {
-                failure.addSuppressed(secondary);
-            }
-            fail("dispatch failed", failure);
-        }
-    }
-
     // ---- status ---------------------------------------------------------------------------------
 
     public static State state() {
         return state;
     }
 
+    // ---- delegates: the public entry points mixins call, implemented by the classes in this package ----
+
+    /** Returns the part's mesh for this generation, capturing and uploading it on first use. */
+    public static CachedMesh mesh(ModelPart part, CachedMesh cached) {
+        return GpuMeshCache.mesh(part, cached);
+    }
+
+    /**
+     * Uploads a captured mesh to the arena (only while the path is active on the render thread).
+     *
+     * @return its first arena vertex, 0 for an empty mesh, or -1 when the arena is full
+     */
+    public static int uploadMesh(ModelMesh mesh) {
+        return GpuMeshCache.uploadMesh(mesh);
+    }
+
+    /**
+     * Uploads a captured item mesh to the item arena.
+     *
+     * @return its first arena vertex, 0 for an empty mesh, or -1 when the arena is full
+     */
+    public static int uploadItemMesh(ItemMesh mesh) {
+        return GpuMeshCache.uploadItemMesh(mesh);
+    }
+
+    /** {@code BufferUploader.end} HEAD: the next pop on this thread feeds the immediate upload. */
+    public static void armUpload() {
+        GpuUploadPath.armUpload();
+    }
+
+    /** {@code BufferUploader.end} RETURN. */
+    public static void disarmUpload() {
+        GpuUploadPath.disarmUpload();
+    }
+
+    /** {@code BufferBuilder.popNextBuffer} RETURN for a draw state that has holes. */
+    public static void popped(HoleBatch batch, BufferBuilder.DrawState drawState, ByteBuffer slice, Object owner) {
+        GpuUploadPath.popped(batch, drawState, slice, owner);
+    }
+
+    /** A pop without holes of its own (see {@link GpuUploadPath#poppedWithoutHoles}). */
+    public static void poppedWithoutHoles(BufferBuilder.DrawState drawState, ByteBuffer slice) {
+        GpuUploadPath.poppedWithoutHoles(drawState, slice);
+    }
+
+    /** Replaces {@code BufferUploader._end}'s vertex {@code glBufferData}. */
+    public static void uploadVertices(int target, ByteBuffer buffer, int usage, VertexFormat format) {
+        GpuUploadPath.uploadVertices(target, buffer, usage, format);
+    }
+
+    /** @return false when the holes are not in ascending order (never expected): upload everything */
+    static boolean uploadGaps(int target, ByteBuffer buffer, int usage, HoleBatch batch) {
+        return GpuUploadPath.uploadGaps(target, buffer, usage, batch);
+    }
+
+    /** {@code BufferUploader._end}, right after the vertex upload and before the draw. */
+    public static void uploaded(ByteBuffer buffer, VertexFormat format) {
+        GpuUploadPath.uploaded(buffer, format);
+    }
+
+    /** Oculus SegmentedBufferBuilder.getSegments HEAD. */
+    public static void beginSegmentPops() {
+        ParkedSegments.beginSegmentPops();
+    }
+
+    /** Oculus SegmentedBufferBuilder.getSegments RETURN. */
+    public static void endSegmentPops() {
+        ParkedSegments.endSegmentPops();
+    }
+
+    /** {@code BufferBuilder.begin} HEAD: this builder's parked batches are dropped unfilled. */
+    public static void builderBegins(Object owner) {
+        ParkedSegments.builderBegins(owner);
+    }
+
+    static String lateFillReason(State current, int parkedVertices, int uploadVertices, VertexFormat parkedFormat,
+                                 VertexFormat uploadFormat, HoleBatch.Kind kind, Object owner, int parkedBytes,
+                                 int uploadBytes) {
+        return ParkedSegments.lateFillReason(current, parkedVertices, uploadVertices, parkedFormat, uploadFormat,
+                kind, owner, parkedBytes, uploadBytes);
+    }
+
     public static String status() {
-        StringBuilder text = new StringBuilder();
-        text.append("GPU entity models: ");
-        if (!ClientOptimizationConfig.gpuEntityModels) text.append("OFF (config render_fast_paths.gpu_entity_models)");
-        else if (ClientOptimizationConfig.compareModeEnabled()) text.append("OFF (Compare Mode)");
-        else text.append(state).append(" - ").append(reason);
-        if (state == State.ACTIVE) {
-            if (effectiveness.paused()) text.append("; paused: ").append(effectiveness.reason());
-            else if (OculusShaderPackProbe.shaderPackActive() && !shaderMode(true)) {
-                text.append("; models paused (Oculus shader pack active").append(irisFormat != null ? "; /vro feature gpushaders on to keep them on)" : ")")
-                        .append(particlesOnlyFrame ? "; particles on the GPU" : "");
-            }
-            else text.append(frameActive ? "; drawing this frame" : "; idle");
-        }
-        String audit = GpuEntityAudit.blocker();
-        text.append("\nMixin audit: ").append(audit == null ? "passed" : audit);
-        String sprite = GpuEntityAudit.spriteBlocker();
-        text.append("\nBlock entities (sprite wrapper): ").append(sprite == null ? "on" : "CPU only - " + sprite);
-        String gecko = GpuEntityAudit.geckoBlocker();
-        text.append("\nGeckoLib models: ").append(!GpuEntityAudit.geckoAudited() ? "GeckoLib 3 not installed"
-                : gecko == null ? "on" : "CPU only - " + gecko);
-        if (GpuEntityAudit.geckoAudited()) {
-            String block = GpuEntityAudit.geckoBlockBlocker();
-            text.append("; block renderers ").append(block == null ? "on" : "CPU only - " + block);
-        }
-        String ars = GpuEntityAudit.arsGeckoBlocker();
-        text.append("\nArs Nouveau GeckoLib models: ").append(!GpuEntityAudit.arsGeckoAudited() ? "not installed"
-                : ars == null ? "on" : "CPU only - " + ars);
-        text.append("\nOculus shader packs (extended vertices): ").append(irisReason)
-                .append(ClientOptimizationConfig.gpuEntityModelsWithShaders ? "" : "; off (config render_fast_paths.gpu_entity_models_with_shaders)");
-        text.append("\n").append(GpuItems.status()).append("; ").append(itemReason);
-        text.append("\n").append(GpuBlockModels.status());
-        String citadel = GpuEntityAudit.citadelBlocker();
-        text.append("\nParticles: ").append(!ClientOptimizationConfig.gpuParticles ? "OFF (config render_fast_paths.gpu_particles)"
-                : particleReason);
-        text.append("\nCitadel models (Alex's Mobs): ").append(!GpuEntityAudit.citadelAudited() ? "not installed"
-                : citadel == null ? "on" : "CPU only - " + citadel);
-        if (snapshot != null) {
-            text.append("\nDriver: ").append(snapshot.renderer()).append(" / ").append(snapshot.version())
-                    .append(" / GLSL ").append(snapshot.glslVersion());
-        }
-        return text.toString();
+        return GpuStats.status();
+    }
+
+    public static String stats() {
+        return GpuStats.stats();
+    }
+
+    public static void resetStats() {
+        GpuStats.resetStats();
     }
 
     /**
      * Diagnostic: read back every dispatch's vertex buffer and compare the GPU-written vertices word
-     * for word with {@link HoleBatch#fillOnCpu}'s exact vanilla bytes for the same parts. Stalls the
-     * pipeline once per dispatch, so it is for testing only.
+     * for word with {@link HoleBatch#fillOnCpu}'s exact vanilla bytes for the same parts.
      */
     public static void setVerify(boolean enabled) {
-        verify = enabled;
+        GpuVerifier.setVerify(enabled);
     }
 
     public static String verifyStatus() {
-        return "GPU entity verify " + (verify ? "ON" : "OFF") + ": vertices checked " + VERIFIED_VERTICES.get()
-                + ", mismatching vertices " + VERIFY_MISMATCHES.get()
-                + (firstMismatch == null ? "" : ", first: " + firstMismatch);
-    }
-
-    private static void verify(HoleBatch batch, ByteBuffer client, VertexFormat format) {
-        int bytes = client.remaining();
-        ByteBuffer gpu = org.lwjgl.system.MemoryUtil.memAlloc(bytes);
-        ByteBuffer cpu = org.lwjgl.system.MemoryUtil.memAlloc(bytes);
-        try {
-            // BufferUploader still has the format's vertex buffer bound to GL_ARRAY_BUFFER.
-            GL15C.glGetBufferSubData(GL15C.GL_ARRAY_BUFFER, 0L, gpu);
-            // Expected: vanilla's client bytes with the reserved vertices filled exactly on the CPU.
-            cpu.put(client.duplicate()).clear();
-            batch.fillOnCpu(cpu);
-            int stride = format.getVertexSize();
-            // Every vertex of the upload, reserved or CPU-written, must match.
-            for (int at = 0; at + stride <= bytes; at += stride) {
-                boolean same = true;
-                for (int w = 0; w < stride; w += 4) {
-                    if (gpu.getInt(at + w) != cpu.getInt(at + w)) {
-                        same = false;
-                        if (firstMismatch == null) {
-                            firstMismatch = "byte " + (at + w) + " GPU 0x" + Integer.toHexString(gpu.getInt(at + w))
-                                    + " CPU 0x" + Integer.toHexString(cpu.getInt(at + w));
-                            VaultRenderOptimization.LOGGER.warn("GPU entity verify mismatch: {}", firstMismatch);
-                        }
-                        break;
-                    }
-                }
-                VERIFIED_VERTICES.incrementAndGet();
-                if (!same) VERIFY_MISMATCHES.incrementAndGet();
-            }
-        } finally {
-            org.lwjgl.system.MemoryUtil.memFree(gpu);
-            org.lwjgl.system.MemoryUtil.memFree(cpu);
-        }
-    }
-
-    public static String stats() {
-        return "parts on GPU " + PARTS_GPU.get() + ", vertices on GPU " + VERTICES_GPU.get() + ", dispatches "
-                + DISPATCHES.get() + ", batches filled on CPU " + BATCHES_CPU_FILLED.get() + ", parts not eligible "
-                + PARTS_NOT_ELIGIBLE.get() + ", late fills " + LATE_FILLS.get() + " (writes skipped out of range "
-                + HoleBatch.FILL_WRITES_SKIPPED.get() + "), fills outside the upload "
-                + UNARMED_FILLS.get() + ", small batches filled on CPU " + SMALL_FILLS.get() + ", sorted item batches "
-                + SORTED_ITEM_BATCHES.get() + " (sort position mismatches " + SORT_POSITION_MISMATCHES.get() + "), model sort fills "
-                + SORT_FILLS_HINTED.get() + " hinted / " + SORT_FILLS_UNHINTED.get() + " never hinted" + ", ineffective pauses " + PAUSES.get() + ", Oculus segments parked "
-                + PARKED_BATCHES.get() + " (dropped " + PARKED_DROPPED.get() + "), upload bytes skipped "
-                + (BYTES_NOT_UPLOADED.get() >> 20) + " MiB, GeckoLib cubes on GPU " + GECKO_CUBES_GPU.get()
-                + " (not eligible " + GECKO_NOT_ELIGIBLE.get() + ", meshes recaptured " + GECKO_MESH_CHANGED.get() + ")"
-                + ", Citadel parts on GPU " + CITADEL_PARTS_GPU.get() + " (not eligible " + CITADEL_NOT_ELIGIBLE.get() + ")"
-                + ", particles on GPU " + PARTICLES_GPU.get() + ", meshes shared " + MESHES_SHARED.get() + ", Oculus extended draws " + IRIS_DISPATCHES.get()
-                + ", " + GpuItems.stats() + ", " + GpuBlockModels.stats()
-                + (backend == null ? "" : ", arena " + backend.arenaVertices() + " vertices / "
-                + (backend.arenaCapacity() >> 10) + " KiB");
-    }
-
-    public static void resetStats() {
-        PARTS_GPU.set(0);
-        VERTICES_GPU.set(0);
-        DISPATCHES.set(0);
-        BATCHES_CPU_FILLED.set(0);
-        PARTS_NOT_ELIGIBLE.set(0);
-        LATE_FILLS.set(0);
-        UNARMED_FILLS.set(0);
-        SMALL_FILLS.set(0);
-        SORTED_ITEM_BATCHES.set(0);
-        SORT_FILLS_HINTED.set(0);
-        SORT_FILLS_UNHINTED.set(0);
-        SORT_POSITION_MISMATCHES.set(0);
-        PAUSES.set(0);
-        BYTES_NOT_UPLOADED.set(0);
-        PARKED_BATCHES.set(0);
-        PARKED_DROPPED.set(0);
-        VERIFIED_VERTICES.set(0);
-        VERIFY_MISMATCHES.set(0);
-        GECKO_CUBES_GPU.set(0);
-        GECKO_NOT_ELIGIBLE.set(0);
-        GECKO_MESH_CHANGED.set(0);
-        CITADEL_PARTS_GPU.set(0);
-        CITADEL_NOT_ELIGIBLE.set(0);
-        PARTICLES_GPU.set(0);
-        IRIS_DISPATCHES.set(0);
-        GpuItems.resetStats();
-        GpuBlockModels.resetStats();
-        firstMismatch = null;
+        return GpuVerifier.verifyStatus();
     }
 
     /** Re-runs the self-test with a new seed (render thread). */

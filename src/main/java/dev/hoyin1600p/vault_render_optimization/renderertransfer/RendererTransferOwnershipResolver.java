@@ -1,5 +1,7 @@
 package dev.hoyin1600p.vault_render_optimization.renderertransfer;
 
+import java.util.Locale;
+
 public final class RendererTransferOwnershipResolver {
     private RendererTransferOwnershipResolver() {
     }
@@ -29,10 +31,10 @@ public final class RendererTransferOwnershipResolver {
             return blocked(feature, "multiple renderer implementations were detected");
         }
         if (!feature.supports(family)) {
-            return blocked(feature, family.name().toLowerCase() + " does not expose the validated implementation");
+            return blocked(feature, family.name().toLowerCase(Locale.ROOT) + " does not expose the validated implementation");
         }
         if (!isSupportedVersion(family, rendererVersion)) {
-            return blocked(feature, "unvalidated " + family.name().toLowerCase() + " version " + rendererVersion);
+            return blocked(feature, "unvalidated " + family.name().toLowerCase(Locale.ROOT) + " version " + rendererVersion);
         }
         if (compatibilityBlocker != null) {
             return blocked(feature, compatibilityBlocker);
@@ -40,7 +42,7 @@ public final class RendererTransferOwnershipResolver {
         return new RendererTransferDecision(
                 feature,
                 RendererTransferStatus.APPLIED,
-                "VRO owns the validated " + family.name().toLowerCase() + " implementation"
+                "VRO owns the validated " + family.name().toLowerCase(Locale.ROOT) + " implementation"
         );
     }
 

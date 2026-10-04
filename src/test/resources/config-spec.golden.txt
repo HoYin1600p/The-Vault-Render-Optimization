@@ -1,0 +1,517 @@
+section updates
+value updates.check_for_updates
+  comment: Check VRO's raw GitHub update manifest asynchronously. | The /vro updates command changes and saves this setting.
+  translationKey: null
+  restart: false
+  class: java.lang.Boolean
+  default: true
+  range: <none>
+value updates.update_types
+  comment: Choose which update types VRO may show: CRITICAL or ALL. | CRITICAL is the safe default; ALL also permits normal update notices. | Allowed Values: CRITICAL, ALL
+  translationKey: null
+  restart: false
+  class: dev.hoyin1600p.vault_render_optimization.config.model.UpdateNoticeFilter
+  default: CRITICAL
+  range: <none>
+  enum: CRITICAL=true,ALL=true
+section benchmark
+value benchmark.compare_mode
+  comment: Disable every VRO performance optimization for an in-game comparison baseline. | Client crash guards, cleanup, and key compatibility remain active. | The /vro compare command changes and saves this setting.
+  translationKey: null
+  restart: false
+  class: java.lang.Boolean
+  default: false
+  range: <none>
+section chunk_updates
+value chunk_updates.defer_updates
+  comment: Use the renderer's existing asynchronous chunk-update path to reduce render-thread stalls. | Default-on for vanilla Forge and validated Embeddium/Rubidium versions; no renderer mod is required. | Visible block changes can be delayed under load. No render distance or world data is changed. | Does not edit vanilla/renderer settings. Off and Compare Mode yield to those settings. | The /vro chunks defer on|off command applies immediately to new scheduling decisions.
+  translationKey: null
+  restart: false
+  class: java.lang.Boolean
+  default: true
+  range: <none>
+value chunk_updates.index_only_sorting
+  comment: Reuse unchanged terrain vertices during translucent sorting on validated Embeddium builds. | Only drawing-order indices are uploaded. Vanilla and Rubidium 0.5.6 are unchanged. | Off/Compare Mode affects new jobs; already queued index-only jobs finish safely. | Use /vro chunks sorting on|off|status without a restart.
+  translationKey: null
+  restart: false
+  class: java.lang.Boolean
+  default: true
+  range: <none>
+value chunk_updates.sort_geometry_cache
+  comment: Experimental: cache immutable triangle centers for validated Embeddium index-only sorting. | Bounded to 16 MiB globally; preserves native stable distance order and generation checks. | Defaults off pending in-game water/glass and shader comparisons.
+  translationKey: null
+  restart: false
+  class: java.lang.Boolean
+  default: false
+  range: <none>
+value chunk_updates.adaptive_budget_v2
+  comment: Experimental v2: dynamically pace updates to already-built terrain using measured costs. | Default-on on supported renderers; an explicit adaptive_budget_v2=false remains respected. | Initial terrain and delayed/overloaded queues use native scheduling/draining automatically. | Requires validated Embeddium and effective asynchronous chunk updates; vanilla/Rubidium unchanged. | Uses conservative startup budgets, bounded feedback and queue backpressure; not an FPS guarantee. | Off/Compare Mode restores native draining and scheduling; /vro chunks budget on|off|status is hot.
+  translationKey: null
+  restart: false
+  class: java.lang.Boolean
+  default: true
+  range: <none>
+value chunk_updates.farsight_chunk_bound
+  comment: Only with Farsight installed: forget client chunks farther than max(server view distance, | render distance) + 1 chunks, once per second, exactly as the forget packet Farsight cancels would | (chunk drop, light release, Embeddium/Rubidium render sections). Chunks within render distance stay. | This is a leak fix: Compare Mode does not affect it, and VH Accelerator leaves this job to VRO, | so turning it off means nothing bounds Farsight's retained chunks until the level changes.
+  translationKey: null
+  restart: false
+  class: java.lang.Boolean
+  default: true
+  range: <none>
+section modernfix_backports
+value modernfix_backports.chunkMeshing
+  comment: Enable VRO's Chunk meshing backport when VRO owns it. | This option is evaluated during startup and requires a game restart. | VRO yields to the current VH Accelerator implementation and to an active ModernFix implementation.
+  translationKey: null
+  restart: false
+  class: java.lang.Boolean
+  default: true
+  range: <none>
+value modernfix_backports.bufferBuilderLeakFix
+  comment: Enable VRO's BufferBuilder leak correction backport when VRO owns it. | This option is evaluated during startup and requires a game restart. | VRO yields to the current VH Accelerator implementation and to an active ModernFix implementation.
+  translationKey: null
+  restart: false
+  class: java.lang.Boolean
+  default: true
+  range: <none>
+value modernfix_backports.compactEntityModels
+  comment: Enable VRO's Entity-model compaction backport when VRO owns it. | This option is evaluated during startup and requires a game restart. | VRO yields to the current VH Accelerator implementation and to an active ModernFix implementation.
+  translationKey: null
+  restart: false
+  class: java.lang.Boolean
+  default: true
+  range: <none>
+value modernfix_backports.profileTextureHashCache
+  comment: Enable VRO's Profile-texture hash cache backport when VRO owns it. | This option is evaluated during startup and requires a game restart. | VRO yields to the current VH Accelerator implementation and to an active ModernFix implementation.
+  translationKey: null
+  restart: false
+  class: java.lang.Boolean
+  default: true
+  range: <none>
+value modernfix_backports.modelSelectorPredicateCache
+  comment: Enable VRO's Multipart model-selector predicate cache backport when VRO owns it. | This option is evaluated during startup and requires a game restart. | VRO yields to the current VH Accelerator implementation and to an active ModernFix implementation.
+  translationKey: null
+  restart: false
+  class: java.lang.Boolean
+  default: true
+  range: <none>
+value modernfix_backports.modelVariantTraversal
+  comment: Enable VRO's Allocation-light model-variant traversal backport when VRO owns it. | This option is evaluated during startup and requires a game restart. | VRO yields to the current VH Accelerator implementation and to an active ModernFix implementation.
+  translationKey: null
+  restart: false
+  class: java.lang.Boolean
+  default: true
+  range: <none>
+value modernfix_backports.modelTransformationHashCache
+  comment: Enable VRO's Model transformation hash cache backport when VRO owns it. | This option is evaluated during startup and requires a game restart. | VRO yields to the current VH Accelerator implementation and to an active ModernFix implementation.
+  translationKey: null
+  restart: false
+  class: java.lang.Boolean
+  default: true
+  range: <none>
+value modernfix_backports.objModelCacheConcurrency
+  comment: Enable VRO's Thread-safe Forge OBJ model caches backport when VRO owns it. | This option is evaluated during startup and requires a game restart. | VRO yields to the current VH Accelerator implementation and to an active ModernFix implementation.
+  translationKey: null
+  restart: false
+  class: java.lang.Boolean
+  default: true
+  range: <none>
+value modernfix_backports.fasterTextureStitching
+  comment: Enable VRO's Faster texture atlas stitching backport when VRO owns it. | This option is evaluated during startup and requires a game restart. | VRO yields to the current VH Accelerator implementation and to an active ModernFix implementation.
+  translationKey: null
+  restart: false
+  class: java.lang.Boolean
+  default: true
+  range: <none>
+value modernfix_backports.modelDataManagerConcurrencyFix
+  comment: Enable VRO's Forge model-data concurrency correction backport when VRO owns it. | This option is evaluated during startup and requires a game restart. | VRO yields to the current VH Accelerator implementation and to an active ModernFix implementation.
+  translationKey: null
+  restart: false
+  class: java.lang.Boolean
+  default: true
+  range: <none>
+value modernfix_backports.ctmMetadataCacheConcurrencyFix
+  comment: Enable VRO's ConnectedTexturesMod metadata-cache concurrency correction backport when VRO owns it. | This option is evaluated during startup and requires a game restart. | VRO yields to the current VH Accelerator implementation and to an active ModernFix implementation.
+  translationKey: null
+  restart: false
+  class: java.lang.Boolean
+  default: true
+  range: <none>
+section embeddium_transfers
+value embeddium_transfers.adjacentBlockOcclusion
+  comment: Enable VRO-EMB-04: Adjacent-position block occlusion correction. | This startup option requires a client restart. | This correctness guard remains active in Compare Mode.
+  translationKey: null
+  restart: false
+  class: java.lang.Boolean
+  default: true
+  range: <none>
+value embeddium_transfers.nullBufferVertexSink
+  comment: Enable VRO-EMB-05: Null-buffer optimized vertex-sink guard. | This startup option requires a client restart. | This correctness guard remains active in Compare Mode.
+  translationKey: null
+  restart: false
+  class: java.lang.Boolean
+  default: true
+  range: <none>
+value embeddium_transfers.directCclRendererLookup
+  comment: Enable VRO-EMB-10: Direct CodeChickenLib renderer lookup. | This startup option requires a client restart. | Compare Mode yields this performance or compatibility-sensitive path.
+  translationKey: null
+  restart: false
+  class: java.lang.Boolean
+  default: true
+  range: <none>
+value embeddium_transfers.vertexBufferRetention
+  comment: Enable VRO-EMB-02: Bounded vertex-buffer retention. | This startup option requires a client restart. | Compare Mode yields this performance or compatibility-sensitive path.
+  translationKey: null
+  restart: false
+  class: java.lang.Boolean
+  default: true
+  range: <none>
+value embeddium_transfers.asyncArenaGrowth
+  comment: Enable VRO-EMB-03: Preemptive asynchronous buffer-arena growth. | This startup option requires a client restart. | Compare Mode yields this performance or compatibility-sensitive path.
+  translationKey: null
+  restart: false
+  class: java.lang.Boolean
+  default: true
+  range: <none>
+value embeddium_transfers.smoothFluidLighting
+  comment: Enable VRO-EMB-06: Cached smooth-lighting selection for fluids. | This startup option requires a client restart. | Compare Mode yields this performance or compatibility-sensitive path.
+  translationKey: null
+  restart: false
+  class: java.lang.Boolean
+  default: true
+  range: <none>
+value embeddium_transfers.chunkLayerColorReset
+  comment: Enable VRO-EMB-08: Chunk-layer shader-color reset. | This startup option requires a client restart. | This correctness guard remains active in Compare Mode.
+  translationKey: null
+  restart: false
+  class: java.lang.Boolean
+  default: true
+  range: <none>
+value embeddium_transfers.chunkRebuildDeduplication
+  comment: Enable VRO-EMB-01: Chunk rebuild de-duplication. | This startup option requires a client restart. | Compare Mode yields this performance or compatibility-sensitive path.
+  translationKey: null
+  restart: false
+  class: java.lang.Boolean
+  default: true
+  range: <none>
+value embeddium_transfers.vertexBufferMaxRetainedMib
+  comment: Maximum native capacity retained by one renderer vertex buffer between builds. | Larger one-off buffers are trimmed at the next start; destroy still frees them deterministically. | Range: 1 ~ 256
+  translationKey: null
+  restart: false
+  class: java.lang.Object
+  default: 16
+  range: 1..256
+value embeddium_transfers.vertexBufferAdaptiveTrimming
+  comment: Experimental: trim unused CPU-native vertex capacity at safe worker start points. | Keeps a 30-second demand window; idle workers trim only when used again, never remotely. | Existing per-buffer ceiling and native destroy remain unchanged. Off pending validation.
+  translationKey: null
+  restart: false
+  class: java.lang.Boolean
+  default: false
+  range: <none>
+value embeddium_transfers.vertexBufferAggregateRetainedMib
+  comment: Aggregate excess-capacity pressure threshold, not a hard process/native/VRAM limit. | Above this, active workers release old peaks at their next safe start; required writes are never capped. | Range: 16 ~ 2048
+  translationKey: null
+  restart: false
+  class: java.lang.Object
+  default: 128
+  range: 16..2048
+value embeddium_transfers.asyncArenaGrowthDivisor
+  comment: Reserve roughly current arena capacity divided by this value during a resize. | Smaller values trade more speculative VRAM for fewer resize/compaction events. | Range: 2 ~ 64
+  translationKey: null
+  restart: false
+  class: java.lang.Object
+  default: 6
+  range: 2..64
+value embeddium_transfers.asyncArenaMaxHeadroomMib
+  comment: Maximum speculative VRAM headroom added by one arena growth. | Memory required by the actual upload is never capped by this value. | Range: 1 ~ 512
+  translationKey: null
+  restart: false
+  class: java.lang.Object
+  default: 64
+  range: 1..512
+section render_fast_paths
+value render_fast_paths.hud_text_geometry
+  comment: Experimental: reuse unchanged plain HUD text glyph geometry while drawing every frame. | Formatted/animated/bidirectional/custom font paths fall back; no gear data or HUD state is cached. | Defaults off pending visual validation. Compare Mode disables reuse.
+  translationKey: null
+  restart: false
+  class: java.lang.Boolean
+  default: false
+  range: <none>
+value render_fast_paths.particle_collision_cache
+  comment: Exact particle block collision with a per-tick cache: visits the same cells and shapes as | vanilla and uses vanilla's collision response, but reads each block once per particle tick | instead of once per particle. Every particle still collides; nothing is skipped. | Yields to Particle Core/Flerovium. /vro particles collision on|off|verify toggles at runtime.
+  translationKey: null
+  restart: false
+  class: java.lang.Boolean
+  default: true
+  range: <none>
+value render_fast_paths.particle_light_cache
+  comment: Cache unchanged particle light lookups for one client tick.
+  translationKey: null
+  restart: false
+  class: java.lang.Boolean
+  default: true
+  range: <none>
+value render_fast_paths.particle_shared_light_cache
+  comment: Share light results between particles occupying the same block during one client tick. | This remains bounded and is cleared when the client level or game tick changes.
+  translationKey: null
+  restart: false
+  class: java.lang.Boolean
+  default: true
+  range: <none>
+value render_fast_paths.particle_billboard_fast_path
+  comment: Build ordinary particle billboards from the camera's left/up basis instead of rotating four corners. | Particles with custom render methods are unchanged. This option can be changed while the game is running.
+  translationKey: null
+  restart: false
+  class: java.lang.Boolean
+  default: true
+  range: <none>
+value render_fast_paths.particle_billboard_owner
+  comment: Select who renders ordinary particle billboards: AUTO, RENDERER, or VRO. | AUTO selects VRO's geometry and uses an installed renderer's packed writer. | RENDERER yields to Rubidium/Embeddium when available; VRO forces VRO's compatible path. | Allowed Values: AUTO, RENDERER, VRO
+  translationKey: null
+  restart: false
+  class: dev.hoyin1600p.vault_render_optimization.config.model.ParticleBillboardOwner
+  default: AUTO
+  range: <none>
+  enum: AUTO=true,RENDERER=true,VRO=true
+value render_fast_paths.particle_diagnostics
+  comment: Collect particle queue, render/tick timing, writer, and light-cache counters. | Disabled by default because class-level diagnostics add measurement overhead.
+  translationKey: null
+  restart: false
+  class: java.lang.Boolean
+  default: false
+  range: <none>
+value render_fast_paths.skip_empty_particle_render
+  comment: Skip particle renderer setup when every particle queue is empty.
+  translationKey: null
+  restart: false
+  class: java.lang.Boolean
+  default: true
+  range: <none>
+value render_fast_paths.allocation_free_frustum
+  comment: Test each frustum plane against the box corner farthest along its normal instead of allocating eight | vectors per plane. Same float operations in the same order, so the answer is vanilla's exactly.
+  translationKey: null
+  restart: false
+  class: java.lang.Boolean
+  default: true
+  range: <none>
+value render_fast_paths.fastload_frustum_bypass
+  comment: With Fastload installed: while its frustum event has no listeners (all gameplay after world load), | visibility checks skip its synchronized per-check event lookup. Same answers; only applies when | Fastload's hook is the only change to that frustum method.
+  translationKey: null
+  restart: false
+  class: java.lang.Boolean
+  default: true
+  range: <none>
+value render_fast_paths.particle_tick_compaction
+  comment: Remove particles that died this tick in one ordered pass instead of one queue shift each. | Every particle still ticks in vanilla order; only the removal of dead ones is batched.
+  translationKey: null
+  restart: false
+  class: java.lang.Boolean
+  default: true
+  range: <none>
+value render_fast_paths.particle_shared_random
+  comment: Give particles a per-thread generator with java.util.Random's exact algorithm instead of a new | Random each (a CAS, nanoTime and AtomicLong per particle, and a CAS per draw). Same distribution.
+  translationKey: null
+  restart: false
+  class: java.lang.Boolean
+  default: true
+  range: <none>
+value render_fast_paths.particle_provider_cache
+  comment: Resolve each particle type's provider once instead of a registry key plus hash lookup per spawn. | Invalidated whenever a provider is registered. Returns exactly the provider vanilla would.
+  translationKey: null
+  restart: false
+  class: java.lang.Boolean
+  default: true
+  range: <none>
+value render_fast_paths.gpu_entity_models
+  comment: Expand entity model cubes on the GPU. Each model part reserves its vertices in the | vanilla entity buffer and a compute shader writes them into the uploaded vertex buffer right before | vanilla's own draw, with vanilla's exact float arithmetic (bit-for-bit self-test at startup). | Needs OpenGL 4.3 or the ARB compute extensions; pauses with an Oculus shader pack (see | gpu_entity_models_with_shaders), in Compare | Mode, on a failed self-test or mixin audit. /vro gpuentity status explains the current state.
+  translationKey: null
+  restart: false
+  class: java.lang.Boolean
+  default: true
+  range: <none>
+value render_fast_paths.gpu_particles
+  comment: With gpu_entity_models active: billboard particles reserve their four vertices and the same compute | path writes them with VRO's exact billboard arithmetic (own startup self-test). Every particle is | still drawn; anything unusual stays on the CPU writer.
+  translationKey: null
+  restart: false
+  class: java.lang.Boolean
+  default: true
+  range: <none>
+value render_fast_paths.gpu_entity_models_with_shaders
+  comment: Experimental; mainly for slower CPUs. With gpu_entity_models active and an Oculus shader pack on, | entity models and particles | stay on the GPU path: a second program writes Oculus' extended entity vertices (face normal, tangent, | mid UV, entity IDs) exactly as Oculus computes them. It saves CPU time, but shader packs usually make | the game GPU-bound, where the extra compute passes cost more than they save; off by default.
+  translationKey: null
+  restart: false
+  class: java.lang.Boolean
+  default: false
+  range: <none>
+value render_fast_paths.gpu_particles_with_shaders
+  comment: With gpu_particles active and an Oculus shader pack on, keep only particles on the GPU (they keep | the vanilla particle format under shader packs). gpu_entity_models_with_shaders includes this.
+  translationKey: null
+  restart: false
+  class: java.lang.Boolean
+  default: false
+  range: <none>
+value render_fast_paths.gpu_items
+  comment: With gpu_entity_models active: solid and cutout block items (dropped, in frames, held) reserve their | vertices and the compute path writes them exactly as the installed item writer (Forge or Embeddium) | would (own self-test). Flat, translucent and glinting items always stay on the CPU.
+  translationKey: null
+  restart: false
+  class: java.lang.Boolean
+  default: true
+  range: <none>
+value render_fast_paths.skip_empty_toast_render
+  comment: Skip toast renderer work when no toast is queued or visible.
+  translationKey: null
+  restart: false
+  class: java.lang.Boolean
+  default: true
+  range: <none>
+value render_fast_paths.skip_empty_debug_render
+  comment: Skip debug renderer work when no supported debug overlay is active.
+  translationKey: null
+  restart: false
+  class: java.lang.Boolean
+  default: true
+  range: <none>
+section client_tick_fast_paths
+value client_tick_fast_paths.skip_inactive_tutorial
+  comment: Skip the completed tutorial's no-op tick when no timed tutorial toast exists.
+  translationKey: null
+  restart: false
+  class: java.lang.Boolean
+  default: true
+  range: <none>
+section renderer_lookup_caches
+value renderer_lookup_caches.entity_renderer_cache
+  comment: Cache non-player entity renderers on their EntityType and refresh on resource reload.
+  translationKey: null
+  restart: false
+  class: java.lang.Boolean
+  default: true
+  range: <none>
+value renderer_lookup_caches.block_entity_renderer_cache
+  comment: Cache block entity renderers on their BlockEntityType and refresh on resource reload.
+  translationKey: null
+  restart: false
+  class: java.lang.Boolean
+  default: true
+  range: <none>
+section sophisticated_storage
+value sophisticated_storage.front_display_culling
+  comment: Skip barrel front-display rendering when its display plane faces away from the camera | or is completely covered by the immediately adjacent block. Visible displays are unchanged.
+  translationKey: null
+  restart: false
+  class: java.lang.Boolean
+  default: true
+  range: <none>
+value sophisticated_storage.quantity_text_cache
+  comment: Cache limited-barrel count formatting and glyph layout until the displayed value changes. | The cache is bounded and cleared by resource reloads.
+  translationKey: null
+  restart: false
+  class: java.lang.Boolean
+  default: true
+  range: <none>
+value sophisticated_storage.fill_level_fast_path
+  comment: Render limited-barrel fill indicators without per-vertex temporary objects | while preserving the original fill values, texture, lighting, and transparency.
+  translationKey: null
+  restart: false
+  class: java.lang.Boolean
+  default: true
+  range: <none>
+value sophisticated_storage.count_only_render_update_filter
+  comment: Avoid rebuilding barrel chunk geometry for client updates that only change quantities | or fill levels. Model-affecting display changes still rebuild immediately.
+  translationKey: null
+  restart: false
+  class: java.lang.Boolean
+  default: true
+  range: <none>
+value sophisticated_storage.diagnostics
+  comment: Collect Sophisticated Storage render and cache counters for /vro storage. | Disabled by default to keep the normal render path as small as possible.
+  translationKey: null
+  restart: false
+  class: java.lang.Boolean
+  default: false
+  range: <none>
+section section_distance_culling
+value section_distance_culling.vertical_enabled
+  comment: Skip terrain sections outside the vertical distance while rendering. | This does not unload chunks or alter Distant Horizons storage.
+  translationKey: null
+  restart: false
+  class: java.lang.Boolean
+  default: true
+  range: <none>
+value section_distance_culling.vertical_distance
+  comment: Vertical terrain distance in 16-block sections above and below the camera. | Range: 1 ~ 64
+  translationKey: null
+  restart: false
+  class: java.lang.Object
+  default: 12
+  range: 1..64
+value section_distance_culling.horizontal_enabled
+  comment: Skip terrain sections outside a circular horizontal distance. | Disabled by default to preserve the configured vanilla render distance.
+  translationKey: null
+  restart: false
+  class: java.lang.Boolean
+  default: false
+  range: <none>
+value section_distance_culling.horizontal_distance
+  comment: Horizontal terrain radius in 16-block sections when enabled. | Range: 1 ~ 64
+  translationKey: null
+  restart: false
+  class: java.lang.Object
+  default: 24
+  range: 1..64
+section create_rendering
+value create_rendering.skip_empty_contraption_buffer_flush
+  comment: Avoid flushing Minecraft's shared render buffers for Create contraptions that rendered no special block entities.
+  translationKey: null
+  restart: false
+  class: java.lang.Boolean
+  default: true
+  range: <none>
+value create_rendering.contraption_block_entity_culling
+  comment: Frustum-cull special block entities inside visible Create contraptions.
+  translationKey: null
+  restart: false
+  class: java.lang.Boolean
+  default: true
+  range: <none>
+value create_rendering.contraption_actor_culling
+  comment: Frustum-cull movement actors inside visible Create contraptions.
+  translationKey: null
+  restart: false
+  class: java.lang.Boolean
+  default: true
+  range: <none>
+value create_rendering.sectioned_contraption_meshes
+  comment: Split large Create contraption meshes into local 16-block sections for frustum culling. | This is geometric culling only; it does not reduce detail or render distance.
+  translationKey: null
+  restart: false
+  class: java.lang.Boolean
+  default: true
+  range: <none>
+value create_rendering.sectioned_mesh_block_threshold
+  comment: Minimum rendered block count before a contraption uses sectioned meshes. | Range: 128 ~ 16384
+  translationKey: null
+  restart: false
+  class: java.lang.Object
+  default: 512
+  range: 128..16384
+value create_rendering.smart_machinery_render_bounds
+  comment: Use directional cached render bounds for supported Create machinery.
+  translationKey: null
+  restart: false
+  class: java.lang.Boolean
+  default: true
+  range: <none>
+value create_rendering.auto_enable_flywheel_instancing
+  comment: Turns on Flywheel's instancing renderer for this session when the pack has it set to OFF. | Flywheel's own config file is never changed; turning this off returns to the pack's setting | immediately. Unsupported GPUs and shader integration failures still fall back safely.
+  translationKey: null
+  restart: false
+  class: java.lang.Boolean
+  default: true
+  range: <none>
+value create_rendering.flywheel_shader_compat
+  comment: Keep Flywheel's instancing backend available with Oculus shaders. | Tested with Oculus 1.6.x, Rubidium/Embeddium, and Flywheel 0.6.11. | Unsupported or incomplete mod stacks ignore this option.
+  translationKey: null
+  restart: false
+  class: java.lang.Boolean
+  default: true
+  range: <none>

@@ -1,5 +1,7 @@
 package dev.hoyin1600p.vault_render_optimization.client.update;
 
+import dev.hoyin1600p.vault_render_optimization.config.model.UpdateNotice;
+
 import java.util.Map;
 import java.util.Optional;
 import org.apache.maven.artifact.versioning.ComparableVersion;

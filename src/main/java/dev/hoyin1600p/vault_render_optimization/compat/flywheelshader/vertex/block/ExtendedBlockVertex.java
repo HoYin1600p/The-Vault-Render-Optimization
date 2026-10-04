@@ -26,23 +26,6 @@ public class ExtendedBlockVertex extends BlockVertex {
             .build();
 
 
-    // Same as IrisVertexFormats.TERRAIN
-    public static final BufferLayout IRIS_FORMAT = BufferLayout.builder()
-            .addItems(CommonItems.VEC3,         //POSITION  3xFLOAT = 12
-                    CommonItems.RGBA,           //COLOR     4xBYTE  = 4
-                    CommonItems.UV,             //UV        2xFLOAT = 8
-                    CommonItems.LIGHT_SHORT,    //UV2 - LIGHT_SHORT 2xSHORT = 4
-                    CommonItems.NORMAL,         //NORMAL    3xBYTE  = 3
-                    CommonItems.PADDING_BYTE,   //PADDING   1xBYTE  = 1     ^^^DEFAULT-VERTEX-FORMAT 32 BYTES
-                    CommonItems.LIGHT_SHORT,    //ENTITY_ELEMENT
-                    CommonItems.VEC4,           //MID_TEXTURE_ELEMENT 4xFLOAT = 16
-                    CommonItems.RGBA,            //TANGENT_ELEMENT   4xBYTE  = 4
-                    CommonItems.RGB,            //MID_BLOCK_ELEMENT  3xBYTE  = 3
-                    CommonItems.PADDING_BYTE    //PADDING_SHORT 1xBYTE  = 1
-                    // Total: 52
-            )
-            .build();
-
     public static final BufferLayout EXTEND_FORMAT = BufferLayout.builder()
             .addItems(CommonItems.VEC3,         //POSITION  3xFLOAT = 12
                     CommonItems.RGBA,           //COLOR     4xBYTE  = 4

@@ -3,7 +3,8 @@ package dev.hoyin1600p.vault_render_optimization.mixin.entitygpu;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Matrix4f;
 import dev.hoyin1600p.vault_render_optimization.client.entitygpu.GpuEntityModels;
-import dev.hoyin1600p.vault_render_optimization.client.render.AllocationProbe;
+import dev.hoyin1600p.vault_render_optimization.client.diagnostics.AllocationProbe;
+import dev.hoyin1600p.vault_render_optimization.client.render.FastloadFrustum;
 import net.minecraft.client.Camera;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.LevelRenderer;
@@ -22,6 +23,6 @@ public abstract class LevelRendererGpuMixin {
                                          LightTexture lightTexture, Matrix4f projection, CallbackInfo ci) {
         GpuEntityModels.beginFrame();
         AllocationProbe.frame();
-        dev.hoyin1600p.vault_render_optimization.client.render.FastloadFrustum.beginFrame();
+        FastloadFrustum.beginFrame();
     }
 }

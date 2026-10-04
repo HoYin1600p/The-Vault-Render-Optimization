@@ -1,5 +1,7 @@
 package dev.hoyin1600p.vault_render_optimization.client.particle;
 
+import dev.hoyin1600p.vault_render_optimization.config.model.ParticleBillboardOwner;
+
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 

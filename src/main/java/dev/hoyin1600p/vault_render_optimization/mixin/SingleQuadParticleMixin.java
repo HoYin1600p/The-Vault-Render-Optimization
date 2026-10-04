@@ -7,8 +7,12 @@
  */
 package dev.hoyin1600p.vault_render_optimization.mixin;
 
+import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.math.Vector3f;
+import dev.hoyin1600p.vault_render_optimization.client.entitygpu.EntityVertexPacking;
+import dev.hoyin1600p.vault_render_optimization.client.entitygpu.GpuEntityModels;
+import dev.hoyin1600p.vault_render_optimization.client.entitygpu.GpuParticles;
 import dev.hoyin1600p.vault_render_optimization.client.particle.ParticleBillboardGeometry;
 import dev.hoyin1600p.vault_render_optimization.client.particle.ParticleDiagnostics;
 import dev.hoyin1600p.vault_render_optimization.client.particle.ParticleOptimizationState;
@@ -75,8 +79,8 @@ public abstract class SingleQuadParticleMixin extends Particle {
 
     /** GPU particles: the same inputs vro$geometry and vro$write use, reserved instead of written. */
     private boolean vro$reserveOnGpu(VertexConsumer consumer, Camera camera, float partialTick) {
-        if (consumer.getClass() != com.mojang.blaze3d.vertex.BufferBuilder.class
-                || !dev.hoyin1600p.vault_render_optimization.client.entitygpu.GpuEntityModels.particleFrameActive()) {
+        if (consumer.getClass() != BufferBuilder.class
+                || !GpuEntityModels.particleFrameActive()) {
             return false;
         }
         Vec3 cameraPosition = camera.getPosition();
@@ -86,9 +90,9 @@ public abstract class SingleQuadParticleMixin extends Particle {
         float angle = this.roll == 0.0F ? 0.0F : Mth.lerp(partialTick, this.oRoll, this.roll);
         float size = this.getQuadSize(partialTick);
         int light = this.getLightColor(partialTick);
-        int color = dev.hoyin1600p.vault_render_optimization.client.entitygpu.EntityVertexPacking.color(
+        int color = EntityVertexPacking.color(
                 this.rCol, this.gCol, this.bCol, this.alpha);
-        if (!dev.hoyin1600p.vault_render_optimization.client.entitygpu.GpuParticles.tryReserve(consumer,
+        if (!GpuParticles.tryReserve(consumer,
                 positionX, positionY, positionZ, camera.getLeftVector(), camera.getUpVector(), angle, size,
                 this.getU0(), this.getU1(), this.getV0(), this.getV1(), color, light)) {
             return false;

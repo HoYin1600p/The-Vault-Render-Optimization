@@ -4,6 +4,7 @@ import dev.hoyin1600p.vault_render_optimization.VaultRenderOptimization;
 import dev.hoyin1600p.vault_render_optimization.mixin.CreateAdditionEnergyNetworkManagerAccessor;
 import dev.hoyin1600p.vault_render_optimization.mixin.PowahCableNetAccessor;
 import dev.hoyin1600p.vault_render_optimization.mixin.VaultLootBeamsCacheAccessor;
+import dev.hoyin1600p.vault_render_optimization.util.ModIds;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.eventbus.api.EventPriority;
@@ -23,17 +24,17 @@ public final class LevelStateCleanup {
         Object world = event.getWorld();
 
 
-        if (ModList.get().isLoaded("createaddition")) {
+        if (ModList.get().isLoaded(ModIds.CREATE_ADDITION)) {
             removeWorld(CreateAdditionEnergyNetworkManagerAccessor.vaultRenderOptimization$getInstances(), world,
                     "Create Addition energy networks");
         }
 
-        if (ModList.get().isLoaded("powah")) {
+        if (ModList.get().isLoaded(ModIds.POWAH)) {
             removeWorld(PowahCableNetAccessor.vaultRenderOptimization$getLoadedCables(), world,
                     "Powah cable networks");
         }
 
-        if (ModList.get().isLoaded("vaultlootbeams") && !ModList.get().isLoaded("unobtainium")) {
+        if (ModList.get().isLoaded(ModIds.VAULT_LOOT_BEAMS) && !ModList.get().isLoaded(ModIds.UNOBTAINIUM)) {
             Map<?, ?> tooltipCache = VaultLootBeamsCacheAccessor.vaultRenderOptimization$getTooltipCache();
             if (tooltipCache != null && !tooltipCache.isEmpty()) {
                 int entries = tooltipCache.size();

@@ -1,7 +1,6 @@
 package dev.hoyin1600p.vault_render_optimization.compat.flywheelshader.flywheel;
 
 import com.mojang.blaze3d.shaders.Uniform;
-import com.mojang.math.Matrix3f;
 import com.mojang.math.Matrix4f;
 import net.coderbot.iris.uniforms.CapturedRenderingState;
 import net.minecraft.client.renderer.ShaderInstance;
@@ -16,7 +15,6 @@ public class IrisFlwCompatShaderWarp {
     public ShaderInstance shader;
     protected GlUniformMcMatrix4f uniformIrisProjMat;
     protected GlUniformMcMatrix4f iris_uniformModelViewMat;
-    //protected GlUniformMcMatrix4f uniformModelViewMat;
     protected GlUniformMcMatrix3f uniformNormalMatrix;
     protected GlUniformMcMatrix4f uniformModelViewProjMat;
 

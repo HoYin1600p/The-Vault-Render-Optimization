@@ -4,18 +4,28 @@
 [![Forge](https://img.shields.io/badge/Forge-40.3.11%2B-e04e39)](https://files.minecraftforge.net/net/minecraftforge/forge/index_1.18.2.html)
 [![Environment](https://img.shields.io/badge/Environment-Client-4b8bbe)](#requirements-and-support)
 [![License](https://img.shields.io/badge/License-AGPL--3.0--or--later-blue.svg)](LICENSE)
-[![Release](https://img.shields.io/badge/Release-0.4.2-2ea44f)](https://github.com/HoYin1600p/The-Vault-Render-Optimization/releases/tag/v0.4.2)
+[![Release](https://img.shields.io/badge/Release-0.5.2-2ea44f)](https://github.com/HoYin1600p/The-Vault-Render-Optimization/releases/tag/v0.5.2)
 
 The Vault Render Optimization (VRO) is a client-side Minecraft Forge 1.18.2
 mod that reduces repeated rendering and client simulation work in Vault
 Hunters. It targets frame-time consistency in busy bases, Vault HUD and gear
 rendering, particle-heavy scenes, and long sessions with repeated world or
-dimension changes.
+dimension changes. Version 0.5 adds GPU rendering for entity models, items and
+particles, and an in-game settings screen.
 
 VRO does not remove visible effects, lower animation rates, change loot, or
 modify server gameplay. The remote server does not need the mod.
 
 ## Highlights
+
+- Draws repeated entity models, items and particles with a compute shader on
+  the graphics card: mobs, armor stands, chests, Vault Hunters' GeckoLib and
+  Citadel models, dropped, framed and held items, and billboard particles. The
+  output matches vanilla exactly; every path self-tests at startup and
+  `/vro gpuentity verify` compares it with vanilla while you play.
+- Adds an in-game settings screen (needs Cloth Config) with every setting in
+  player-facing tabs, click-to-expand explanations, Default and Experimental
+  buttons, and a Report a bug preview. Bind its key in Options > Controls.
 
 - Offers experimental, default-on pacing for already-built terrain updates on
   validated Embeddium, with native loading/backlog fallback and hot controls.
@@ -318,7 +328,7 @@ different pack files together.
 
 1. Stop Minecraft.
 2. Remove or disable every older VRO jar.
-3. Place `vault_render_optimization.0.4.2.jar` in the instance's `mods`
+3. Place `vault_render_optimization.0.5.2.jar` in the instance's `mods`
    directory.
 4. Keep only one active VRO jar.
 5. Remove Entity Collision FPS Fix only if you want VRO to own that same
@@ -335,6 +345,9 @@ for upgrades, removal, optional-mod coexistence, and issue isolation.
 | `/vro compare on` | Saves and immediately disables VRO performance optimizations. |
 | `/vro compare off` | Saves and immediately enables configured VRO optimizations. |
 | `/vro compare status` | Reports whether Compare Mode is active. |
+| `/vro gpuentity status\|stats` | Reports GPU rendering state and its counters. |
+| `/vro gpuentity verify on\|off` | Compares GPU output with vanilla's while you play. |
+| `/vro feature list` | Lists the GPU feature switches; `/vro feature <name> on\|off` toggles one. |
 | `/vro updates` | Reports whether update checks are enabled and which update types may be shown. |
 | `/vro updates on\|off` | Enables or disables update checks immediately and saves the setting. |
 | `/vro updates critical\|all` | Shows only critical updates, or opts into all update notices. |
@@ -363,7 +376,8 @@ performance changes. Commands are client-side and require no server permission.
 
 VRO writes `config/vault_render_optimization-client.toml`. Its generic render
 fast paths are enabled by default and can be disabled individually. Compare
-Mode is also saved there.
+Mode is also saved there. The settings screen (key unbound by default; set it
+in Options > Controls) edits the same file and needs Cloth Config.
 
 Update checks are enabled by default, but notices default to critical updates
 only. The request is asynchronous, bounded, and fails closed; VRO never
@@ -399,14 +413,14 @@ The complete option and coexistence reference is in
 | [Sophisticated Storage rendering](docs/SOPHISTICATED_STORAGE.md) | Barrel display culling, quantity/fill fast paths, update filtering, and validation |
 | [Testing](docs/TESTING.md) | Compare Mode and repeatable benchmark procedure |
 | [Performance validation](docs/PERFORMANCE_VALIDATION.md) | Four-client measured results and limitations |
-| [Release notes 0.4.2](docs/releases/0.4.2.md) | Current release: faster Sophisticated Storage barrel displays |
-| [Release notes 0.4.0](docs/releases/0.4.0.md) | Previous published release with configurable update notices |
-| [Release notes 0.3.5](docs/releases/0.3.5.md) | Previous release with dedicated Flywheel shader-pack programs |
+| [Release notes 0.4.2](docs/releases/0.4.2.md) | Faster Sophisticated Storage barrel displays |
+| [Release notes 0.4.0](docs/releases/0.4.0.md) | Configurable update notices |
+| [Release notes 0.3.5](docs/releases/0.3.5.md) | Dedicated Flywheel shader-pack programs |
 | [Release notes 0.3.4](docs/releases/0.3.4.md) | Create contraption and Flywheel shader rendering |
 | [Release notes 0.3.3](docs/releases/0.3.3.md) | Dynamic-light crash correction |
 | [Release notes 0.3.2](docs/releases/0.3.2.md) | Expanded 0.3.2 release details |
 | [Release notes 0.3.0](docs/releases/0.3.0.md) | Initial release history |
-| [Changelog](CHANGELOG.md) | Version-to-version changes |
+| [Changelog](CHANGELOG.md) | Version-to-version changes, including the 0.5 GPU rendering and settings screen releases |
 | [Credits](CREDITS.md) | Adapted code, design research, and compatibility attribution |
 | [Third-party notices](THIRD_PARTY_NOTICES.md) | Exact shipped provenance and licenses |
 | [Source provenance audit](docs/SOURCE_PROVENANCE_AUDIT.md) | Feature-by-feature copied, adapted, and original classification |

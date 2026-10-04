@@ -1,5 +1,6 @@
 package dev.hoyin1600p.vault_render_optimization.mixin;
 
+import dev.hoyin1600p.vault_render_optimization.VaultRenderOptimization;
 import dev.hoyin1600p.vault_render_optimization.config.ClientOptimizationConfig;
 import iskallia.vault.core.event.Event;
 import iskallia.vault.core.event.client.AmbientLightEvent;
@@ -51,7 +52,7 @@ public abstract class VaultEventMixin {
             try {
                 listener.accept(data);
             } catch (Exception exception) {
-                exception.printStackTrace();
+                VaultRenderOptimization.LOGGER.error("A Vault event listener failed", exception);
             }
         }
 

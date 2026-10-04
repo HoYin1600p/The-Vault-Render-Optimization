@@ -1,7 +1,6 @@
 package dev.hoyin1600p.vault_render_optimization.compat.flywheelshader.iris;
 
 import com.mojang.math.Matrix3f;
-import com.mojang.math.Matrix4f;
 import me.jellysquid.mods.sodium.client.gl.shader.uniform.GlUniform;
 import org.lwjgl.opengl.GL30C;
 import org.lwjgl.BufferUtils;

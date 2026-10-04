@@ -2,6 +2,8 @@ package dev.hoyin1600p.vault_render_optimization.config;
 
 import dev.hoyin1600p.vault_render_optimization.backport.RenderBackportFeature;
 import dev.hoyin1600p.vault_render_optimization.renderertransfer.RendererTransferFeature;
+import dev.hoyin1600p.vault_render_optimization.util.ConfigKeys;
+import dev.hoyin1600p.vault_render_optimization.util.ConfigSections;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -88,7 +90,7 @@ public final class ConfigSettingCatalog {
      * Default-off settings the Experimental button never turns on, by setting id. Horizontal section
      * culling is not an experiment but a deliberate trade: it shortens the sideways draw distance.
      */
-    public static final Set<String> EXPERIMENTAL_EXCLUSIONS = Set.of("horizontal_enabled");
+    public static final Set<String> EXPERIMENTAL_EXCLUSIONS = Set.of(ConfigKeys.HORIZONTAL_ENABLED);
 
     private static final List<Setting> SETTINGS = build();
 
@@ -107,97 +109,97 @@ public final class ConfigSettingCatalog {
         List<Setting> settings = new ArrayList<>();
 
         // GPU rendering: all read every frame, so changes apply live.
-        toml(settings, Category.GPU, "gpu_entity_models", "render_fast_paths", false);
-        toml(settings, Category.GPU, "gpu_particles", "render_fast_paths", false);
-        toml(settings, Category.GPU, "gpu_items", "render_fast_paths", false);
-        toml(settings, Category.GPU, "gpu_entity_models_with_shaders", "render_fast_paths", false);
-        toml(settings, Category.GPU, "gpu_particles_with_shaders", "render_fast_paths", false);
+        toml(settings, Category.GPU, ConfigKeys.GPU_ENTITY_MODELS, ConfigSections.RENDER_FAST_PATHS, false);
+        toml(settings, Category.GPU, ConfigKeys.GPU_PARTICLES, ConfigSections.RENDER_FAST_PATHS, false);
+        toml(settings, Category.GPU, ConfigKeys.GPU_ITEMS, ConfigSections.RENDER_FAST_PATHS, false);
+        toml(settings, Category.GPU, ConfigKeys.GPU_ENTITY_MODELS_WITH_SHADERS, ConfigSections.RENDER_FAST_PATHS, false);
+        toml(settings, Category.GPU, ConfigKeys.GPU_PARTICLES_WITH_SHADERS, ConfigSections.RENDER_FAST_PATHS, false);
 
         // Chunks & terrain.
-        toml(settings, Category.CHUNKS, "defer_updates", "chunk_updates", false);
-        toml(settings, Category.CHUNKS, "index_only_sorting", "chunk_updates", false);
-        toml(settings, Category.CHUNKS, "sort_geometry_cache", "chunk_updates", false);
-        toml(settings, Category.CHUNKS, "adaptive_budget_v2", "chunk_updates", false);
-        toml(settings, Category.CHUNKS, "vertical_enabled", "section_distance_culling", false);
-        toml(settings, Category.CHUNKS, "vertical_distance", "section_distance_culling", false);
-        toml(settings, Category.CHUNKS, "horizontal_enabled", "section_distance_culling", false);
-        toml(settings, Category.CHUNKS, "horizontal_distance", "section_distance_culling", false);
+        toml(settings, Category.CHUNKS, "defer_updates", ConfigSections.CHUNK_UPDATES, false);
+        toml(settings, Category.CHUNKS, "index_only_sorting", ConfigSections.CHUNK_UPDATES, false);
+        toml(settings, Category.CHUNKS, "sort_geometry_cache", ConfigSections.CHUNK_UPDATES, false);
+        toml(settings, Category.CHUNKS, "adaptive_budget_v2", ConfigSections.CHUNK_UPDATES, false);
+        toml(settings, Category.CHUNKS, "vertical_enabled", ConfigSections.SECTION_DISTANCE_CULLING, false);
+        toml(settings, Category.CHUNKS, "vertical_distance", ConfigSections.SECTION_DISTANCE_CULLING, false);
+        toml(settings, Category.CHUNKS, ConfigKeys.HORIZONTAL_ENABLED, ConfigSections.SECTION_DISTANCE_CULLING, false);
+        toml(settings, Category.CHUNKS, "horizontal_distance", ConfigSections.SECTION_DISTANCE_CULLING, false);
 
         // Entities & particles.
-        toml(settings, Category.ENTITIES, "particle_collision_cache", "render_fast_paths", false);
-        toml(settings, Category.ENTITIES, "particle_light_cache", "render_fast_paths", false);
-        toml(settings, Category.ENTITIES, "particle_shared_light_cache", "render_fast_paths", false);
-        toml(settings, Category.ENTITIES, "particle_billboard_fast_path", "render_fast_paths", false);
-        toml(settings, Category.ENTITIES, "particle_billboard_owner", "render_fast_paths", false);
-        toml(settings, Category.ENTITIES, "skip_empty_particle_render", "render_fast_paths", false);
-        toml(settings, Category.ENTITIES, "particle_tick_compaction", "render_fast_paths", false);
-        toml(settings, Category.ENTITIES, "particle_shared_random", "render_fast_paths", false);
-        toml(settings, Category.ENTITIES, "particle_provider_cache", "render_fast_paths", false);
-        toml(settings, Category.ENTITIES, "allocation_free_frustum", "render_fast_paths", false);
-        toml(settings, Category.ENTITIES, "entity_renderer_cache", "renderer_lookup_caches", false);
-        toml(settings, Category.ENTITIES, "block_entity_renderer_cache", "renderer_lookup_caches", false);
+        toml(settings, Category.ENTITIES, ConfigKeys.PARTICLE_COLLISION_CACHE, ConfigSections.RENDER_FAST_PATHS, false);
+        toml(settings, Category.ENTITIES, "particle_light_cache", ConfigSections.RENDER_FAST_PATHS, false);
+        toml(settings, Category.ENTITIES, "particle_shared_light_cache", ConfigSections.RENDER_FAST_PATHS, false);
+        toml(settings, Category.ENTITIES, "particle_billboard_fast_path", ConfigSections.RENDER_FAST_PATHS, false);
+        toml(settings, Category.ENTITIES, "particle_billboard_owner", ConfigSections.RENDER_FAST_PATHS, false);
+        toml(settings, Category.ENTITIES, "skip_empty_particle_render", ConfigSections.RENDER_FAST_PATHS, false);
+        toml(settings, Category.ENTITIES, ConfigKeys.PARTICLE_TICK_COMPACTION, ConfigSections.RENDER_FAST_PATHS, false);
+        toml(settings, Category.ENTITIES, ConfigKeys.PARTICLE_SHARED_RANDOM, ConfigSections.RENDER_FAST_PATHS, false);
+        toml(settings, Category.ENTITIES, ConfigKeys.PARTICLE_PROVIDER_CACHE, ConfigSections.RENDER_FAST_PATHS, false);
+        toml(settings, Category.ENTITIES, ConfigKeys.ALLOCATION_FREE_FRUSTUM, ConfigSections.RENDER_FAST_PATHS, false);
+        toml(settings, Category.ENTITIES, "entity_renderer_cache", ConfigSections.RENDERER_LOOKUP_CACHES, false);
+        toml(settings, Category.ENTITIES, "block_entity_renderer_cache", ConfigSections.RENDERER_LOOKUP_CACHES, false);
 
         // Interface & HUD.
-        settings.add(new Setting("hud_text_geometry", Category.INTERFACE, Storage.CLIENT_TOML,
-                List.of("render_fast_paths", "hud_text_geometry"), false,
+        settings.add(new Setting(ConfigKeys.HUD_TEXT_GEOMETRY, Category.INTERFACE, Storage.CLIENT_TOML,
+                List.of(ConfigSections.RENDER_FAST_PATHS, ConfigKeys.HUD_TEXT_GEOMETRY), false,
                 value -> ClientOptimizationConfig.setHudTextGeometry((Boolean) value)));
-        toml(settings, Category.INTERFACE, "skip_empty_toast_render", "render_fast_paths", false);
-        toml(settings, Category.INTERFACE, "skip_empty_debug_render", "render_fast_paths", false);
-        toml(settings, Category.INTERFACE, "skip_inactive_tutorial", "client_tick_fast_paths", false);
+        toml(settings, Category.INTERFACE, "skip_empty_toast_render", ConfigSections.RENDER_FAST_PATHS, false);
+        toml(settings, Category.INTERFACE, "skip_empty_debug_render", ConfigSections.RENDER_FAST_PATHS, false);
+        toml(settings, Category.INTERFACE, "skip_inactive_tutorial", ConfigSections.CLIENT_TICK_FAST_PATHS, false);
 
         // Mod compatibility: Farsight, Fastload, Create, Sophisticated Storage, ModernFix, Embeddium.
-        toml(settings, Category.COMPAT, "farsight_chunk_bound", "chunk_updates", false);
-        toml(settings, Category.COMPAT, "fastload_frustum_bypass", "render_fast_paths", false);
+        toml(settings, Category.COMPAT, "farsight_chunk_bound", ConfigSections.CHUNK_UPDATES, false);
+        toml(settings, Category.COMPAT, ConfigKeys.FASTLOAD_FRUSTUM_BYPASS, ConfigSections.RENDER_FAST_PATHS, false);
         toml(settings, Category.COMPAT, "create_skip_empty_contraption_buffer_flush",
-                List.of("create_rendering", "skip_empty_contraption_buffer_flush"), false);
+                List.of(ConfigSections.CREATE_RENDERING, "skip_empty_contraption_buffer_flush"), false);
         toml(settings, Category.COMPAT, "create_contraption_block_entity_culling",
-                List.of("create_rendering", "contraption_block_entity_culling"), false);
+                List.of(ConfigSections.CREATE_RENDERING, "contraption_block_entity_culling"), false);
         toml(settings, Category.COMPAT, "create_contraption_actor_culling",
-                List.of("create_rendering", "contraption_actor_culling"), false);
+                List.of(ConfigSections.CREATE_RENDERING, "contraption_actor_culling"), false);
         // Flywheel builds sectioned meshes when a contraption renderer is created: rebuild them.
         settings.add(new Setting("create_sectioned_contraption_meshes", Category.COMPAT, Storage.CLIENT_TOML,
-                List.of("create_rendering", "sectioned_contraption_meshes"), false,
+                List.of(ConfigSections.CREATE_RENDERING, "sectioned_contraption_meshes"), false,
                 value -> ClientOptimizationConfig.reloadCreateRenderers()));
         settings.add(new Setting("create_sectioned_mesh_block_threshold", Category.COMPAT, Storage.CLIENT_TOML,
-                List.of("create_rendering", "sectioned_mesh_block_threshold"), false,
+                List.of(ConfigSections.CREATE_RENDERING, "sectioned_mesh_block_threshold"), false,
                 value -> ClientOptimizationConfig.reloadCreateRenderers()));
         toml(settings, Category.COMPAT, "create_smart_machinery_render_bounds",
-                List.of("create_rendering", "smart_machinery_render_bounds"), false);
+                List.of(ConfigSections.CREATE_RENDERING, "smart_machinery_render_bounds"), false);
         // Session-only, read live: FlywheelBackendManager refreshes Flywheel when the decision changes.
         toml(settings, Category.COMPAT, "create_auto_enable_flywheel_instancing",
-                List.of("create_rendering", "auto_enable_flywheel_instancing"), false);
+                List.of(ConfigSections.CREATE_RENDERING, "auto_enable_flywheel_instancing"), false);
         settings.add(new Setting("create_flywheel_shader_compat", Category.COMPAT, Storage.CLIENT_TOML,
-                List.of("create_rendering", "flywheel_shader_compat"), false,
+                List.of(ConfigSections.CREATE_RENDERING, "flywheel_shader_compat"), false,
                 value -> ClientOptimizationConfig.setCreateFlywheelShaderCompat((Boolean) value)));
         toml(settings, Category.COMPAT, "storage_front_display_culling",
-                List.of("sophisticated_storage", "front_display_culling"), false);
+                List.of(ConfigSections.SOPHISTICATED_STORAGE, "front_display_culling"), false);
         toml(settings, Category.COMPAT, "storage_quantity_text_cache",
-                List.of("sophisticated_storage", "quantity_text_cache"), false);
+                List.of(ConfigSections.SOPHISTICATED_STORAGE, "quantity_text_cache"), false);
         toml(settings, Category.COMPAT, "storage_fill_level_fast_path",
-                List.of("sophisticated_storage", "fill_level_fast_path"), false);
+                List.of(ConfigSections.SOPHISTICATED_STORAGE, "fill_level_fast_path"), false);
         toml(settings, Category.COMPAT, "storage_count_only_render_update_filter",
-                List.of("sophisticated_storage", "count_only_render_update_filter"), false);
+                List.of(ConfigSections.SOPHISTICATED_STORAGE, "count_only_render_update_filter"), false);
         // Backports and transfers choose their mixins at startup.
         for (RenderBackportFeature feature : RenderBackportFeature.values()) {
             toml(settings, Category.COMPAT, "backport_" + feature.id(),
-                    List.of("modernfix_backports", feature.configKey()), true);
+                    List.of(ConfigSections.MODERNFIX_BACKPORTS, feature.configKey()), true);
         }
         for (RendererTransferFeature feature : RendererTransferFeature.values()) {
             toml(settings, Category.COMPAT, "transfer_" + snakeCase(feature.configKey()),
-                    List.of("embeddium_transfers", feature.configKey()), true);
+                    List.of(ConfigSections.EMBEDDIUM_TRANSFERS, feature.configKey()), true);
         }
         // Tunables of the transfers above. The buffer values are read on every buffer start; the arena
         // values are captured per arena on its first growth, so they apply after a world rejoin.
         toml(settings, Category.COMPAT, "vertex_buffer_max_retained_mib",
-                List.of("embeddium_transfers", "vertexBufferMaxRetainedMib"), false);
+                List.of(ConfigSections.EMBEDDIUM_TRANSFERS, "vertexBufferMaxRetainedMib"), false);
         toml(settings, Category.COMPAT, "vertex_buffer_adaptive_trimming",
-                List.of("embeddium_transfers", "vertexBufferAdaptiveTrimming"), false);
+                List.of(ConfigSections.EMBEDDIUM_TRANSFERS, "vertexBufferAdaptiveTrimming"), false);
         toml(settings, Category.COMPAT, "vertex_buffer_aggregate_retained_mib",
-                List.of("embeddium_transfers", "vertexBufferAggregateRetainedMib"), false);
+                List.of(ConfigSections.EMBEDDIUM_TRANSFERS, "vertexBufferAggregateRetainedMib"), false);
         toml(settings, Category.COMPAT, "async_arena_growth_divisor",
-                List.of("embeddium_transfers", "asyncArenaGrowthDivisor"), true);
+                List.of(ConfigSections.EMBEDDIUM_TRANSFERS, ConfigKeys.ASYNC_ARENA_GROWTH_DIVISOR), true);
         toml(settings, Category.COMPAT, "async_arena_max_headroom_mib",
-                List.of("embeddium_transfers", "asyncArenaMaxHeadroomMib"), true);
+                List.of(ConfigSections.EMBEDDIUM_TRANSFERS, ConfigKeys.ASYNC_ARENA_MAX_HEADROOM_MIB), true);
 
         // Built-in ImmediatelyFast: the JSON is read once at startup for mixin selection. Its cosmetic
         // and debug-only options sit in Diagnostics so Experimental never turns them on.
@@ -211,17 +213,17 @@ public final class ConfigSettingCatalog {
                 "experimental_item_hud_batching");
 
         // Updates.
-        toml(settings, Category.UPDATES, "check_for_updates", "updates", false);
-        toml(settings, Category.UPDATES, "update_types", "updates", false);
+        toml(settings, Category.UPDATES, "check_for_updates", ConfigSections.UPDATES, false);
+        toml(settings, Category.UPDATES, "update_types", ConfigSections.UPDATES, false);
 
         // Diagnostics: never touched by Experimental. Compare Mode switches runtime paths at once, but
         // the backports and transfers read it from the launch snapshot, so it carries the badge.
-        settings.add(new Setting("compare_mode", Category.DIAGNOSTICS, Storage.CLIENT_TOML,
-                List.of("benchmark", "compare_mode"), true,
+        settings.add(new Setting(ConfigKeys.COMPARE_MODE, Category.DIAGNOSTICS, Storage.CLIENT_TOML,
+                List.of(ConfigSections.BENCHMARK, ConfigKeys.COMPARE_MODE), true,
                 value -> ClientOptimizationConfig.setCompareMode((Boolean) value)));
-        toml(settings, Category.DIAGNOSTICS, "particle_diagnostics", "render_fast_paths", false);
+        toml(settings, Category.DIAGNOSTICS, "particle_diagnostics", ConfigSections.RENDER_FAST_PATHS, false);
         toml(settings, Category.DIAGNOSTICS, "storage_diagnostics",
-                List.of("sophisticated_storage", "diagnostics"), false);
+                List.of(ConfigSections.SOPHISTICATED_STORAGE, "diagnostics"), false);
         json(settings, Category.DIAGNOSTICS, "immediatelyfast_dont_add_info_into_debug_hud",
                 "dont_add_info_into_debug_hud");
         json(settings, Category.DIAGNOSTICS, "immediatelyfast_disable_universal_batching",

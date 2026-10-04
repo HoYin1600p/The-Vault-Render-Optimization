@@ -6,6 +6,7 @@ import net.minecraft.core.Vec3i;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -14,7 +15,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(value = BeltBlockEntity.class, remap = false)
 public abstract class CreateBeltBoundsMixin {
-    @org.spongepowered.asm.mixin.Shadow public int beltLength;
+    @Shadow public int beltLength;
 
     @Unique private int vro$cachedBeltLength = Integer.MIN_VALUE;
     @Unique private BlockState vro$cachedBeltState;

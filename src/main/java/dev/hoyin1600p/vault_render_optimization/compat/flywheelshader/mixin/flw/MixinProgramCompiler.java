@@ -51,7 +51,6 @@ public abstract class MixinProgramCompiler<P extends WorldProgram> {
                     FlywheelShaderCompatState.recordFailure("compiler initialization", null);
                     return;
                 }
-                //Optional<ShaderPack> currentPackOptional = Iris.getCurrentPack();
                 WorldRenderingPipeline pipeline = Iris.getPipelineManager().getPipelineNullable();
                 boolean isShadow = IrisApi.getInstance().isRenderingShadowPass();
 

@@ -48,12 +48,6 @@ import java.util.regex.Pattern;
 public class GlslTransformerShaderPatcher extends ShaderPatcherBase {
     private final SingleASTTransformer<ContextParameter> transformer;
     private final SingleASTTransformer<ContextParameter> flwTransformer;
-    public static final AutoHintedMatcher<Expression> glTextureMatrix0 = new AutoHintedMatcher<>(
-            "gl_TextureMatrix[0]", ParseShape.EXPRESSION);
-    public static final AutoHintedMatcher<Expression> glTextureMatrix1 = new AutoHintedMatcher<>(
-            "gl_TextureMatrix[1]", ParseShape.EXPRESSION);
-    public static final AutoHintedMatcher<Expression> glTextureMatrix2 = new AutoHintedMatcher<>(
-            "gl_TextureMatrix[2]", ParseShape.EXPRESSION);
 
 
     public static final Set<String> toRemoveAttributesSet = Set.of(
@@ -318,7 +312,6 @@ public class GlslTransformerShaderPatcher extends ShaderPatcherBase {
         compoundStatement.getRoot().rename("i", "_flw_instance");
         compoundStatement.getRoot().rename("v", "_flw_v");
 
-        //tree.prependMainFunctionBody(prependMainFuncStatements);
         return compoundStatement.getStatements();
     }
 

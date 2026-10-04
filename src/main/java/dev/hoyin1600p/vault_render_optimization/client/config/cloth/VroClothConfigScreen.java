@@ -6,9 +6,11 @@ import dev.hoyin1600p.vault_render_optimization.config.ConfigSettingCatalog;
 import dev.hoyin1600p.vault_render_optimization.config.ConfigSettingCatalog.Category;
 import dev.hoyin1600p.vault_render_optimization.config.ConfigSettingCatalog.Setting;
 import dev.hoyin1600p.vault_render_optimization.config.ConfigSettingStore;
+import dev.hoyin1600p.vault_render_optimization.util.ConfigKeys;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 import me.shedaniel.clothconfig2.api.AbstractConfigListEntry;
 import me.shedaniel.clothconfig2.api.ConfigBuilder;
 import me.shedaniel.clothconfig2.api.ConfigCategory;
@@ -139,7 +141,7 @@ public final class VroClothConfigScreen {
     @SuppressWarnings({"unchecked", "rawtypes"})
     private static AbstractConfigListEntry<?> enumEntry(ConfigEntryBuilder entries, Component label,
                                                         Enum<?> defaultValue, Object value,
-                                                        java.util.function.Consumer<Object> save) {
+                                                        Consumer<Object> save) {
         Class type = defaultValue.getDeclaringClass();
         Enum<?> currentValue = type.isInstance(value) ? (Enum<?>) value : defaultValue;
         return entries.startEnumSelector(label, type, currentValue)
@@ -231,7 +233,8 @@ public final class VroClothConfigScreen {
     /** The two arena sizes are captured per arena on its first growth, so they need a world rejoin too. */
     static boolean isArenaSetting(Setting setting) {
         String key = setting.path().get(setting.path().size() - 1);
-        return key.equals("asyncArenaGrowthDivisor") || key.equals("asyncArenaMaxHeadroomMib");
+        return key.equals(ConfigKeys.ASYNC_ARENA_GROWTH_DIVISOR)
+                || key.equals(ConfigKeys.ASYNC_ARENA_MAX_HEADROOM_MIB);
     }
 
     private static void showRestartNotice(List<Setting> restart, Screen next) {

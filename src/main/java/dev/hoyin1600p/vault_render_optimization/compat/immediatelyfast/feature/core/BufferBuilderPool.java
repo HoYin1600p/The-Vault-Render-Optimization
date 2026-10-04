@@ -67,7 +67,8 @@ public class BufferBuilderPool {
     private static void cleanup() {
         POOL.removeIf(b -> ((IBufferBuilder) b.getKey()).isReleased());
         POOL.removeIf(b -> {
-            if (b.getValue() < System.currentTimeMillis() - 120_000) {
+            // VRO: never free a builder that is still building (a long stall, e.g. sleep, mid-batch).
+            if (!b.getKey().building() && b.getValue() < System.currentTimeMillis() - 120_000) {
                 ((IBufferBuilder) b.getKey()).release();
                 return true;
             }

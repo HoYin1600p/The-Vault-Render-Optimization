@@ -13,6 +13,7 @@ import dev.hoyin1600p.vault_render_optimization.mixin.entitygpu.ItemRendererGpuA
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
+import java.util.Arrays;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
@@ -38,15 +39,12 @@ public final class GpuItems {
         final BakedQuad[] quads;
         final ItemMesh mesh;
         final int first;
-        /** The frame this entry was last checked against its live list (checked once per frame). */
-        int validatedFrame;
 
         Entry(int generation, BakedQuad[] quads, ItemMesh mesh, int first) {
             this.generation = generation;
             this.quads = quads;
             this.mesh = mesh;
             this.first = first;
-            this.validatedFrame = GpuEntityModels.frameIndex();
         }
 
         boolean gpu() {
@@ -85,6 +83,8 @@ public final class GpuItems {
     private static volatile String firstOracleMismatch;
 
     private static boolean oracleRunning;
+    /** Set while ItemColors providers run: a nested item render from inside one stays on the CPU (tints is shared). */
+    private static boolean tinting;
     private static BufferBuilder oracleBuffer;
 
     private GpuItems() {
@@ -105,7 +105,7 @@ public final class GpuItems {
      */
     public static boolean tryReserve(ItemRenderer renderer, PoseStack poseStack, VertexConsumer consumer,
                                      List<BakedQuad> quads, ItemStack stack, int light, int overlay) {
-        if (oracleRunning || quads.isEmpty()) return false;
+        if (oracleRunning || tinting || quads.isEmpty()) return false;
         ItemWriter active = writer();
         if (active == null || !ClientOptimizationConfig.gpuItems || !GpuEntityModels.itemFrameActive()
                 || !RenderSystem.isOnRenderThread() || consumer.getClass() != BufferBuilder.class) {
@@ -125,9 +125,14 @@ public final class GpuItems {
         // non-null && quad.isTinted()); both give -1 when the stack is empty or the quad is untinted.
         boolean hasStack = !stack.isEmpty();
         var colors = ((ItemRendererGpuAccessor) renderer).vro$itemColors();
-        for (int q = 0; q < count; q++) {
-            BakedQuad quad = entry.quads()[q];
-            tints[q] = hasStack && quad.isTinted() ? abgr(colors.getColor(stack, quad.getTintIndex())) : -1;
+        tinting = true;
+        try {
+            for (int q = 0; q < count; q++) {
+                BakedQuad quad = entry.quads()[q];
+                tints[q] = hasStack && quad.isTinted() ? abgr(colors.getColor(stack, quad.getTintIndex())) : -1;
+            }
+        } finally {
+            tinting = false;
         }
         PoseStack.Pose pose = poseStack.last();
         pose.pose().store(POSE_BUFFER);
@@ -162,17 +167,11 @@ public final class GpuItems {
     private static Entry entry(List<BakedQuad> quads, ItemWriter active) {
         Entry entry = CACHE.get(quads);
         int generation = GpuEntityModels.generation();
-        if (entry != null && entry.generation == generation) {
-            int frame = GpuEntityModels.frameIndex();
-            // Quad lists are baked once; checking identity once per frame (every use while verifying) is enough.
-            if (entry.validatedFrame == frame && !GpuEntityModels.verifying()) return entry;
-            if (same(entry.quads, quads)) {
-                entry.validatedFrame = frame;
-                return entry;
-            }
-        }
+        // Every use: a dynamic model can refill one list with different quads between two stacks in a frame.
+        if (entry != null && entry.generation == generation && same(entry.quads, quads)) return entry;
+        // Capture from the snapshot the entry keeps, so its quads and its mesh always agree.
         BakedQuad[] snapshot = quads.toArray(new BakedQuad[0]);
-        ItemMesh mesh = ItemMeshCapture.capture(quads, active);
+        ItemMesh mesh = ItemMeshCapture.capture(Arrays.asList(snapshot), active);
         int first = mesh == null ? -1 : GpuEntityModels.uploadItemMesh(mesh);
         entry = new Entry(generation, snapshot, mesh, first);
         if (CACHE.size() >= CACHE_LIMIT) CACHE.clear();

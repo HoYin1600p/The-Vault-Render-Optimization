@@ -1,6 +1,9 @@
 package dev.hoyin1600p.vault_render_optimization.client.entitygpu;
 
+import com.mojang.math.Quaternion;
+import com.mojang.math.Vector3f;
 import java.nio.IntBuffer;
+import java.util.Arrays;
 import java.util.Random;
 import net.minecraft.util.Mth;
 import org.lwjgl.opengl.GL11C;
@@ -29,11 +32,11 @@ final class GpuParticleSelfTest {
         float[] camera = new float[6];
         // A plausible camera basis from yaw/pitch, as Camera.setRotation computes it through a quaternion.
         float yaw = random.nextFloat() * 360.0F, pitch = random.nextFloat() * 180.0F - 90.0F;
-        com.mojang.math.Quaternion rotation = com.mojang.math.Vector3f.YP.rotationDegrees(-yaw);
-        rotation.mul(com.mojang.math.Vector3f.XP.rotationDegrees(pitch));
-        com.mojang.math.Vector3f left = new com.mojang.math.Vector3f(1.0F, 0.0F, 0.0F);
+        Quaternion rotation = Vector3f.YP.rotationDegrees(-yaw);
+        rotation.mul(Vector3f.XP.rotationDegrees(pitch));
+        Vector3f left = new Vector3f(1.0F, 0.0F, 0.0F);
         left.transform(rotation);
-        com.mojang.math.Vector3f up = new com.mojang.math.Vector3f(0.0F, 1.0F, 0.0F);
+        Vector3f up = new Vector3f(0.0F, 1.0F, 0.0F);
         up.transform(rotation);
         camera[0] = left.x(); camera[1] = left.y(); camera[2] = left.z();
         camera[3] = up.x(); camera[4] = up.y(); camera[5] = up.z();
@@ -54,7 +57,7 @@ final class GpuParticleSelfTest {
             out += words + GAP_WORDS;
         }
         int[] expected = new int[out];
-        java.util.Arrays.fill(expected, SENTINEL);
+        Arrays.fill(expected, SENTINEL);
         int[] vertices = new int[words];
         for (int i = 0; i < particles; i++) {
             ParticleReference.expand(records, i * ParticleRecord.WORDS, camera, vertices, 0);
@@ -67,6 +70,7 @@ final class GpuParticleSelfTest {
     static String run(GpuEntityBackend backend, long seed, int particles) {
         if (!backend.particlesAvailable()) return "particle program unavailable: " + backend.particleFailure();
         Case test = build(seed, particles);
+        GpuEntitySelfTest.clearGlErrors();
         int outputBuffer = GL15C.glGenBuffers();
         IntBuffer sentinel = null;
         IntBuffer readback = null;

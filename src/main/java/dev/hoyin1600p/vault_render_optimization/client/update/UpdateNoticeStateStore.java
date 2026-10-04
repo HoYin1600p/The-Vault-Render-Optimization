@@ -1,5 +1,7 @@
 package dev.hoyin1600p.vault_render_optimization.client.update;
 
+import dev.hoyin1600p.vault_render_optimization.config.model.UpdateNotice;
+
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.mojang.logging.LogUtils;

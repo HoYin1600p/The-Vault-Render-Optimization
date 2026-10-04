@@ -3,6 +3,7 @@ package dev.hoyin1600p.vault_render_optimization.client.entitygpu;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.Arrays;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * The reserved (not yet written) model vertices of one {@code BufferBuilder} draw state. Each entry
@@ -278,7 +279,7 @@ public final class HoleBatch {
     }
 
     /** CPU fill writes skipped because the hole lay outside the buffer handed in (counted, never thrown). */
-    public static final java.util.concurrent.atomic.AtomicLong FILL_WRITES_SKIPPED = new java.util.concurrent.atomic.AtomicLong();
+    public static final AtomicLong FILL_WRITES_SKIPPED = new AtomicLong();
 
     /** Whether {@code words} ints starting at byte {@code at} fit inside {@code popped}; counts a skip when not. */
     private static boolean fits(ByteBuffer popped, int at, int words) {

@@ -2,6 +2,8 @@ package dev.hoyin1600p.vault_render_optimization.renderertransfer;
 
 import com.electronwill.nightconfig.core.file.CommentedFileConfig;
 import dev.hoyin1600p.vault_render_optimization.VaultRenderOptimization;
+import dev.hoyin1600p.vault_render_optimization.util.ConfigKeys;
+import dev.hoyin1600p.vault_render_optimization.util.ConfigSections;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.EnumMap;
@@ -26,7 +28,7 @@ public final class BootstrapRendererTransferConfig {
         if (snapshot != null) {
             return;
         }
-        Path path = FMLPaths.CONFIGDIR.get().resolve("vault_render_optimization-client.toml");
+        Path path = FMLPaths.CONFIGDIR.get().resolve(ConfigKeys.CLIENT_CONFIG_FILE);
         if (!Files.isRegularFile(path)) {
             snapshot = resolveValues(key -> null);
             return;
@@ -46,7 +48,7 @@ public final class BootstrapRendererTransferConfig {
         EnumMap<RendererTransferFeature, Boolean> options =
                 new EnumMap<>(RendererTransferFeature.class);
         for (RendererTransferFeature feature : RendererTransferFeature.values()) {
-            Object value = lookup.apply(List.of("embeddium_transfers", feature.configKey()));
+            Object value = lookup.apply(List.of(ConfigSections.EMBEDDIUM_TRANSFERS, feature.configKey()));
             options.put(feature, value instanceof Boolean enabled ? enabled : true);
         }
         return new Snapshot(Map.copyOf(options));
