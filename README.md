@@ -4,14 +4,15 @@
 [![Forge](https://img.shields.io/badge/Forge-40.3.11%2B-e04e39)](https://files.minecraftforge.net/net/minecraftforge/forge/index_1.18.2.html)
 [![Environment](https://img.shields.io/badge/Environment-Client-4b8bbe)](#requirements-and-support)
 [![License](https://img.shields.io/badge/License-AGPL--3.0--or--later-blue.svg)](LICENSE)
-[![Release](https://img.shields.io/badge/Release-0.5.2-2ea44f)](https://github.com/HoYin1600p/The-Vault-Render-Optimization/releases/tag/v0.5.2)
+[![Release](https://img.shields.io/badge/Release-1.0.0-2ea44f)](https://github.com/HoYin1600p/The-Vault-Render-Optimization/releases/tag/v1.0.0)
 
 The Vault Render Optimization (VRO) is a client-side Minecraft Forge 1.18.2
 mod that reduces repeated rendering and client simulation work in Vault
 Hunters. It targets frame-time consistency in busy bases, Vault HUD and gear
 rendering, particle-heavy scenes, and long sessions with repeated world or
-dimension changes. Version 0.5 adds GPU rendering for entity models, items and
-particles, and an in-game settings screen.
+dimension changes. It offers optional GPU rendering for entity models, items and
+particles, an in-game benchmark that measures whether it helps your PC, and an
+in-game settings screen.
 
 VRO does not remove visible effects, lower animation rates, change loot, or
 modify server gameplay. The remote server does not need the mod.
@@ -22,7 +23,11 @@ modify server gameplay. The remote server does not need the mod.
   the graphics card: mobs, armor stands, chests, Vault Hunters' GeckoLib and
   Citadel models, dropped, framed and held items, and billboard particles. The
   output matches vanilla exactly; every path self-tests at startup and
-  `/vro gpuentity verify` compares it with vanilla while you play.
+  `/vro gpuentity verify` compares it with vanilla while you play. These paths are
+  off by default since 1.0.
+- Adds a GPU benchmark at the bottom of the GPU rendering tab: it measures each
+  GPU switch in a client-only crowd of Vault Hunters and vanilla mobs and saves
+  its recommendations only if you choose Apply.
 - Adds an in-game settings screen (needs Cloth Config) with every setting in
   player-facing tabs, click-to-expand explanations, Default and Experimental
   buttons, and a Report a bug preview. Bind its key in Options > Controls.
@@ -328,7 +333,7 @@ different pack files together.
 
 1. Stop Minecraft.
 2. Remove or disable every older VRO jar.
-3. Place `vault_render_optimization.0.5.2.jar` in the instance's `mods`
+3. Place `vault_render_optimization.1.0.0.jar` in the instance's `mods`
    directory.
 4. Keep only one active VRO jar.
 5. Remove Entity Collision FPS Fix only if you want VRO to own that same
@@ -347,6 +352,7 @@ for upgrades, removal, optional-mod coexistence, and issue isolation.
 | `/vro compare status` | Reports whether Compare Mode is active. |
 | `/vro gpuentity status\|stats` | Reports GPU rendering state and its counters. |
 | `/vro gpuentity verify on\|off` | Compares GPU output with vanilla's while you play. |
+| `/vro benchmark gpu start\|cancel\|status\|result` | Runs the GPU benchmark from chat (the GPU rendering tab has a button for it). |
 | `/vro feature list` | Lists the GPU feature switches; `/vro feature <name> on\|off` toggles one. |
 | `/vro updates` | Reports whether update checks are enabled and which update types may be shown. |
 | `/vro updates on\|off` | Enables or disables update checks immediately and saves the setting. |
@@ -420,7 +426,7 @@ The complete option and coexistence reference is in
 | [Release notes 0.3.3](docs/releases/0.3.3.md) | Dynamic-light crash correction |
 | [Release notes 0.3.2](docs/releases/0.3.2.md) | Expanded 0.3.2 release details |
 | [Release notes 0.3.0](docs/releases/0.3.0.md) | Initial release history |
-| [Changelog](CHANGELOG.md) | Version-to-version changes, including the 0.5 GPU rendering and settings screen releases |
+| [Changelog](CHANGELOG.md) | Version-to-version changes, including the 0.5 GPU rendering and settings screen releases and the 1.0 GPU benchmark |
 | [Credits](CREDITS.md) | Adapted code, design research, and compatibility attribution |
 | [Third-party notices](THIRD_PARTY_NOTICES.md) | Exact shipped provenance and licenses |
 | [Source provenance audit](docs/SOURCE_PROVENANCE_AUDIT.md) | Feature-by-feature copied, adapted, and original classification |
@@ -431,19 +437,19 @@ The complete option and coexistence reference is in
 Requirements:
 
 - JDK 17
-- the compile-only mod jars: The Vault, Embeddium 0.3.18 (and optionally
-  Rubidium 0.5.6), Create 0.5.1.i, Oculus 1.6.x, Vault Loot Beams, iSpawner,
-  Architectury, CodeChickenLib, Sophisticated Storage 1.18.2-0.9.8.915 and
-  Sophisticated Core 1.18.2-0.6.4.604
 
-The build finds these in the known local Prism instances. On any other machine,
-put them in one folder and pass `-Pvro_deps_dir=path/to/folder`, or point at a
-single jar with its property (`vault_mod_jar`, `render_mod_jar`,
-`embeddium_compile_jar`, `create_jar`, `oculus_mod_jar`, `vault_loot_beams_jar`,
-`ispawner_jar`, `architectury_jar`, `codechickenlib_jar`,
-`sophisticated_storage_jar`, `sophisticated_core_jar`). A missing jar is reported
-together with the property that supplies it; `gradlew printDependencyJars` shows
-what was chosen. The custom-Embeddium and Oculus contract tests also accept
+`gradlew build` works from a clean clone. The mods VRO compiles against are
+downloaded from CurseForge through [CurseMaven](https://cursemaven.com); their
+file ids are in `gradle.properties`. Flywheel, the copy Create bundles, comes from
+modmaven.dev.
+
+To build against a local jar while developing, pass its path with that mod's
+property, for example `-Pvault_mod_jar=path/to/the_vault.jar` (also
+`render_mod_jar`, `embeddium_compile_jar`, `create_jar`, `oculus_mod_jar`,
+`vault_loot_beams_jar`, `ispawner_jar`, `architectury_jar`, `codechickenlib_jar`,
+`sophisticated_storage_jar`, `sophisticated_core_jar`, `geckolib_jar`,
+`ars_nouveau_jar`, `citadel_jar`), or set it in `~/.gradle/gradle.properties`.
+The optional custom-Embeddium and extra Oculus contract tests run only with
 `-Pcustom_embeddium_jar` and `-Poculus_contract_jars`.
 
 Build and run the complete installed-pack compatibility matrix:

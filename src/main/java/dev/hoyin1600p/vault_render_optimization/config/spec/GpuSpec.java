@@ -19,12 +19,12 @@ public final class GpuSpec {
                 "Needs OpenGL 4.3 or the ARB compute extensions; pauses with an Oculus shader pack (see",
                 "gpu_entity_models_with_shaders), in Compare",
                 "Mode, on a failed self-test or mixin audit. /vro gpuentity status explains the current state."
-        ).define(ConfigKeys.GPU_ENTITY_MODELS, true);
+        ).define(ConfigKeys.GPU_ENTITY_MODELS, false);
         this.gpuParticles = builder.comment(
                 "With gpu_entity_models active: billboard particles reserve their four vertices and the same compute",
                 "path writes them with VRO's exact billboard arithmetic (own startup self-test). Every particle is",
                 "still drawn; anything unusual stays on the CPU writer."
-        ).define(ConfigKeys.GPU_PARTICLES, true);
+        ).define(ConfigKeys.GPU_PARTICLES, false);
         this.gpuEntityModelsWithShaders = builder.comment(
                 "Experimental; mainly for slower CPUs. With gpu_entity_models active and an Oculus shader pack on,",
                 "entity models and particles",
@@ -40,6 +40,6 @@ public final class GpuSpec {
                 "With gpu_entity_models active: solid and cutout block items (dropped, in frames, held) reserve their",
                 "vertices and the compute path writes them exactly as the installed item writer (Forge or Embeddium)",
                 "would (own self-test). Flat, translucent and glinting items always stay on the CPU."
-        ).define(ConfigKeys.GPU_ITEMS, true);
+        ).define(ConfigKeys.GPU_ITEMS, false);
     }
 }

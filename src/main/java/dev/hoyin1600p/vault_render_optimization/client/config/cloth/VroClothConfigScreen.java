@@ -1,5 +1,6 @@
 package dev.hoyin1600p.vault_render_optimization.client.config.cloth;
 
+import dev.hoyin1600p.vault_render_optimization.client.benchmark.BenchmarkFrameHook;
 import dev.hoyin1600p.vault_render_optimization.client.bugreport.BugReportScreen;
 import dev.hoyin1600p.vault_render_optimization.client.config.VroScreenScale;
 import dev.hoyin1600p.vault_render_optimization.config.ConfigSettingCatalog;
@@ -82,6 +83,15 @@ public final class VroClothConfigScreen {
                         new TranslatableComponent(setting.labelKey()),
                         new TranslatableComponent(setting.summaryKey()),
                         new TranslatableComponent(setting.tooltipKey())));
+            }
+            if (category == Category.GPU) {
+                // The benchmark's own section: its notices, then the button that asks before starting.
+                tab.addEntry(new ExpandableDescriptionEntry(
+                        new TranslatableComponent("vro.config.button.gpu_benchmark"),
+                        new TranslatableComponent("vro.config.button.gpu_benchmark.summary"),
+                        new TranslatableComponent("vro.config.button.gpu_benchmark.tooltip")));
+                tab.addEntry(new ButtonListEntry(new TranslatableComponent("vro.config.button.gpu_benchmark"),
+                        button -> confirmBenchmark(Minecraft.getInstance().screen)));
             }
         }
         builder.setSavingRunnable(() -> {
@@ -212,6 +222,25 @@ public final class VroClothConfigScreen {
                 new TranslatableComponent("vro.config.dialog.experimental.title"),
                 new TranslatableComponent("vro.config.dialog.experimental.message", list(changes))
         ));
+    }
+
+    /** Repeats the notices and starts only on yes; settings change only if Apply is chosen at the end. */
+    private static void confirmBenchmark(Screen clothScreen) {
+        Minecraft minecraft = Minecraft.getInstance();
+        Component title = new TranslatableComponent("vro.benchmark.confirm.title");
+        if (minecraft.level == null || minecraft.player == null) {
+            show(new AlertScreen(() -> minecraft.setScreen(clothScreen), title,
+                    new TranslatableComponent("vro.benchmark.confirm.no_world")));
+            return;
+        }
+        show(new ConfirmScreen(confirmed -> {
+            if (!confirmed) {
+                minecraft.setScreen(clothScreen);
+                return;
+            }
+            minecraft.setScreen(null);
+            minecraft.player.displayClientMessage(new TextComponent("[VRO] " + BenchmarkFrameHook.start()), false);
+        }, title, new TranslatableComponent("vro.benchmark.confirm.message")));
     }
 
     /** Saves and applies, then opens a fresh screen so every entry shows the new saved values. */

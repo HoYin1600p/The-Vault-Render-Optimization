@@ -131,17 +131,27 @@ class ConfigSettingCatalogTest {
         List<Setting> experimental = ConfigSettingStore.experimentalTargets();
         assertEquals(expected, new HashSet<>(experimental));
         assertTrue(experimental.stream().noneMatch(Setting::diagnostics));
-        assertEquals(Set.of("horizontal_enabled"), ConfigSettingCatalog.EXPERIMENTAL_EXCLUSIONS);
+        assertEquals(Set.of("horizontal_enabled", "gpu_entity_models", "gpu_items", "gpu_particles",
+                "gpu_entity_models_with_shaders", "gpu_particles_with_shaders"),
+                ConfigSettingCatalog.EXPERIMENTAL_EXCLUSIONS);
         assertTrue(experimental.stream().noneMatch(setting -> setting.id().equals("horizontal_enabled")));
         // The current set, so an accidental new default-off option is noticed in review.
         assertEquals(Set.of(
-                "gpu_entity_models_with_shaders",
-                "gpu_particles_with_shaders",
                 "sort_geometry_cache",
                 "hud_text_geometry",
                 "vertex_buffer_adaptive_trimming",
                 "experimental_item_hud_batching"
         ), experimental.stream().map(Setting::id).collect(Collectors.toSet()));
+    }
+
+    @Test
+    void defaultsResetEveryGpuSwitchOffAndExperimentalExcludesThem() {
+        Map<Setting, Object> defaults = ConfigSettingStore.defaults();
+        ConfigSettingCatalog.in(Category.GPU).forEach(setting -> {
+            assertEquals(false, defaults.get(setting), setting.id());
+            assertTrue(ConfigSettingCatalog.EXPERIMENTAL_EXCLUSIONS.contains(setting.id()), setting.id());
+            assertFalse(ConfigSettingStore.experimentalTargets().contains(setting), setting.id());
+        });
     }
 
     @Test

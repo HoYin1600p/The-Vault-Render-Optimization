@@ -1,1 +1,1 @@
-Client-side Vault Hunters performance: GPU entity, item and particle rendering, an in-game settings screen, faster Create, chunks, particles and storage displays.
+Client-side Vault Hunters performance: optional GPU entity, item and particle rendering with an in-game benchmark, a settings screen, faster Create, chunks, particles and storage displays.

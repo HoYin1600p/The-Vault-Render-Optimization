@@ -6,6 +6,10 @@
   "compatibilityLevel": "JAVA_17",
   "refmap": "mixins.vault_render_optimization.refmap.json",
   "client": [
+    "benchmark.ClientLevelSceneMixin",
+    "benchmark.ArmorStandSceneAccessor",
+    "benchmark.ItemEntitySceneAccessor",
+    "benchmark.MultiPlayerGameModeSceneMixin",
     "HudFontGeometryMixin",
     "HudFontGenerationMixin",
     "entitygpu.BufferBuilderGpuMixin",

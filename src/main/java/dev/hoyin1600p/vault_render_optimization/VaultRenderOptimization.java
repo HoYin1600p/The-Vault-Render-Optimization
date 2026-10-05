@@ -1,6 +1,7 @@
 package dev.hoyin1600p.vault_render_optimization;
 
 import dev.hoyin1600p.vault_render_optimization.client.command.VaultRenderOptimizationCommand;
+import dev.hoyin1600p.vault_render_optimization.client.benchmark.BenchmarkFrameHook;
 import dev.hoyin1600p.vault_render_optimization.client.config.ConfigScreenKey;
 import dev.hoyin1600p.vault_render_optimization.client.chunk.residency.FarsightChunkBound;
 import dev.hoyin1600p.vault_render_optimization.client.entitygpu.GpuEntityModels;
@@ -64,6 +65,10 @@ public final class VaultRenderOptimization {
             MinecraftForge.EVENT_BUS.addListener(FlywheelBackendManager::onClientTick);
         }
         if (FMLEnvironment.dist.isClient()) {
+            MinecraftForge.EVENT_BUS.addListener(BenchmarkFrameHook::onRenderTick);
+            MinecraftForge.EVENT_BUS.addListener(BenchmarkFrameHook::onClientTick);
+            MinecraftForge.EVENT_BUS.addListener(BenchmarkFrameHook::onWorldUnload);
+            MinecraftForge.EVENT_BUS.addListener(BenchmarkFrameHook::onLogout);
             MinecraftForge.EVENT_BUS.addListener(ParticleStress::onClientTick);
             MinecraftForge.EVENT_BUS.addListener(ConfigScreenKey::onClientTick);
             if (VroImmediatelyFast.applied() && ModList.get().isLoaded(ModIds.OCULUS)) {

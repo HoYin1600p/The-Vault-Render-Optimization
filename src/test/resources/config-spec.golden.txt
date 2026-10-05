@@ -326,14 +326,14 @@ value render_fast_paths.gpu_entity_models
   translationKey: null
   restart: false
   class: java.lang.Boolean
-  default: true
+  default: false
   range: <none>
 value render_fast_paths.gpu_particles
   comment: With gpu_entity_models active: billboard particles reserve their four vertices and the same compute | path writes them with VRO's exact billboard arithmetic (own startup self-test). Every particle is | still drawn; anything unusual stays on the CPU writer.
   translationKey: null
   restart: false
   class: java.lang.Boolean
-  default: true
+  default: false
   range: <none>
 value render_fast_paths.gpu_entity_models_with_shaders
   comment: Experimental; mainly for slower CPUs. With gpu_entity_models active and an Oculus shader pack on, | entity models and particles | stay on the GPU path: a second program writes Oculus' extended entity vertices (face normal, tangent, | mid UV, entity IDs) exactly as Oculus computes them. It saves CPU time, but shader packs usually make | the game GPU-bound, where the extra compute passes cost more than they save; off by default.
@@ -354,7 +354,7 @@ value render_fast_paths.gpu_items
   translationKey: null
   restart: false
   class: java.lang.Boolean
-  default: true
+  default: false
   range: <none>
 value render_fast_paths.skip_empty_toast_render
   comment: Skip toast renderer work when no toast is queued or visible.

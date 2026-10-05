@@ -6,7 +6,7 @@ VRO stores client settings in:
 config/vault_render_optimization-client.toml
 ```
 
-All release fast paths are enabled by default. Forge reloads changes made by
+GPU rendering is opt-in and defaults off. Other release fast paths are enabled by default. Forge reloads changes made by
 VRO's command immediately. For manual file edits, stop Minecraft first.
 
 ## Settings screen
@@ -53,10 +53,9 @@ discard unsaved edits on the screen, and save and apply immediately:
 - **Default** resets every setting, including Diagnostics and the
   ImmediatelyFast options, to the shipped defaults.
 - **Experimental** turns on every setting that ships off, except those in
-  Diagnostics and horizontal section culling (which shortens the sideways draw
-  distance rather than being an experiment). The confirmation lists the
-  settings it will change. Currently these are GPU models with shaders, GPU
-  particles with shaders, the sort geometry cache, HUD text reuse, adaptive
+  Diagnostics, all GPU switches and horizontal section culling (which shortens
+  the sideways draw distance). The confirmation lists the settings it will
+  change. Currently these are the sort geometry cache, HUD text reuse, adaptive
   vertex buffer trimming and ImmediatelyFast's hotbar item batching.
 
 ### Report a bug
@@ -445,9 +444,32 @@ render distance. Existing `sophisticated_storage.quantity_text_cache` now also
 retains bounded count glyph geometry with fresh color, pose and lighting; resource
 reloads clear it. Particle census diagnostics now sample at 250 ms intervals.
 
+### GPU rendering opt-in
+
+GPU entity models, GPU items (`render_fast_paths.gpu_items`) and GPU particles
+(`render_fast_paths.gpu_particles`) all default to `false`. The two with-shaders
+switches also default to `false`. Default resets all five switches to off.
+Existing installs are reset once after the client config loads. The JSON marker
+`config/vault_render_optimization-migrations.json` records `"gpuOptIn": true`;
+later launches preserve your choices. An unreadable marker is treated as absent.
+
+Use **Run GPU benchmark** at the bottom of the GPU rendering tab (or
+`/vro benchmark gpu start|cancel|status|result`) to measure the GPU switches
+on your PC, including from their default-off state. Stand somewhere safe, above a
+flat open area, facing empty space: the benchmark places a client-only crowd of
+mobs, armour stands and items in front of you (`start view` measures the current
+view instead). You cannot move or look around during the run; screens and focus loss pause it
+and restart the current round. When it finishes, a dialog lists the recommended
+changes and saves them only if you choose Apply. Warmup absorbs initialization
+and self-tests. Dependencies are enabled only for the measurement session, and
+all settings are restored at completion or cancellation. The benchmark reports
+recommendations without saving them; CONFIRM compares the resolved combination
+against your original settings. A recommended dependent switch also requires
+GPU entity models on. Shader-pack variants require their base switches too.
+
 ### GPU entity models
 
-- `render_fast_paths.gpu_entity_models` (default `true`): `/vro gpuentity on|off|status|stats|selftest`.
+- `render_fast_paths.gpu_entity_models` (default `false`): `/vro gpuentity on|off|status|stats|selftest`.
   Entity model part vertices are written by a compute shader into the vertex buffer vanilla has
   just uploaded, before vanilla's own draw. The arithmetic is bit-exact with vanilla and checked by
   a startup self-test. It turns itself off with an Oculus shader pack, on unsupported drivers, in

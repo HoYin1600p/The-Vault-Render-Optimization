@@ -116,11 +116,11 @@ public final class ClientOptimizationConfig {
     public static volatile boolean particleTickCompaction = true;
     public static volatile boolean particleSharedRandom = true;
     public static volatile boolean particleProviderCache = true;
-    public static volatile boolean gpuEntityModels = true;
-    public static volatile boolean gpuParticles = true;
+    public static volatile boolean gpuEntityModels = false;
+    public static volatile boolean gpuParticles = false;
     public static volatile boolean gpuEntityModelsWithShaders = false;
     public static volatile boolean gpuParticlesWithShaders = false;
-    public static volatile boolean gpuItems = true;
+    public static volatile boolean gpuItems = false;
     public static volatile boolean emptyToastRenderSkip = true;
     public static volatile boolean inactiveTutorialSkip = true;
     public static volatile boolean emptyDebugRenderSkip = true;
@@ -517,6 +517,13 @@ public final class ClientOptimizationConfig {
 
     public static void onLoading(ModConfigEvent.Loading event) {
         bake(event.getConfig());
+        if (event.getConfig().getSpec() == SPEC) {
+            GpuOptInMigration.apply(net.minecraftforge.fml.loading.FMLPaths.CONFIGDIR.get(), () -> {
+                setGpuEntityModels(false);
+                setGpuItems(false);
+                setGpuParticles(false);
+            }, (message, failure) -> VaultRenderOptimization.LOGGER.warn(message, failure));
+        }
     }
 
     public static void onReloading(ModConfigEvent.Reloading event) {

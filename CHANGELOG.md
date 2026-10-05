@@ -5,6 +5,28 @@ All notable changes to The Vault Render Optimization are recorded here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+## [1.0.0] - 2026-10-05
+
+### Added
+
+- In-game GPU benchmark, in its own section at the bottom of the GPU rendering tab (or `/vro benchmark gpu start|cancel|status|result`).
+  It explains what to expect, asks before starting, and keeps you in place while it runs. It measures all GPU paths together, then
+  each GPU switch, in ON/OFF/OFF/ON rounds of 3 seconds warmup and 12 seconds measurement, and recommends a change
+  only when the difference is larger than the measured noise. At the end it shows the
+  recommended changes and saves them only if you choose Apply.
+- The benchmark fills the view in front of you with a client-only crowd: 180 mobs (half of them Vault Hunters mobs),
+  40 armour stands, 80 dropped items and a light particle mix. It works on servers without operator rights and is
+  removed when the run ends. `start view` measures your current view instead.
+
+### Changed
+
+- The mod now builds from a clean clone: its compile-time mods come from CurseForge through CurseMaven instead of
+  jars found on the developer's disk.
+- GPU entity models, GPU items and GPU particles are now off by default and are turned on only by you. Existing
+  installs have them reset to off once; later choices are kept. Experimental no longer turns on any GPU switch.
+
 ## [0.5.2] - 2026-10-04
 
 ### Added
@@ -614,7 +636,11 @@ deferred at the user's request. No measured FPS gains are claimed.
 - Released the complete project under AGPL-3.0-or-later, with exact source
   revisions and third-party notices included.
 
-[Unreleased]: https://github.com/HoYin1600p/The-Vault-Render-Optimization/compare/v0.4.2...HEAD
+[Unreleased]: https://github.com/HoYin1600p/The-Vault-Render-Optimization/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/HoYin1600p/The-Vault-Render-Optimization/compare/v0.5.2...v1.0.0
+[0.5.2]: https://github.com/HoYin1600p/The-Vault-Render-Optimization/compare/v0.5.1...v0.5.2
+[0.5.1]: https://github.com/HoYin1600p/The-Vault-Render-Optimization/compare/v0.5.0...v0.5.1
+[0.5.0]: https://github.com/HoYin1600p/The-Vault-Render-Optimization/compare/v0.4.2...v0.5.0
 [0.4.2]: https://github.com/HoYin1600p/The-Vault-Render-Optimization/compare/v0.4.1...v0.4.2
 [0.4.1]: https://github.com/HoYin1600p/The-Vault-Render-Optimization/compare/v0.4.0...v0.4.1
 [0.4.0]: https://github.com/HoYin1600p/The-Vault-Render-Optimization/compare/v0.3.5...v0.4.0

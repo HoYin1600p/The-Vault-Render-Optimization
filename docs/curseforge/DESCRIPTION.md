@@ -1,29 +1,39 @@
 # The Vault Render Optimization
 
-**Client-side performance and stability for Vault Hunters: GPU entity, particle and item rendering, an in-game settings screen, faster Create contraptions, particles, terrain and storage displays.**
+**Client-side performance and stability for Vault Hunters: optional GPU entity, particle and item rendering with an in-game benchmark, a settings screen, faster Create contraptions, particles, terrain and storage displays.**
 
-The Vault Render Optimization (VRO) is a Minecraft 1.18.2 Forge mod that cuts repeated client work while preserving normal models, textures, animations, effects, loot, and server gameplay. Version 0.5 moves a large share of entity, item and particle drawing work onto your graphics card and adds an in-game settings screen. VRO works with official and custom Vault Hunters packs, and its generic optimizations remain available when Vault Hunters is not installed.
+The Vault Render Optimization (VRO) is a Minecraft 1.18.2 Forge mod that cuts repeated client work while preserving normal models, textures, animations, effects, loot, and server gameplay. VRO can move a large share of entity, item and particle drawing work onto your graphics card, and version 1.0 adds an in-game benchmark that measures which of those GPU paths actually help your PC. VRO works with official and custom Vault Hunters packs, and its generic optimizations remain available when Vault Hunters is not installed.
 
 VRO is client-side. The remote server does not need it.
 
-## GPU rendering (new in 0.5)
+## GPU rendering (opt-in)
 
 VRO writes repeated model vertices with a compute shader on your graphics card, straight into the buffer the game has just uploaded, instead of building them on the CPU. The result matches vanilla's exact output: every path passes a startup self-test, and `/vro gpuentity verify` compares the GPU output with vanilla's while you play. Nothing is hidden or skipped to gain speed.
 
-*   **Entity models** (on by default): mobs, armor stands, armor, chests, beds, shulker boxes, signs, Vault Hunters' GeckoLib mobs (knights, bosses, pets and more), GeckoLib block entities, and Citadel models.
-*   **Items** (on by default): items on the ground, in item frames, held in hands and on armor stands, including flat items such as gems and loot. Whole block models drawn by block entities use the same path. Enchanted items stay on the CPU.
-*   **Particles** (on by default without shaders): billboard particles are written the same way. Every particle is still drawn.
+Whether this helps depends on your CPU and graphics card, so since 1.0 the GPU paths are **off by default**. Turn them on in the GPU rendering tab, or run the GPU benchmark below and let it recommend them. Updating from 0.5 switches them off once; after that your choices are kept, and **Experimental** never turns them on.
+
+*   **Entity models:** mobs, armor stands, armor, chests, beds, shulker boxes, signs, Vault Hunters' GeckoLib mobs (knights, bosses, pets and more), GeckoLib block entities, and Citadel models.
+*   **Items:** items on the ground, in item frames, held in hands and on armor stands, including flat items such as gems and loot. Whole block models drawn by block entities use the same path. Enchanted items stay on the CPU.
+*   **Particles:** billboard particles are written the same way. Every particle is still drawn.
 *   **Shader packs:** with an Oculus shader pack the GPU paths pause by default, because shader packs usually make the graphics card the bottleneck already. Players held back by a slower CPU can keep them on in the settings screen.
 
 In test scenes this gave about +8-11% FPS in a crowded mob scene and about +50% with 192 GeckoLib mobs in view. Results depend on your hardware and scene. The GPU paths need OpenGL 4.3 (or the equivalent extensions) and switch themselves off on unsupported drivers, in Compare Mode, or when another mod changes the same rendering code; normal CPU rendering then takes over.
 
-## Settings screen (new in 0.5)
+## GPU benchmark (new in 1.0)
+
+The GPU rendering tab ends with a **Run GPU benchmark** button. It fills the view in front of you with a crowd only you can see (180 mobs, half of them Vault Hunters mobs, plus armour stands, dropped items and particles), then measures every GPU switch on and off and recommends a change only when the difference is bigger than the measured noise. When it finishes it lists the recommended changes with their FPS gains and saves them only if you choose **Apply**.
+
+*   Takes about 5 minutes (up to 7 with a shader pack). You cannot move or look around until it ends; opening a menu pauses it.
+*   Stand somewhere safe, above a flat open area, facing empty space: the crowd appears in front of you.
+*   Works on servers where you are not an operator. Nothing is spawned for other players, and the crowd is removed when the run ends.
+
+## Settings screen
 
 Every VRO setting now has an in-game screen, grouped into tabs: GPU rendering, Chunks & terrain, Entities & particles, Interface & HUD, Mod compatibility, ImmediatelyFast, Updates and Diagnostics.
 
 *   Open it with a key you choose in **Options > Controls** under "The Vault Render Optimization" (unbound by default).
 *   Each setting has a short summary; click it to expand a plain-English explanation. Settings that need a restart are marked, and saving tells you which ones changed.
-*   **Default** resets everything to the shipped settings; **Experimental** turns on the experimental settings that ship off, listing them first. Both ask before applying.
+*   **Default** resets everything to the shipped settings; **Experimental** turns on the experimental settings that ship off (never the GPU switches), listing them first. Both ask before applying.
 *   **Report a bug** (Diagnostics tab) previews a GitHub issue with your versions, rendering mods and VRO status, with your user folder and player name removed. It can copy your newest crash report to the clipboard and open the issue page; nothing is uploaded.
 *   The screen keeps the same layout at every resolution and GUI scale.
 *   Needs Cloth Config (included in the Vault Hunters packs). Without it, VRO runs normally and the key tells you where the settings live.
@@ -114,6 +124,7 @@ No server installation, world migration, cache deletion, or settings reset is re
 | Settings key (set in Controls)          |Open the VRO settings screen.                                  |
 | <code>/vro</code>                       |Show the current Compare Mode state.                           |
 | <code>/vro gpuentity status|stats|verify on|off</code> |Show GPU rendering status and counters, or compare GPU output with vanilla. |
+| <code>/vro benchmark gpu start|cancel|status|result</code> |Run the GPU benchmark from chat (the GPU rendering tab has a button for it). |
 | <code>/vro feature list</code>          |List the GPU feature switches (`/vro feature <name> on|off`).  |
 | <code>/vro compare on|off|status</code> |Compare VRO optimizations without restarting Minecraft.        |
 | <code>/vro updates on|off|status|critical|all</code> |Control update checks and choose critical-only or all notices. |

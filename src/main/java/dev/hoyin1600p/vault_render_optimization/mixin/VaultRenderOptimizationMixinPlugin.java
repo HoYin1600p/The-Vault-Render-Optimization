@@ -257,6 +257,8 @@ public final class VaultRenderOptimizationMixinPlugin implements IMixinConfigPlu
 
     @Override
     public boolean shouldApplyMixin(String targetClassName, String mixinClassName) {
+        // Scene safety/animation hooks are independent of all optimization and compatibility gates.
+        if (mixinClassName.contains(".benchmark.")) return physicalClient;
         if (mixinClassName.endsWith(".FrustumFastloadMixin")) {
             return physicalClient && !modDiscoveryFailed && isModLoaded(ModIds.FASTLOAD);
         }

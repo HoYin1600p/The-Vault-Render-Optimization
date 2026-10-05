@@ -88,9 +88,9 @@ the shader-toggle fix) plus mod metadata. VRO's deferral redirect targets
 SHA-256: `9B68D17A96314365E72A9A0DE966B6352C9BA6AB4DE5363C670861E5C655D520`.
 
 The custom-JAR tests (`IndexSortCompatibilityTest`, `RendererTransferBytecodeTest`)
-run when the build finds `embeddium-0.3.19-git.7b0cf676+mc1.18.2.jar` in a known
-instance, when `-Pcustom_embeddium_jar=path` is given, or when
-`VRO_CUSTOM_EMBEDDIUM_JAR` is set. Use `-Prequire_custom_renderer_tests=true` for
+run when `-Pcustom_embeddium_jar=path` points at
+`embeddium-0.3.19-git.7b0cf676+mc1.18.2.jar` (or in `~/.gradle/gradle.properties`),
+or when `VRO_CUSTOM_EMBEDDIUM_JAR` is set. Use `-Prequire_custom_renderer_tests=true` for
 release builds so a missing JAR fails the build instead of skipping the tests.
 This fixes compatibility only. No FPS change has been measured.
 

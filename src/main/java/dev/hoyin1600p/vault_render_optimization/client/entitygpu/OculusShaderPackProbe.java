@@ -4,7 +4,7 @@ import dev.hoyin1600p.vault_render_optimization.util.ModIds;
 import net.minecraftforge.fml.ModList;
 
 /** True when an Oculus shader pack is active; any doubt counts as active (the GPU path then stays off). */
-final class OculusShaderPackProbe {
+public final class OculusShaderPackProbe {
     private static final boolean OCULUS = isLoaded();
 
     private OculusShaderPackProbe() {
@@ -19,7 +19,7 @@ final class OculusShaderPackProbe {
         }
     }
 
-    static boolean shaderPackActive() {
+    public static boolean shaderPackActive() {
         if (!OCULUS) return false;
         try {
             return Holder.inUse();

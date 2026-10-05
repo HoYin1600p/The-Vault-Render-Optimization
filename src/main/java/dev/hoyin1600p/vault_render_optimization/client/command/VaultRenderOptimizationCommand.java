@@ -49,6 +49,7 @@ public final class VaultRenderOptimizationCommand {
                         .then(Commands.literal("backports")
                                 .executes(context -> reportBackports(context.getSource())))
                         .then(ParticleCommand.build())
+                        .then(BenchmarkCommand.build())
                         .then(GpuEntityCommand.build())
                         .then(RuntimeExperimentCommand.build())
                         .then(FeatureToggleCommand.build())

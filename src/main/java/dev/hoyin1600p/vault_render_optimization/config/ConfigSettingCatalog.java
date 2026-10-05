@@ -90,7 +90,9 @@ public final class ConfigSettingCatalog {
      * Default-off settings the Experimental button never turns on, by setting id. Horizontal section
      * culling is not an experiment but a deliberate trade: it shortens the sideways draw distance.
      */
-    public static final Set<String> EXPERIMENTAL_EXCLUSIONS = Set.of(ConfigKeys.HORIZONTAL_ENABLED);
+    public static final Set<String> EXPERIMENTAL_EXCLUSIONS = Set.of(ConfigKeys.HORIZONTAL_ENABLED,
+            ConfigKeys.GPU_ENTITY_MODELS, ConfigKeys.GPU_ITEMS, ConfigKeys.GPU_PARTICLES,
+            ConfigKeys.GPU_ENTITY_MODELS_WITH_SHADERS, ConfigKeys.GPU_PARTICLES_WITH_SHADERS);
 
     private static final List<Setting> SETTINGS = build();
 

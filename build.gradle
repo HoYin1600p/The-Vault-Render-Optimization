@@ -76,210 +76,136 @@ repositories {
         name = 'shedaniel'
         url = 'https://maven.shedaniel.me/'
     }
+    maven {
+        // CurseMaven: any CurseForge file as curse.maven:<slug>-<projectId>:<fileId>.
+        name = 'CurseMaven'
+        url = 'https://cursemaven.com'
+        content { includeGroup 'curse.maven' }
+    }
+    maven {
+        // Flywheel, the copy Create bundles; nothing else is taken from this repository.
+        name = 'ModMaven'
+        url = 'https://modmaven.dev/'
+        content { includeGroup 'com.jozufozu.flywheel' }
+    }
     mavenCentral()
 }
 
-// Override with -Pvro.prismInstances=<folder> to search a different Prism instances root.
-def prismInstancesDirectory = findProperty('vro.prismInstances') ? file(findProperty('vro.prismInstances'))
-        : new File(System.getProperty('user.home'), 'AppData/Roaming/PrismLauncher/instances')
-def knownVaultInstances = [
-        [name: 'Remastered Public Stack', folder: 'Remastered', minecraft: 'minecraft'],
-        [name: 'VaultCrafters Bootstrap', folder: 'vaultcrafters-bootstrap-1.0.0', minecraft: '.minecraft'],
-        [name: 'Asgard-SMP', folder: 'Asgard-SMP', minecraft: 'minecraft'],
-        [name: 'Wolds Vaults 0.32.2', folder: 'Wolds-Vaults-0.32.2', minecraft: 'minecraft'],
-        [name: 'Wolds Vaults 0.33.0', folder: 'Wolds-Vaults-0.33.0', minecraft: 'minecraft'],
-        [name: 'Vault Hunters Third Edition', folder: 'Vault Hunters Third Edition', minecraft: 'minecraft'],
-]
-
-// Dependency jars resolve in this order: an explicit -P<property>=path, then the first
-// matching file in -Pvro_deps_dir=folder, then the known Prism instances above. Every
-// missing jar is reported together, with the property that supplies it.
-def vroDepsDirectory = findProperty('vro_deps_dir') ? file(findProperty('vro_deps_dir')) : null
-def missingDependencies = []
-def fromDepsDirectory = { java.util.regex.Pattern filePattern ->
-    vroDepsDirectory?.listFiles()?.findAll { it.isFile() && filePattern.matcher(it.name).matches() }
-            ?.sort { it.name }?.find { true }
-}
-def discoverOptionalModJar = { java.util.regex.Pattern filePattern ->
-    knownVaultInstances.collect { instance ->
-        def modsDirectory = new File(prismInstancesDirectory, "${instance.folder}/${instance.minecraft}/mods")
-        modsDirectory.listFiles()?.find {
-            it.isFile() && filePattern.matcher(it.name).matches()
-        }
-    }.find { it != null }
-}
-def resolveDependencyJar = { String property, String label, java.util.regex.Pattern filePattern, Closure discover ->
-    def configured = findProperty(property)
-    if (configured) {
-        def configuredFile = file(configured)
-        if (!configuredFile.isFile()) {
-            missingDependencies << "${label}: -P${property}=${configured} does not exist"
-            return null
-        }
-        return configuredFile
+// cursemaven-helper:start
+// Mod dependencies come from CurseForge through CurseMaven, so anyone can build this mod; the file ids
+// are in gradle.properties. To build against a local jar while developing, pass its path:
+// -Pvault_mod_jar=path/to/the_vault.jar (or set it in ~/.gradle/gradle.properties). Never commit an override.
+def modDep = { String property, String coordinate ->
+    def local = findProperty(property)
+    if (local) {
+        def f = file(local)
+        if (!f.isFile()) throw new GradleException("-P${property}=${local} does not exist")
+        return files(f)
     }
-    def found = fromDepsDirectory(filePattern) ?: discover(filePattern)
-    if (found == null) {
-        missingDependencies << "${label}: set -P${property}=path/to/jar or put it in -Pvro_deps_dir"
+    return fg.deobf(coordinate)
+}
+// The published bytes, not remapped: for tests that run a renderer's own code as an oracle.
+def rawDep = { String property, String coordinate ->
+    def local = findProperty(property)
+    if (local) {
+        def f = file(local)
+        if (!f.isFile()) throw new GradleException("-P${property}=${local} does not exist")
+        return files(f)
     }
-    return found
+    return coordinate
+}
+// cursemaven-helper:end
+
+// The same file as it is published, for tasks and tests that read a mod's exact bytes. Resolved only
+// when a task runs; the same -P<property> override applies.
+def rawModJar = { String property, String coordinate ->
+    def local = findProperty(property)
+    if (local) {
+        def f = file(local)
+        if (!f.isFile()) throw new GradleException("-P${property}=${local} does not exist")
+        return f
+    }
+    def jar = configurations.detachedConfiguration(dependencies.create(coordinate))
+    jar.transitive = false
+    return jar.singleFile
 }
 
-def discoveredVaultModJars = knownVaultInstances.collect { instance ->
-    def modsDirectory = new File(prismInstancesDirectory, "${instance.folder}/${instance.minecraft}/mods")
-    def candidates = modsDirectory.listFiles()?.findAll {
-        it.isFile() && it.name.startsWith('the_vault-') && it.name.endsWith('.jar')
-    } ?: []
-
-    if (candidates.size() > 1) {
-        throw new GradleException("More than one active The Vault jar was found for ${instance.name}: ${candidates*.name}")
-    }
-
-    candidates ? [name: instance.name, jar: candidates.first()] : null
-}.findAll { it != null }
-
-def vaultModJarFile = resolveDependencyJar('vault_mod_jar', 'The Vault', ~/^the_vault-.*\.jar$/) { pattern ->
-    discoveredVaultModJars.find { it.name == 'Vault Hunters Third Edition' }?.jar
-            ?: discoveredVaultModJars.find { true }?.jar
-}
-def renderModJarFile = resolveDependencyJar('render_mod_jar', 'Embeddium or Rubidium',
-        ~/^(embeddium|rubidium)-[0-9].*\.jar$/, discoverOptionalModJar)
-// CCLCompat is Embeddium-only, but the same source set must also compile while
-// the active compatibility target is Rubidium. Keep one validated Embeddium
-// jar on the compile-only classpath; it is never packaged as a dependency.
-def embeddiumCompileJarFile = resolveDependencyJar('embeddium_compile_jar', 'Embeddium 0.3.18 (CCL bridge compile)',
-        ~/^embeddium-0\.3\.18.*\.jar$/, discoverOptionalModJar)
-def vaultLootBeamsJarFile = resolveDependencyJar('vault_loot_beams_jar', 'Vault Loot Beams', ~/^VaultLootBeams-.*\.jar$/, discoverOptionalModJar)
-def iSpawnerJarFile = resolveDependencyJar('ispawner_jar', 'iSpawner', ~/^ispawner-.*\.jar$/, discoverOptionalModJar)
-def architecturyJarFile = resolveDependencyJar('architectury_jar', 'Architectury', ~/^architectury-.*\.jar$/, discoverOptionalModJar)
-def createJarFile = resolveDependencyJar('create_jar', 'Create', ~/^create-.*\.jar$/, discoverOptionalModJar)
-def codeChickenLibJarFile = resolveDependencyJar('codechickenlib_jar', 'CodeChickenLib', ~/^CodeChickenLib-.*\.jar$/, discoverOptionalModJar)
-def sophisticatedStorageJarFile = resolveDependencyJar('sophisticated_storage_jar', 'Sophisticated Storage 1.18.2-0.9.8.915',
-        ~/^sophisticatedstorage-1\.18\.2-0\.9\.8\.915\.jar$/, discoverOptionalModJar)
-def sophisticatedCoreJarFile = resolveDependencyJar('sophisticated_core_jar', 'Sophisticated Core 1.18.2-0.6.4.604',
-        ~/^sophisticatedcore-1\.18\.2-0\.6\.4\.604\.jar$/, discoverOptionalModJar)
-def oculusModJarFile = resolveDependencyJar('oculus_mod_jar', 'Oculus', ~/^oculus-.*\.jar$/, discoverOptionalModJar)
-def geckoLibJarFile = resolveDependencyJar('geckolib_jar', 'GeckoLib 3', ~/^geckolib-forge-1\.18-3\..*\.jar$/, discoverOptionalModJar)
+def vaultCoordinate = "curse.maven:vault-hunters-official-mod-458203:${vault_hunters_file}"
+def renderCoordinate = "curse.maven:rubidium-574856:${rubidium_file}"
+// CCLCompat is Embeddium-only, but the same source set must also compile while the active
+// compatibility target is Rubidium, so one Embeddium jar stays on the compile-only classpath.
+def embeddiumCoordinate = "curse.maven:embeddium-908741:${embeddium_file}"
+def createCoordinate = "curse.maven:create-328085:${create_file}"
+def oculusCoordinate = "curse.maven:oculus-581495:${oculus_file}"
+def geckoLibCoordinate = "curse.maven:geckolib-388172:${geckolib_file}"
 // Ars Nouveau shades its own GeckoLib 3 copy; Citadel (Alex's Mobs) has its own model boxes.
-def arsNouveauJarFile = resolveDependencyJar('ars_nouveau_jar', 'Ars Nouveau', ~/^ars_nouveau-1\.18\.2-.*\.jar$/, discoverOptionalModJar)
-def citadelJarFile = resolveDependencyJar('citadel_jar', 'Citadel', ~/^citadel-.*-1\.18\.2\.jar$/, discoverOptionalModJar)
+def arsNouveauCoordinate = "curse.maven:ars-nouveau-401955:${ars_nouveau_file}"
+def citadelCoordinate = "curse.maven:citadel-331936:${citadel_file}"
 
-if (!missingDependencies.isEmpty()) {
-    throw new GradleException("VRO compile dependencies are missing:\n  - " + missingDependencies.join("\n  - "))
-}
-
-tasks.register('printDependencyJars') {
-    group = 'help'
-    description = 'Prints the dependency jars this build resolved.'
-    def resolved = [
-            'The Vault': vaultModJarFile, 'Renderer': renderModJarFile, 'Embeddium compile': embeddiumCompileJarFile,
-            'Vault Loot Beams': vaultLootBeamsJarFile, 'iSpawner': iSpawnerJarFile, 'Architectury': architecturyJarFile,
-            'Create': createJarFile, 'CodeChickenLib': codeChickenLibJarFile,
-            'Sophisticated Storage': sophisticatedStorageJarFile, 'Sophisticated Core': sophisticatedCoreJarFile,
-            'Oculus': oculusModJarFile, 'GeckoLib': geckoLibJarFile, 'Ars Nouveau': arsNouveauJarFile,
-            'Citadel': citadelJarFile
-    ].collectEntries { label, jar -> [(label): jar.absolutePath] }
-    doLast {
-        resolved.each { label, path -> println "${label}: ${path}" }
-    }
-}
-
-def extractedFlywheelJar = layout.buildDirectory.file('generated-dependencies/flywheel-forge-1.18.2-0.6.11-107.jar')
-tasks.register('extractBundledFlywheel', Copy) {
-    from(zipTree(createJarFile)) {
-        include 'META-INF/jarjar/flywheel-forge-1.18.2-0.6.11-107.jar'
-        eachFile { details -> details.path = details.name }
-        includeEmptyDirs = false
-    }
-    into extractedFlywheelJar.get().asFile.parentFile
-}
-
-def indexSortTestSource = file(findProperty('index_sort_test_jar') ?: embeddiumCompileJarFile)
-// HoYin1600p's custom Embeddium build, checked against every renderer hash contract when present.
-// -Prequire_custom_renderer_tests=true turns a missing jar into a build failure instead of a skip.
-def configuredCustomEmbeddiumJar = findProperty('custom_embeddium_jar')
-        ?: discoverOptionalModJar(~/^embeddium-0\.3\.19-git\.7b0cf676\+mc1\.18\.2\.jar$/)
-def customEmbeddiumTestJar = configuredCustomEmbeddiumJar == null ? null : file(configuredCustomEmbeddiumJar)
-// Every Oculus build in the known instances (public 1.6.4 and HoYin1600p's dh-compat builds) is
-// checked against the shader-compat contract; -Poculus_contract_jars adds more (path-separated).
-def oculusContractJars = ([oculusModJarFile] + knownVaultInstances.collect { instance ->
-    new File(prismInstancesDirectory, "${instance.folder}/${instance.minecraft}/mods").listFiles()?.findAll {
-        it.isFile() && it.name ==~ /^oculus-mc1\.18\.2-.*\.jar$/
-    } ?: []
-}.flatten() + ((findProperty('oculus_contract_jars') ?: '').tokenize(File.pathSeparator).collect { file(it) }))
-        .findAll { it != null && it.isFile() }
-        .unique { it.canonicalPath }
-
-// GeckoLib's jar uses production (SRG) names; the test runtime needs it remapped to run its real
-// IGeoRenderer.renderCube as the oracle, so tests take it through ForgeGradle's deobf from a flat dir.
-def flatArtifact = { File jar ->
-    def base = jar.name - ~/\.jar$/
-    def cut = base.lastIndexOf('-')
-    "blank:${base.substring(0, cut)}:${base.substring(cut + 1)}"
-}
-repositories {
-    flatDir { dirs([geckoLibJarFile, arsNouveauJarFile, citadelJarFile, oculusModJarFile].collect { it.parentFile }.unique()) }
-}
+def createRawJar = providers.provider { rawModJar('create_jar', createCoordinate) }
+def indexSortTestJar = providers.provider { rawModJar('index_sort_test_jar', embeddiumCoordinate) }
+def oculusRawJar = providers.provider { rawModJar('oculus_mod_jar', oculusCoordinate) }
+// The Flywheel build Create 0.5.1i bundles, byte-identical to the one published on modmaven.dev.
+def flywheelCoordinate = "com.jozufozu.flywheel:flywheel-forge-1.18.2:${flywheel_version}"
 
 dependencies {
     minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
 
     annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
 
-    compileOnly files(vaultModJarFile)
-    compileOnly files(embeddiumCompileJarFile)
-    compileOnly files(renderModJarFile)
-    compileOnly files(vaultLootBeamsJarFile)
-    compileOnly files(iSpawnerJarFile)
-    compileOnly files(architecturyJarFile)
-    compileOnly files(createJarFile)
-    compileOnly files(codeChickenLibJarFile)
-    compileOnly files(sophisticatedStorageJarFile)
-    compileOnly files(sophisticatedCoreJarFile)
-    compileOnly files(extractedFlywheelJar)
-    compileOnly files(oculusModJarFile)
-    compileOnly files(geckoLibJarFile)
-    compileOnly files(arsNouveauJarFile)
-    compileOnly files(citadelJarFile)
+    compileOnly modDep('vault_mod_jar', vaultCoordinate)
+    compileOnly modDep('embeddium_compile_jar', embeddiumCoordinate)
+    compileOnly modDep('render_mod_jar', renderCoordinate)
+    compileOnly modDep('vault_loot_beams_jar', "curse.maven:vaultlootbeams-1313069:${vault_loot_beams_file}")
+    compileOnly modDep('ispawner_jar', "curse.maven:ispawner-533792:${ispawner_file}")
+    compileOnly modDep('architectury_jar', "curse.maven:architectury-api-419699:${architectury_file}")
+    compileOnly modDep('create_jar', createCoordinate)
+    compileOnly modDep('codechickenlib_jar', "curse.maven:codechicken-lib-1-8-242818:${codechickenlib_file}")
+    compileOnly modDep('sophisticated_storage_jar', "curse.maven:sophisticated-storage-619320:${sophisticated_storage_file}")
+    compileOnly modDep('sophisticated_core_jar', "curse.maven:sophisticated-core-618298:${sophisticated_core_file}")
+    compileOnly(flywheelCoordinate) { transitive = false }
+    compileOnly modDep('oculus_mod_jar', oculusCoordinate)
+    compileOnly modDep('geckolib_jar', geckoLibCoordinate)
+    compileOnly modDep('ars_nouveau_jar', arsNouveauCoordinate)
+    compileOnly modDep('citadel_jar', citadelCoordinate)
     // The oldest Cloth Config the supported packs ship; VRO loads and runs without it.
     compileOnly fg.deobf("me.shedaniel.cloth:cloth-config-forge:${cloth_config_version}")
 
     testImplementation 'org.junit.jupiter:junit-jupiter:5.10.2'
     testImplementation 'org.mockito:mockito-core:5.11.0'
     // Exercise the actual optional renderer contracts without packaging it into VRO.
-    testImplementation files(indexSortTestSource)
-    testImplementation files(extractedFlywheelJar)
+    testImplementation rawDep('index_sort_test_jar', embeddiumCoordinate)
+    testImplementation(flywheelCoordinate) { transitive = false }
     // Oculus' own NormalHelper is the oracle for the shader-pack (extended vertex) GPU path; it calls Mth.
-    testImplementation fg.deobf(flatArtifact(oculusModJarFile))
+    testImplementation modDep('oculus_mod_jar', oculusCoordinate)
     // GeckoLib's own IGeoRenderer.renderCube is the oracle for the GeckoLib GPU path.
-    testImplementation fg.deobf(flatArtifact(geckoLibJarFile))
+    testImplementation modDep('geckolib_jar', geckoLibCoordinate)
     // Ars Nouveau's shaded GeckoLib and Citadel's AdvancedModelBox are the oracles for their GPU paths.
-    testImplementation fg.deobf(flatArtifact(arsNouveauJarFile))
-    testImplementation fg.deobf(flatArtifact(citadelJarFile))
+    testImplementation modDep('ars_nouveau_jar', arsNouveauCoordinate)
+    testImplementation modDep('citadel_jar', citadelCoordinate)
 }
 
+// Optional local jars for extra renderer contract tests; nothing is searched for on disk.
+// -Pcustom_embeddium_jar=path checks HoYin1600p's custom Embeddium build against every renderer hash contract
+// (-Prequire_custom_renderer_tests=true makes a missing jar a failure); -Poculus_contract_jars adds Oculus
+// builds (path-separated) to the shader-compat contract check alongside the public Oculus jar.
+def customEmbeddiumTestJar = findProperty('custom_embeddium_jar') ? file(findProperty('custom_embeddium_jar')) : null
+def extraOculusContractJars = (findProperty('oculus_contract_jars') ?: '').tokenize(File.pathSeparator).collect { file(it) }
 tasks.named('test') {
     useJUnitPlatform()
-    systemProperty 'vro.indexSort.rawRenderer', indexSortTestSource.absolutePath
-    systemProperty 'vro.flywheel.rawCreate', createJarFile.absolutePath
-    systemProperty 'vro.oculus.contractJars', oculusContractJars*.absolutePath.join(File.pathSeparator)
     if (customEmbeddiumTestJar != null && customEmbeddiumTestJar.isFile()) {
         systemProperty 'vro.indexSort.customRenderer', customEmbeddiumTestJar.absolutePath
     } else if (findProperty('require_custom_renderer_tests') == 'true') {
         throw new GradleException('The custom Embeddium jar was not found. Set -Pcustom_embeddium_jar=path/to/embeddium.jar.')
     }
-}
-
-tasks.register('printVaultCompatibilityTargets') {
-    group = 'verification'
-    description = 'Prints the discovered Vault Hunters jars used by the compatibility build matrix.'
-    doLast {
-        discoveredVaultModJars.each { target ->
-            println "${target.name}: ${target.jar}"
-        }
+    doFirst {
+        def oculusContractJars = ([oculusRawJar.get()] + extraOculusContractJars)
+                .findAll { it.isFile() }.unique { it.canonicalPath }
+        systemProperty 'vro.indexSort.rawRenderer', indexSortTestJar.get().absolutePath
+        systemProperty 'vro.flywheel.rawCreate', createRawJar.get().absolutePath
+        systemProperty 'vro.oculus.contractJars', oculusContractJars*.absolutePath.join(File.pathSeparator)
     }
 }
-
 tasks.named('processResources', ProcessResources).configure {
     var replaceProperties = [
             minecraft_version: minecraft_version,
@@ -358,7 +284,6 @@ tasks.named('jar', Jar).configure {
 }
 
 tasks.withType(JavaCompile).configureEach {
-    dependsOn tasks.named('extractBundledFlywheel')
     options.encoding = 'UTF-8'
 }
 
