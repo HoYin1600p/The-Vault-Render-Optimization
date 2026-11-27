@@ -6,6 +6,7 @@ public final class ConfigKeys {
     public static final String CLIENT_CONFIG_FILE = "vault_render_optimization-client.toml";
 
     public static final String ALLOCATION_FREE_FRUSTUM = "allocation_free_frustum";
+    public static final String ANGLE_SECTION_OCCLUSION = "angle_section_occlusion";
     public static final String ASYNC_ARENA_GROWTH_DIVISOR = "asyncArenaGrowthDivisor";
     public static final String ASYNC_ARENA_MAX_HEADROOM_MIB = "asyncArenaMaxHeadroomMib";
     public static final String COMPARE_MODE = "compare_mode";
@@ -21,6 +22,9 @@ public final class ConfigKeys {
     public static final String PARTICLE_PROVIDER_CACHE = "particle_provider_cache";
     public static final String PARTICLE_SHARED_RANDOM = "particle_shared_random";
     public static final String PARTICLE_TICK_COMPACTION = "particle_tick_compaction";
+    public static final String SKY_ANGLE_CACHING = "sky_angle_caching";
+    public static final String SOUND_CHANNEL_CULLING = "sound_channel_culling";
+    public static final String SOUND_DISTANCE_CULLING = "sound_distance_culling";
 
     private ConfigKeys() {
     }

@@ -49,6 +49,8 @@ VRO can also check its update manifest in the background and show an update row 
 *   Resolves the Vault map and Xaero's World Map `M`\-key conflict.
 *   Isolates Vault elixir number rendering so it cannot corrupt later particle colors.
 
+Vault 22.0.0 build 7209, 3.22.0 build 7210, and 22.0.1 build 7237 now include several of these fixes themselves (the ability list, tool model, armor texture, spawner item, render-event caches, and empty-`ItemStack` entity-reference cleanup). On those builds VRO leaves them to Vault and keeps the rest; older Vault builds keep all of VRO's versions.
+
 ## Create and shader improvements
 
 *   Divides large Create contraptions into render sections so off-screen pieces can be skipped without lowering model detail.
@@ -66,16 +68,18 @@ Use `/vro create status` to see the active Flywheel backend, shader path, and co
 *   Reduces client collision work around dense mob farms and rapid kill systems.
 *   Builds ordinary particle billboards from the camera basis, reuses Rubidium/Embeddium packed output, shares same-tick light results, and skips empty particle, toast, tutorial, debug, and renderer setup work without hiding visible effects.
 *   Makes particle-heavy moments such as Vault Hunters Nova bursts cheaper: collisions read each block once per tick instead of once per particle, dead particles are removed in one pass, particles share one random generator, and particle providers are looked up once. Every particle is kept.
-*   Includes a built-in copy of ImmediatelyFast for HUD, text, map and buffer-upload batching. It switches itself off when the standalone ImmediatelyFast mod is installed.
+*   Includes a built-in copy of ImmediatelyFast for HUD, ItemBorders, text, map and buffer-upload batching (preserving `GL_STATIC_DRAW` buffers). It switches itself off when the standalone ImmediatelyFast mod is installed.
 *   With Farsight installed, releases client chunks the server has already unloaded once they are far outside your view, so memory no longer grows for the whole session.
 *   Adapts eleven later ModernFix render/model improvements for chunk meshing, model caches, profile textures, texture stitching, and Forge/CTM concurrency.
 *   Carries eight guarded Embeddium/Rubidium corrections for chunk rebuilds, bounded native buffers, arena growth, custom block faces, fluid lighting, shader color, vertex writers, and optional CodeChickenLib rendering.
+*   Uses angle-based chunk section visibility path occlusion on Embeddium 0.3.18/0.3.19 (skipping spectator mode and Oculus shadow passes) to cut unreachable terrain sections without visual change.
 *   Uses renderer-native asynchronous chunk scheduling by default to reduce blocking rebuild stalls without changing another mod's settings.
 *   Avoids copying and uploading unchanged terrain vertices during supported Embeddium transparency re-sorts.
 *   Paces already-built Embeddium terrain work under measured load while leaving initial and cached-terrain loading on the renderer's native path.
-*   Makes Sophisticated Storage barrel displays cheaper by culling hidden or covered front faces, caching quantity labels, emitting fill bars without temporary vertex objects, and avoiding chunk rebuilds for count/fill-only updates. Tier badges are unchanged.
+*   Makes Sophisticated Storage barrel displays cheaper by culling hidden or covered front faces (including fill bars, while skipping virtual/contraption worlds), caching quantity labels, emitting fill bars without temporary vertex objects, and avoiding chunk rebuilds for count/fill-only updates. Tier badges are unchanged.
 *   Compacts baked-model and block-state data beyond the reductions already present in FerriteCore 4.2.2.
 *   Adds separate vertical and horizontal terrain-section culling. Vertical culling is enabled by default; horizontal culling is optional.
+*   Skips inaudible out-of-range sounds and saturated OpenAL static-channel setup, and reuses per-frame sky angle queries.
 *   Cleans up retained Create Addition, Powah, Vault Loot Beams, and empty-item references during long sessions and world changes.
 
 ## Renderer ownership and safe fallback
@@ -103,7 +107,7 @@ Update checks are enabled by default, while displayed update types default to cr
 *   **Create shader path:** Create 0.5.1.i, Flywheel 0.6.11, Oculus 1.6.x, and supported Rubidium or Embeddium releases
 *   **Renderer-transfer baselines:** Embeddium 0.3.18/0.3.19 and Rubidium 0.5.6
 *   **Sophisticated Storage display path:** Sophisticated Storage 1.18.2-0.9.8.915 with Sophisticated Core 1.18.2-0.6.4.604
-*   **Oculus:** 1.6.4 and the 1.6.5, 1.6.7 and 1.6.8 dh-compat builds
+*   **Oculus:** 1.6.4 and the 1.6.5, 1.6.7, 1.6.8, and 1.6.9 dh-compat builds
 *   **Settings screen:** Cloth Config 6.5.102 or newer (optional; only the screen needs it)
 
 Optional integrations load only when their target mod is present. VRO yields overlapping work when Entity Collision FPS Fix, BadOptimizations, Particle Core, Flerovium, or Better Fps - Render Distance is installed.

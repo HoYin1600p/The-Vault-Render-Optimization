@@ -29,7 +29,7 @@ public final class BarrelFrontVisibility {
                 || !ClientOptimizationConfig.sophisticatedStorageFaceCulling) {
             return true;
         }
-        if (barrel.getLevel() == null) {
+        if (!isMainClientLevel(barrel.getLevel(), Minecraft.getInstance().level)) {
             return true;
         }
 
@@ -63,6 +63,10 @@ public final class BarrelFrontVisibility {
 
         SophisticatedStorageDiagnostics.recordFrontFaceRendered();
         return true;
+    }
+
+    static boolean isMainClientLevel(Object barrelLevel, Object clientLevel) {
+        return barrelLevel != null && barrelLevel == clientLevel;
     }
 
     static boolean cameraIsInFront(

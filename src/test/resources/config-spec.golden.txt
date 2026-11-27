@@ -321,6 +321,27 @@ value render_fast_paths.particle_provider_cache
   class: java.lang.Boolean
   default: true
   range: <none>
+value render_fast_paths.sound_distance_culling
+  comment: Skip playing non-relative, non-looping linearly attenuated sounds beyond their audible range. | Yields to Flerovium. No audible difference; Compare Mode disables this optimization.
+  translationKey: null
+  restart: false
+  class: java.lang.Boolean
+  default: true
+  range: <none>
+value render_fast_paths.sound_channel_culling
+  comment: Skip non-streaming sound setup when all OpenAL static sound channels are already in use. | Yields to Flerovium. Helps during heavy Nova and mob-farm sound bursts.
+  translationKey: null
+  restart: false
+  class: java.lang.Boolean
+  default: true
+  range: <none>
+value render_fast_paths.sky_angle_caching
+  comment: Cache ClientLevel.getTimeOfDay across calls within a single sky render pass. | Yields to BadOptimizations. Same visual output with or without shaders.
+  translationKey: null
+  restart: false
+  class: java.lang.Boolean
+  default: true
+  range: <none>
 value render_fast_paths.gpu_entity_models
   comment: Expand entity model cubes on the GPU. Each model part reserves its vertices in the | vanilla entity buffer and a compute shader writes them into the uploaded vertex buffer right before | vanilla's own draw, with vanilla's exact float arithmetic (bit-for-bit self-test at startup). | Needs OpenGL 4.3 or the ARB compute extensions; pauses with an Oculus shader pack (see | gpu_entity_models_with_shaders), in Compare | Mode, on a failed self-test or mixin audit. /vro gpuentity status explains the current state.
   translationKey: null
@@ -458,6 +479,13 @@ value section_distance_culling.horizontal_distance
   class: java.lang.Object
   default: 24
   range: 1..64
+value section_distance_culling.angle_section_occlusion
+  comment: On validated Embeddium builds, mask opposing-face chunk visibility paths that are | geometrically unreachable from the perspective camera angle (Sodium PR #2811 / Flerovium). | Zero visual difference; skipped in spectator mode, Oculus shadow passes and Compare Mode.
+  translationKey: null
+  restart: false
+  class: java.lang.Boolean
+  default: true
+  range: <none>
 section create_rendering
 value create_rendering.skip_empty_contraption_buffer_flush
   comment: Avoid flushing Minecraft's shared render buffers for Create contraptions that rendered no special block entities.

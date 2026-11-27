@@ -288,5 +288,17 @@
   "vro.config.diagnostics.immediatelyfast_dont_add_info_into_debug_hud.tooltip": "Cosmetic only. It stops ImmediatelyFast from adding its \"Buffer Pool\" lines to the F3 debug screen. It does not change performance. Needs a restart.",
   "vro.config.diagnostics.immediatelyfast_disable_universal_batching": "Debug: no general batching",
   "vro.config.diagnostics.immediatelyfast_disable_universal_batching.summary": "For troubleshooting only: turns off general draw batching.",
-  "vro.config.diagnostics.immediatelyfast_disable_universal_batching.tooltip": "For troubleshooting only. It turns off ImmediatelyFast's general batching of draws and is not recommended for normal play. Needs a restart."
+  "vro.config.diagnostics.immediatelyfast_disable_universal_batching.tooltip": "For troubleshooting only. It turns off ImmediatelyFast's general batching of draws and is not recommended for normal play. Needs a restart.",
+  "vro.config.chunks.angle_section_occlusion": "Angle section occlusion",
+  "vro.config.chunks.angle_section_occlusion.summary": "Skips terrain sections unreachable at the current camera angle.",
+  "vro.config.chunks.angle_section_occlusion.tooltip": "On validated Embeddium builds, masks out opposing-face chunk visibility paths that a perspective view ray cannot geometrically cross. Cuts rendered sections with zero visual difference; skipped in spectator mode, Oculus shadow passes and Compare Mode.",
+  "vro.config.entities.sound_distance_culling": "Cull out-of-range sounds",
+  "vro.config.entities.sound_distance_culling.summary": "Skips sound setup for non-looping sounds beyond audible range.",
+  "vro.config.entities.sound_distance_culling.tooltip": "Non-relative, non-looping sounds with linear attenuation beyond their audible range are skipped before channel allocation. Nothing audible is removed. Yields to Flerovium.",
+  "vro.config.entities.sound_channel_culling": "Cull saturated sound channels",
+  "vro.config.entities.sound_channel_culling.summary": "Skips extra sounds when all static sound channels are full.",
+  "vro.config.entities.sound_channel_culling.tooltip": "When every OpenAL static sound channel is already busy (for example during Nova or mob-farm bursts), skips non-streaming sound setup instead of preparing sounds that OpenAL drops anyway. Yields to Flerovium.",
+  "vro.config.interface.sky_angle_caching": "Cache sky angle per frame",
+  "vro.config.interface.sky_angle_caching.summary": "Reuses the sky angle during a sky render pass.",
+  "vro.config.interface.sky_angle_caching.tooltip": "Computes ClientLevel.getTimeOfDay once per sky render pass instead of twice. Identical visual output with or without shaders. Yields to BadOptimizations."
 }

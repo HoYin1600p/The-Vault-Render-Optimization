@@ -20,6 +20,7 @@ import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
 import net.minecraft.client.renderer.block.ModelBlockRenderer;
 import net.minecraft.client.renderer.block.model.BakedQuad;
+import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.core.Direction;
 import net.minecraft.util.Mth;
@@ -47,6 +48,8 @@ public final class GpuBlockModels {
         final BakedQuad[] quads;
         final ItemMesh mesh;
         final int first;
+        // Distinct sprites of the model, marked as drawn for Embeddium's animation tracking.
+        final TextureAtlasSprite[] sprites;
 
         Entry(int generation, List<?>[] lists, BakedQuad[] quads, ItemMesh mesh, int first) {
             this.generation = generation;
@@ -54,6 +57,7 @@ public final class GpuBlockModels {
             this.quads = quads;
             this.mesh = mesh;
             this.first = first;
+            this.sprites = GpuItems.distinctSprites(quads);
         }
 
         boolean gpu() {
@@ -142,6 +146,8 @@ public final class GpuBlockModels {
             }
             start = end;
         }
+        // Embeddium's overwrite marks these while writing the quads; it no longer runs for this model.
+        if (embeddium) EmbeddiumSpriteTracking.markActive(entry.sprites);
         MODELS_GPU.incrementAndGet();
         return true;
     }

@@ -14,7 +14,9 @@ a separate design and compatibility pass.
 
 VRO skips the block-entity-rendered item, quantity, fill, and upgrade layers
 when the display face is behind the camera plane or an immediately adjacent
-block fully covers it. The camera-inside-block case remains visible. This is a
+block fully covers it. The camera-inside-block case remains visible, and culling
+runs only on the active client level so barrels rendered inside virtual or
+contraption worlds (such as Create contraptions) stay visible. This is a
 narrow face test, not a ray-trace occlusion system; EntityCulling can continue
 to own general block-entity occlusion.
 

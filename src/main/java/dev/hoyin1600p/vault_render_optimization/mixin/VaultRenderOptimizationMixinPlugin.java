@@ -26,6 +26,7 @@ import dev.hoyin1600p.vault_render_optimization.renderertransfer.RendererTransfe
 import dev.hoyin1600p.vault_render_optimization.renderertransfer.RendererTransferOwnershipRegistry;
 import dev.hoyin1600p.vault_render_optimization.util.ClassBytes;
 import dev.hoyin1600p.vault_render_optimization.util.ModIds;
+import dev.hoyin1600p.vault_render_optimization.util.VaultUpstreamFixes;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import net.minecraftforge.fml.loading.FMLLoader;
@@ -53,6 +54,7 @@ public final class VaultRenderOptimizationMixinPlugin implements IMixinConfigPlu
             "EntityRenderDispatcherMixin",
             "EntityTypeRendererCacheMixin",
             "GameTestDebugRendererMixin",
+            "LevelRendererSkyAngleMixin",
             "ParticleEngineMixin",
             "ToastComponentMixin",
             "TutorialMixin"
@@ -141,6 +143,7 @@ public final class VaultRenderOptimizationMixinPlugin implements IMixinConfigPlu
     private boolean ctmCompatible;
     private boolean codeChickenLibLoaded;
     private boolean sophisticatedStorageCompatible;
+    private Set<String> vaultAbsorbedFixes = Set.of();
     private RendererFamily rendererFamily = RendererFamily.NONE;
     private String rendererVersion;
     private ChunkUpdateBackend chunkUpdateBackend = ChunkUpdateBackend.BLOCKED;
@@ -166,6 +169,7 @@ public final class VaultRenderOptimizationMixinPlugin implements IMixinConfigPlu
                     modVersion(ModIds.SOPHISTICATED_STORAGE),
                     modVersion(ModIds.SOPHISTICATED_CORE)
             );
+            vaultAbsorbedFixes = isModLoaded(ModIds.THE_VAULT) ? vaultAbsorbedFixes() : Set.of();
             rendererFamily = resolveRendererFamily();
             rendererVersion = rendererFamily == RendererFamily.EMBEDDIUM
                     ? modVersion(ModIds.EMBEDDIUM)
@@ -287,6 +291,10 @@ public final class VaultRenderOptimizationMixinPlugin implements IMixinConfigPlu
         if (mixinClassName.endsWith(".chunk.EmbeddiumDeferredChunkUpdatesMixin")) {
             return chunkUpdateBackend == ChunkUpdateBackend.EMBEDDIUM;
         }
+        if (mixinClassName.endsWith(".chunk.EmbeddiumAngleOcclusionManagerMixin")
+                || mixinClassName.endsWith(".chunk.EmbeddiumChunkGraphInfoMixin")) {
+            return chunkUpdateBackend == ChunkUpdateBackend.EMBEDDIUM && !fleroviumLoaded;
+        }
         if (mixinClassName.endsWith(".chunk.RubidiumDeferredChunkUpdatesMixin")) {
             return chunkUpdateBackend == ChunkUpdateBackend.RUBIDIUM;
         }
@@ -309,6 +317,10 @@ public final class VaultRenderOptimizationMixinPlugin implements IMixinConfigPlu
 
         if (BAD_OPTIMIZATIONS_EQUIVALENT_MIXINS.contains(simpleName) && isModLoaded(ModIds.BAD_OPTIMIZATIONS)) {
             return false;
+        }
+
+        if (simpleName.equals("SoundEngineOptimizationMixin") || simpleName.equals("LibraryChannelPoolAccessor")) {
+            return !modDiscoveryFailed && !fleroviumLoaded;
         }
 
         if (simpleName.equals("ParticleEngineCompactionMixin") || simpleName.equals("ParticleRandomMixin")
@@ -352,6 +364,11 @@ public final class VaultRenderOptimizationMixinPlugin implements IMixinConfigPlu
         }
 
         if (UNOBTAINIUM_EQUIVALENT_MIXINS.contains(simpleName) && isModLoaded(ModIds.UNOBTAINIUM)) {
+            return false;
+        }
+
+        // Vault ships this fix itself (see VaultUpstreamFixes); leave it to Vault's code.
+        if (vaultAbsorbedFixes.contains(simpleName)) {
             return false;
         }
 
@@ -475,6 +492,23 @@ public final class VaultRenderOptimizationMixinPlugin implements IMixinConfigPlu
             }
         }
         return RendererTransferBytecode.blocker(feature, this::resourceBytes);
+    }
+
+    private Set<String> vaultAbsorbedFixes() {
+        Set<String> absorbed = new java.util.TreeSet<>();
+        for (String mixin : VaultUpstreamFixes.MARKERS.keySet()) {
+            try {
+                if (VaultUpstreamFixes.absorbed(mixin, path -> ClassBytes.read(loadingModList, path))) {
+                    absorbed.add(mixin);
+                }
+            } catch (RuntimeException failure) {
+                VaultRenderOptimization.LOGGER.debug("Could not read Vault's class for {}; keeping VRO's fix", mixin, failure);
+            }
+        }
+        if (!absorbed.isEmpty()) {
+            VaultRenderOptimization.LOGGER.info("The Vault already ships these fixes; leaving them to Vault: {}", absorbed);
+        }
+        return Set.copyOf(absorbed);
     }
 
     private byte[] resourceBytes(String path) {

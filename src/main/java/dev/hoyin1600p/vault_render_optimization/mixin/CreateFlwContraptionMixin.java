@@ -47,6 +47,10 @@ public abstract class CreateFlwContraptionMixin {
         if (vro$sectionedMeshes == null) {
             return;
         }
+        if (!vro$sectionedMeshes.hasLayer(layer)) {
+            ci.cancel();
+            return;
+        }
         FlwContraption self = (FlwContraption) (Object) this;
         setup(shader);
         vro$sectionedMeshes.render(layer, self.getMatrices(), shader);

@@ -157,6 +157,11 @@ public final class SectionedContraptionRenderer {
             }
         }
 
+        public boolean hasLayer(RenderType layer) {
+            List<FlywheelSection> sections = layers.get(layer);
+            return sections != null && !sections.isEmpty();
+        }
+
         public void render(RenderType layer, ContraptionMatrices matrices, ContraptionProgram shader) {
             List<FlywheelSection> sections = layers.get(layer);
             if (sections == null || sections.isEmpty()) {

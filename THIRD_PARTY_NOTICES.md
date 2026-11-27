@@ -47,22 +47,28 @@ VRO preserves that transitive source and license attribution.
 
 ### ImmediatelyFast Reforged (built-in batching and text/map optimizations)
 
-VRO contains a relocated copy of ImmediatelyFast Reforged for Minecraft Forge 1.18.2.
+VRO contains a relocated copy of ImmediatelyFast Reforged for Minecraft Forge 1.18.2, with
+selected compatibility and correctness backports from upstream ImmediatelyFast `1.20`.
 
 - Project: ImmediatelyFast by RK_01/RaphiMC and contributors; Forge port ImmediatelyFast
   Reforged by CCr4ft3r
 - Source: https://github.com/CCr4ft3r/ImmediatelyFastReforged, branch `1.18.2`, commit
-  `53d41ab043eacf4664be70d54b18b23b690e537e` (mod version 1.1.10)
-- Copyright: 2023 RK_01/RaphiMC and contributors
+  `53d41ab043eacf4664be70d54b18b23b690e537e` (mod version 1.1.10); upstream
+  https://github.com/RaphiMC/ImmediatelyFast, branch `1.20`, commit
+  `e91270df6a2727f01701aa39e62ec1baeb126fb5`
+- Copyright: 2023-2026 RK_01/RaphiMC and contributors
 - License: LGPL-3.0-or-later
 - Location: `src/main/java/dev/hoyin1600p/vault_render_optimization/compat/immediatelyfast/`
 
 Every copied file keeps its original license header and carries a VRO modification note. VRO
 changes: package relocation, VRO-owned configuration file and startup decision, the built-in copy
 is skipped when the standalone `immediatelyfast` mod is installed, the bundled Reflect library is
-replaced with `MethodHandles`, and a failed Oculus lookup disables that path instead of exiting.
-The access-transformer entries are merged into VRO's. The complete license text is retained at
-`docs/licenses/immediatelyfast-LGPL-3.0-or-later.txt` and embedded in the runnable jar.
+replaced with `MethodHandles`, a failed Oculus lookup disables that path instead of exiting,
+`MixinVertexBuffer` preserves `GL_STATIC_DRAW` buffers instead of converting them to
+`GL_DYNAMIC_DRAW`, and `MixinItemBorders` batches ItemBorders slot-border fills when no outer HUD
+fill batch is active. The access-transformer entries are merged into VRO's. The complete license
+text is retained at `docs/licenses/immediatelyfast-LGPL-3.0-or-later.txt` and embedded in the
+runnable jar.
 
 ### Accelerated Rendering (GPU entity models)
 
@@ -91,26 +97,30 @@ code. No item, text, GUI, Iris or third-party-mod compatibility code from AR is 
 complete license text is retained at `docs/licenses/accelerated-rendering-MIT.txt` and embedded
 in the runnable jar.
 
-### Flerovium particle billboard geometry
+### Flerovium particle, sound, and section-occlusion adaptations
 
-VRO's particle geometry helper and ordinary-particle render injections adapt
-Flerovium's camera-basis billboard calculation.
+VRO adapts Flerovium's camera-basis particle billboard calculation, sound distance and
+saturated static-channel culling, and angle-based chunk section visibility path occlusion.
 
 - Project: Flerovium by MoePus and contributors
 - Source: https://github.com/MoePus/Flerovium
-- Source commit: `240f08c62745d57bf200440c9932e0c7907bc5f7`
-- Source path:
-  `src/main/java/com/moepus/flerovium/mixins/Particle/SingleQuadParticleMixin.java`
+- Source commits:
+  - `240f08c62745d57bf200440c9932e0c7907bc5f7` (`Particle/SingleQuadParticleMixin.java`)
+  - `512e03074126ebdc2920b5197c4e8526bf2eedcf` (`Sound/SoundEngineMixin.java`, `Sound/ClientLevelMixin.java`, and `Chunk/OcclusionCullerMixin.java` concept alongside Sodium PR #2811)
 - License: LGPL-3.0-only
-- Adaptation: reusable allocation-free geometry, a renderer-neutral
-  `VertexConsumer` fallback, Rubidium/Embeddium packed-writer integration, hot
-  ownership and configuration, Compare Mode, and diagnostics.
+- Adaptation:
+  - Particle billboards: reusable allocation-free geometry, renderer-neutral `VertexConsumer`
+    fallback, Rubidium/Embeddium packed-writer integration.
+  - Sound engine: pure range and static-channel decision helper wired into Forge 1.18.2
+    `SoundEngine.play` with hot toggles and Compare Mode support.
+  - Angle-based section occlusion: Embeddium 0.3.18/0.3.19 `ChunkGraphInfo` bit-layout mask
+    applied during `RenderSectionManager.iterateChunks`, skipping spectator mode, Compare Mode,
+    and Oculus orthographic shadow passes (`ShadowRenderer.ACTIVE`).
 
-VRO does not include Flerovium's native-memory writer, entity writer, particle
-culling, or other mixins. Flerovium wins ownership when installed. VRO's
-project license remains AGPL-3.0-or-later, and the complete upstream LGPL text
-is retained at `docs/licenses/flerovium-LGPL-3.0.txt` and embedded in the
-runnable jar.
+VRO does not include Flerovium's native-memory writer, entity writer, particle culling, or other
+mixins. Flerovium wins ownership for all overlapping mixins when installed. VRO's project license
+remains AGPL-3.0-or-later, and the complete upstream LGPL text is retained at
+`docs/licenses/flerovium-LGPL-3.0.txt` and embedded in the runnable jar.
 
 ### Forge Update Notifier
 
@@ -229,10 +239,9 @@ already supplies particle frustum culling, so that feature was not duplicated.
 
 - Project: BadOptimizations by Thosea
 - Source: https://github.com/imthosea/BadOptimizations
-- Inspected revision: `5de4a3ad4299909178d8995dc0bc80626be48d44`
-- License observed at inspection: MIT
-- Design influence: avoid empty render/tick setup and cache stable renderer
-  lookups.
+- Inspected revisions: `5de4a3ad4299909178d8995dc0bc80626be48d44` (MIT) and `3.0.0` / `b464270c9fff1519bdb070525de1616cbb2aaf4a` (ISC)
+- Design influence: avoid empty render/tick setup, cache stable renderer lookups, and reuse
+  `ClientLevel.getTimeOfDay` within `LevelRenderer.renderSky`.
 
 VRO deliberately excludes BadOptimizations' shader-sensitive lightmap and sky
 color caching. Equivalent VRO mixins disable themselves when BadOptimizations

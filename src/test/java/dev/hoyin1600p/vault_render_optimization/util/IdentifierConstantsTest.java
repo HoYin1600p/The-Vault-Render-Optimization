@@ -88,6 +88,7 @@ class IdentifierConstantsTest {
         Map<String, Object> expected = new LinkedHashMap<>();
         expected.put("CLIENT_CONFIG_FILE", "vault_render_optimization-client.toml");
         expected.put("ALLOCATION_FREE_FRUSTUM", "allocation_free_frustum");
+        expected.put("ANGLE_SECTION_OCCLUSION", "angle_section_occlusion");
         expected.put("ASYNC_ARENA_GROWTH_DIVISOR", "asyncArenaGrowthDivisor");
         expected.put("ASYNC_ARENA_MAX_HEADROOM_MIB", "asyncArenaMaxHeadroomMib");
         expected.put("COMPARE_MODE", "compare_mode");
@@ -103,6 +104,9 @@ class IdentifierConstantsTest {
         expected.put("PARTICLE_PROVIDER_CACHE", "particle_provider_cache");
         expected.put("PARTICLE_SHARED_RANDOM", "particle_shared_random");
         expected.put("PARTICLE_TICK_COMPACTION", "particle_tick_compaction");
+        expected.put("SKY_ANGLE_CACHING", "sky_angle_caching");
+        expected.put("SOUND_CHANNEL_CULLING", "sound_channel_culling");
+        expected.put("SOUND_DISTANCE_CULLING", "sound_distance_culling");
         assertConstants(ConfigKeys.class, expected);
     }
 

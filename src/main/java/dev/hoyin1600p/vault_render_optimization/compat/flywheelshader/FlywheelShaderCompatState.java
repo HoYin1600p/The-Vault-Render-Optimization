@@ -4,8 +4,8 @@ import com.jozufozu.flywheel.backend.Backend;
 import net.coderbot.iris.block_rendering.BlockRenderingSettings;
 
 public final class FlywheelShaderCompatState {
-    private static Object pipeline;
-    private static boolean failed;
+    private static volatile Object pipeline;
+    private static volatile boolean failed;
     private static boolean fallbackPending;
     private static boolean successLogged;
     private static boolean dedicatedGbuffersUsed;
@@ -41,11 +41,11 @@ public final class FlywheelShaderCompatState {
         resetProgramSources();
     }
 
-    public static synchronized boolean shouldUseShaderInstancing() {
+    public static boolean shouldUseShaderInstancing() {
         return featureEnabled() && !failed && VroFlywheelShaderCompat.isShaderPackInUse();
     }
 
-    public static synchronized boolean isRenderPathActive() {
+    public static boolean isRenderPathActive() {
         return featureEnabled()
                 && pipeline != null
                 && !failed
@@ -53,18 +53,18 @@ public final class FlywheelShaderCompatState {
                 && VroFlywheelShaderCompat.isShaderPackInUse();
     }
 
-    public static synchronized boolean hasPipeline() {
+    public static boolean hasPipeline() {
         return pipeline != null;
     }
 
-    public static synchronized boolean deferModelBuilds() {
+    public static boolean deferModelBuilds() {
         // Oculus retains its vertex-format setting across a DH-triggered pipeline destruction.
         // Do not consume Create/Flywheel model work in that gap; rendering recreates the pipeline.
         return ModelBuildReadiness.defer(
                 BlockRenderingSettings.INSTANCE.shouldUseExtendedVertexFormat(), pipeline != null);
     }
 
-    public static synchronized boolean hasFailed() {
+    public static boolean hasFailed() {
         return failed;
     }
 

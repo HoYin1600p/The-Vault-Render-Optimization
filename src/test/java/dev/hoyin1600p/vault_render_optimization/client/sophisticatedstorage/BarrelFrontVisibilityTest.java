@@ -38,4 +38,14 @@ class BarrelFrontVisibilityTest {
                 0, 0, -1
         ));
     }
+
+    @Test
+    void onlyCullsBarrelsInTheActiveClientLevel() {
+        Object mainLevel = new Object();
+        Object contraptionWorld = new Object();
+        assertTrue(BarrelFrontVisibility.isMainClientLevel(mainLevel, mainLevel));
+        assertFalse(BarrelFrontVisibility.isMainClientLevel(contraptionWorld, mainLevel));
+        assertFalse(BarrelFrontVisibility.isMainClientLevel(null, mainLevel));
+        assertFalse(BarrelFrontVisibility.isMainClientLevel(mainLevel, null));
+    }
 }

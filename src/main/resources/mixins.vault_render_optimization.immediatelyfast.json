@@ -20,6 +20,7 @@
     "hud_batching.MixinMinecraftClient",
     "hud_batching.consumer.MixinDrawableHelper",
     "hud_batching.consumer.MixinItemRenderer",
+    "hud_batching.compat.MixinItemBorders",
     "map_atlas_generation.MixinMapRenderer",
     "map_atlas_generation.MixinMapRenderer_MapTexture"
   ],

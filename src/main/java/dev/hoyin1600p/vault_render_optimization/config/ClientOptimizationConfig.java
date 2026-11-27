@@ -63,6 +63,9 @@ public final class ClientOptimizationConfig {
     private static final ForgeConfigSpec.BooleanValue PARTICLE_TICK_COMPACTION;
     private static final ForgeConfigSpec.BooleanValue PARTICLE_SHARED_RANDOM;
     private static final ForgeConfigSpec.BooleanValue PARTICLE_PROVIDER_CACHE;
+    private static final ForgeConfigSpec.BooleanValue SOUND_DISTANCE_CULLING;
+    private static final ForgeConfigSpec.BooleanValue SOUND_CHANNEL_CULLING;
+    private static final ForgeConfigSpec.BooleanValue SKY_ANGLE_CACHING;
     private static final ForgeConfigSpec.BooleanValue GPU_ENTITY_MODELS;
     private static final ForgeConfigSpec.BooleanValue GPU_PARTICLES;
     private static final ForgeConfigSpec.BooleanValue GPU_ENTITY_MODELS_WITH_SHADERS;
@@ -82,6 +85,7 @@ public final class ClientOptimizationConfig {
     private static final ForgeConfigSpec.IntValue VERTICAL_SECTION_DISTANCE;
     private static final ForgeConfigSpec.BooleanValue HORIZONTAL_SECTION_CULLING;
     private static final ForgeConfigSpec.IntValue HORIZONTAL_SECTION_DISTANCE;
+    private static final ForgeConfigSpec.BooleanValue ANGLE_SECTION_OCCLUSION;
     private static final ForgeConfigSpec.BooleanValue CREATE_EMPTY_BUFFER_FLUSH_SKIP;
     private static final ForgeConfigSpec.BooleanValue CREATE_BLOCK_ENTITY_CULLING;
     private static final ForgeConfigSpec.BooleanValue CREATE_ACTOR_CULLING;
@@ -116,6 +120,9 @@ public final class ClientOptimizationConfig {
     public static volatile boolean particleTickCompaction = true;
     public static volatile boolean particleSharedRandom = true;
     public static volatile boolean particleProviderCache = true;
+    public static volatile boolean soundDistanceCulling = true;
+    public static volatile boolean soundChannelCulling = true;
+    public static volatile boolean skyAngleCaching = true;
     public static volatile boolean gpuEntityModels = false;
     public static volatile boolean gpuParticles = false;
     public static volatile boolean gpuEntityModelsWithShaders = false;
@@ -135,6 +142,7 @@ public final class ClientOptimizationConfig {
     public static volatile int verticalSectionDistance = 12;
     public static volatile boolean horizontalSectionCulling = false;
     public static volatile int horizontalSectionDistance = 24;
+    public static volatile boolean angleSectionOcclusion = true;
     public static volatile boolean createEmptyBufferFlushSkip = true;
     public static volatile boolean createBlockEntityCulling = true;
     public static volatile boolean createActorCulling = true;
@@ -190,6 +198,9 @@ public final class ClientOptimizationConfig {
         PARTICLE_TICK_COMPACTION = fastPaths.particleTickCompaction;
         PARTICLE_SHARED_RANDOM = fastPaths.particleSharedRandom;
         PARTICLE_PROVIDER_CACHE = fastPaths.particleProviderCache;
+        SOUND_DISTANCE_CULLING = fastPaths.soundDistanceCulling;
+        SOUND_CHANNEL_CULLING = fastPaths.soundChannelCulling;
+        SKY_ANGLE_CACHING = fastPaths.skyAngleCaching;
         GpuSpec gpu = new GpuSpec(builder);
         GPU_ENTITY_MODELS = gpu.gpuEntityModels;
         GPU_PARTICLES = gpu.gpuParticles;
@@ -218,6 +229,7 @@ public final class ClientOptimizationConfig {
         VERTICAL_SECTION_DISTANCE = culling.verticalSectionDistance;
         HORIZONTAL_SECTION_CULLING = culling.horizontalSectionCulling;
         HORIZONTAL_SECTION_DISTANCE = culling.horizontalSectionDistance;
+        ANGLE_SECTION_OCCLUSION = culling.angleSectionOcclusion;
 
         CreateSpec create = new CreateSpec(builder);
         CREATE_EMPTY_BUFFER_FLUSH_SKIP = create.createEmptyBufferFlushSkip;
@@ -580,6 +592,9 @@ public final class ClientOptimizationConfig {
         particleTickCompaction = PARTICLE_TICK_COMPACTION.get();
         particleSharedRandom = PARTICLE_SHARED_RANDOM.get();
         particleProviderCache = PARTICLE_PROVIDER_CACHE.get();
+        soundDistanceCulling = SOUND_DISTANCE_CULLING.get();
+        soundChannelCulling = SOUND_CHANNEL_CULLING.get();
+        skyAngleCaching = SKY_ANGLE_CACHING.get();
         gpuEntityModels = GPU_ENTITY_MODELS.get();
         gpuParticles = GPU_PARTICLES.get();
         gpuEntityModelsWithShaders = GPU_ENTITY_MODELS_WITH_SHADERS.get();
@@ -599,6 +614,7 @@ public final class ClientOptimizationConfig {
         verticalSectionDistance = VERTICAL_SECTION_DISTANCE.get();
         horizontalSectionCulling = HORIZONTAL_SECTION_CULLING.get();
         horizontalSectionDistance = HORIZONTAL_SECTION_DISTANCE.get();
+        angleSectionOcclusion = ANGLE_SECTION_OCCLUSION.get();
         createEmptyBufferFlushSkip = CREATE_EMPTY_BUFFER_FLUSH_SKIP.get();
         createBlockEntityCulling = CREATE_BLOCK_ENTITY_CULLING.get();
         createActorCulling = CREATE_ACTOR_CULLING.get();

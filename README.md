@@ -119,8 +119,9 @@ This work is especially relevant to chunk rebuild tint and lighting calls.
 ### Crowded entity areas
 
 The server is authoritative for movement, pushing, and suffocation. VRO skips
-the duplicate client-side wall checks and living-entity push calculation. This
-reduces CPU work around dense mob farms, spawners, and rapid kill systems.
+the duplicate client-side wall checks and non-player living-entity push scans
+(keeping `LocalPlayer` on vanilla pushback). This reduces CPU work around dense
+mob farms, spawners, and rapid kill systems.
 
 The feature disables itself when Entity Collision FPS Fix is installed.
 
@@ -319,9 +320,9 @@ pack-level summary and test controls.
 | Forge | `40.3.11+` in the Forge 40.x line |
 | Java bytecode | Java 17 |
 | Environment | Client |
-| Vault Hunters official | `3.21.6.6884` |
-| Vault Hunters Remastered | `20.0.3-remastered` |
-| Wolds Vaults | Pack `0.32.2` / Vault `3.21.5.6573` |
+| Vault Hunters official | `3.21.6.6884` and `3.22.0.7210` |
+| Vault Hunters Remastered | `20.0.3-remastered`, `22.0.0-remastered.7209`, and `22.0.1-remastered.7237` |
+| Wolds Vaults | Packs `0.32.2` (`3.21.5.6573`) and `0.34.2` (`3.21.6.6884`) |
 | Custom compatibility target | Vault `3.21.62` |
 
 Vault Hunters is an optional integration rather than a hard loading

@@ -7,6 +7,7 @@ import java.lang.invoke.MethodType;
 import java.util.Locale;
 import java.util.Random;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.multiplayer.ClientPacketListener;
 import net.minecraft.core.Registry;
 import net.minecraft.core.particles.ParticleOptions;
@@ -27,7 +28,10 @@ public final class ParticleStress {
     public enum Kind { NOVA, FROST }
 
     private static final Random POSITIONS = new Random(1600);
-    private static MethodHandle novaSpawn;
+    private static MethodHandle legacyNovaSpawn;
+    private static MethodHandle vault22IsClassic;
+    private static MethodHandle vault22ClassicFireNova;
+    private static MethodHandle vault22ModernFireNova;
     private static boolean novaResolved;
 
     private static Kind kind;
@@ -44,8 +48,8 @@ public final class ParticleStress {
         if (Minecraft.getInstance().level == null || Minecraft.getInstance().player == null) {
             return "no world is loaded";
         }
-        if (requested == Kind.NOVA && novaSpawner() == null) {
-            return "Vault's NovaParticleMessage.spawnParticles is not available";
+        if (requested == Kind.NOVA && !hasNovaSpawner()) {
+            return "Vault's Nova particle spawner is not available";
         }
         if (requested == Kind.FROST && particle(ModIds.THE_VAULT, "nova_speed") == null) {
             return "the_vault:nova_speed is not registered";
@@ -86,16 +90,29 @@ public final class ParticleStress {
         for (int i = 0; i < casts; i++) {
             // Casters stand within 6 blocks of the player, as in a crowded vault room.
             Vec3 at = feet.add(POSITIONS.nextDouble() * 12 - 6, 0, POSITIONS.nextDouble() * 12 - 6);
-            if (kind == Kind.NOVA) castNova(at);
+            if (kind == Kind.NOVA) castNova(minecraft.level, at);
             else castFrost(minecraft.getConnection(), at);
             castsDone++;
         }
     }
 
-    private static void castNova(Vec3 at) {
+    private static void castNova(ClientLevel level, Vec3 at) {
         try {
             // NovaAbility sends the caster position raised by 0.15.
-            novaSpawner().invokeExact(at.add(0, 0.15, 0), radius);
+            Vec3 origin = at.add(0, 0.15, 0);
+            resolveNovaSpawner();
+            if (legacyNovaSpawn != null) {
+                legacyNovaSpawn.invokeExact(origin, radius);
+            } else if (vault22ClassicFireNova != null && vault22ModernFireNova != null) {
+                boolean classic = vault22IsClassic != null && (boolean) vault22IsClassic.invokeExact();
+                if (classic) {
+                    vault22ClassicFireNova.invokeExact(level, origin, radius);
+                } else {
+                    vault22ModernFireNova.invokeExact(level, origin, radius);
+                }
+            } else {
+                ticksLeft = 0;
+            }
         } catch (Throwable failure) {
             ticksLeft = 0;
             throw new IllegalStateException("Nova stress spawn failed", failure);
@@ -117,17 +134,40 @@ public final class ParticleStress {
         return type instanceof ParticleOptions ? type : null;
     }
 
-    private static MethodHandle novaSpawner() {
-        if (!novaResolved) {
-            novaResolved = true;
-            try {
-                Class<?> message = Class.forName("iskallia.vault.network.message.NovaParticleMessage");
-                novaSpawn = MethodHandles.publicLookup().findStatic(message, "spawnParticles",
-                        MethodType.methodType(void.class, Vec3.class, float.class));
-            } catch (ReflectiveOperationException | LinkageError failure) {
-                novaSpawn = null;
-            }
+    private static boolean hasNovaSpawner() {
+        resolveNovaSpawner();
+        return legacyNovaSpawn != null || (vault22ClassicFireNova != null && vault22ModernFireNova != null);
+    }
+
+    private static void resolveNovaSpawner() {
+        if (novaResolved) {
+            return;
         }
-        return novaSpawn;
+        novaResolved = true;
+        MethodHandles.Lookup lookup = MethodHandles.publicLookup();
+        try {
+            Class<?> message = Class.forName("iskallia.vault.network.message.NovaParticleMessage");
+            legacyNovaSpawn = lookup.findStatic(message, "spawnParticles",
+                    MethodType.methodType(void.class, Vec3.class, float.class));
+            return;
+        } catch (ReflectiveOperationException | LinkageError ignored) {
+            legacyNovaSpawn = null;
+        }
+        try {
+            Class<?> classic = Class.forName("iskallia.vault.client.particles.ClassicAbilityParticles");
+            Class<?> modern = Class.forName("iskallia.vault.client.particles.NovaWaveParticles");
+            MethodType spawnType = MethodType.methodType(void.class, ClientLevel.class, Vec3.class, float.class);
+            vault22ClassicFireNova = lookup.findStatic(classic, "spawnFireNova", spawnType);
+            vault22ModernFireNova = lookup.findStatic(modern, "spawnFireNova", spawnType);
+            try {
+                vault22IsClassic = lookup.findStatic(classic, "isClassic", MethodType.methodType(boolean.class));
+            } catch (ReflectiveOperationException | LinkageError ignored) {
+                vault22IsClassic = null;
+            }
+        } catch (ReflectiveOperationException | LinkageError failure) {
+            vault22ClassicFireNova = null;
+            vault22ModernFireNova = null;
+            vault22IsClassic = null;
+        }
     }
 }

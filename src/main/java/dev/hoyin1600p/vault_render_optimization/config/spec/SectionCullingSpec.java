@@ -10,6 +10,7 @@ public final class SectionCullingSpec {
     public final ForgeConfigSpec.IntValue verticalSectionDistance;
     public final ForgeConfigSpec.BooleanValue horizontalSectionCulling;
     public final ForgeConfigSpec.IntValue horizontalSectionDistance;
+    public final ForgeConfigSpec.BooleanValue angleSectionOcclusion;
 
     public SectionCullingSpec(ForgeConfigSpec.Builder builder) {
         builder.push(ConfigSections.SECTION_DISTANCE_CULLING);
@@ -31,6 +32,13 @@ public final class SectionCullingSpec {
         this.horizontalSectionDistance = builder
                 .comment("Horizontal terrain radius in 16-block sections when enabled.")
                 .defineInRange("horizontal_distance", 24, 1, 64);
+        this.angleSectionOcclusion = builder
+                .comment(
+                        "On validated Embeddium builds, mask opposing-face chunk visibility paths that are",
+                        "geometrically unreachable from the perspective camera angle (Sodium PR #2811 / Flerovium).",
+                        "Zero visual difference; skipped in spectator mode, Oculus shadow passes and Compare Mode."
+                )
+                .define(ConfigKeys.ANGLE_SECTION_OCCLUSION, true);
         builder.pop();
     }
 }

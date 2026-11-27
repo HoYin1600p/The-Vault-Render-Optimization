@@ -5,7 +5,45 @@ All notable changes to The Vault Render Optimization are recorded here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [1.0.1] - 2026-11-27
+
+Vault 22.0.x compatibility handoffs, GPU animated-item and edge-case fixes, plus new CPU/terrain/HUD/audio FPS optimizations.
+See [1.0.1 release notes](docs/releases/1.0.1.md) for the complete `v1.0.0...v1.0.1` technical diff, settings table, and verification summary.
+
+### Added
+
+- **Angle-based chunk section visibility path occlusion (`section_distance_culling.angle_section_occlusion`, default on, hot-configurable):** masks geometrically impossible opposing-face BFS paths through Embeddium `0.3.18`/`0.3.19` chunk sections, reducing rendered terrain sections without visual change. Yields to Flerovium and automatically skips spectator mode, Compare Mode, and Oculus orthographic shadow passes (`ShadowRenderer.ACTIVE`).
+- **Built-in ImmediatelyFast upgrades (from upstream `1.20` `e91270df`, skipped when standalone ImmediatelyFast is installed):**
+  - `MixinVertexBuffer` now preserves `GL_STATIC_DRAW` vertex buffers instead of converting them to `GL_DYNAMIC_DRAW` + `glBufferSubData`.
+  - Added `@Pseudo` `MixinItemBorders` to batch `ItemBorders`/`ModdedItemBorders` slot-border fills when no outer HUD fill batch is active.
+- **Sound engine distance and static-channel culling (`render_fast_paths.sound_distance_culling`, `render_fast_paths.sound_channel_culling`, default on, hot-configurable, adapted from Flerovium `512e0307`):** cancels non-streaming sounds when OpenAL static channels are saturated and skips non-relative, non-looping, non-tickable linearly attenuated sounds beyond audible range plus a 4-block margin of all active listener positions (OpenAL listener, main camera, and player eye position, preventing teleport/elevator sound loss); yields to Flerovium.
+- **Sky-angle caching (`render_fast_paths.sky_angle_caching`, default on, hot-configurable, informed by BadOptimizations `3.0.0`):** reuses `ClientLevel.getTimeOfDay` across both calls in `LevelRenderer.renderSky`; yields to BadOptimizations.
+- **Internal hot-path cleanups:** skips Sophisticated Storage `LimitedBarrelRenderer.renderFillLevels` when the barrel's front display is already culled, skips `setup(shader)` on empty render layers in Create's `SectionedContraptionRenderer`, and replaces `synchronized` hot-path reads in `FlywheelShaderCompatState` with lock-free `volatile` reads.
+
+### Changed
+
+- The cached Vault event listener dispatch (biome colours, dimension effects, ambient light and level-render events) now stays off on The Vault 22.0.0 and later, which caches its listeners itself, so Vault's own code runs there. Older Vault builds keep VRO's cache as before. Detection reads Vault's `Event` class, not its version number.
+- The Vault 22.0.0 build 7209 and 3.22.0 build 7210 ship five more of VRO's fixes themselves: the learned-ability list cache, tool model and gear lookups in the tool renderer, the armour texture cache, one armour layer factory per model, and skipping the item drawn inside spawners. On those builds VRO's versions stay off and Vault's code runs; older Vault builds keep VRO's fixes. Each check reads the Vault class that carries the fix, not the version number, and the log lists the fixes VRO left to Vault.
+- The Vault 22.0.1 build 7237 also ships the empty-`ItemStack` entity-reference fix (`MixinItemStack.keepEmptyStacksFreeOfEntityLinks`), so VRO's `EmptyItemStackEntityReferenceMixin` stays off on 7237 and leaves it to Vault while older Vault builds keep VRO's version.
+- `/vro particles stress nova` now supports Vault 22.x's `ClassicAbilityParticles` and `NovaWaveParticles` alongside legacy `NovaParticleMessage`.
+
+### Fixed
+
+- With GPU items on, animated item textures (and animated block models shown by block entities) could stop
+  animating under Embeddium or Rubidium's "Animate Only Visible Textures", because VRO drew them without marking
+  their textures as drawn. VRO now marks them, as the renderer does.
+- Sophisticated Storage front-display culling (`BarrelFrontVisibility`) now skips culling when a barrel is rendered
+  in a virtual or contraption world (such as Create contraptions) rather than the active client level, preventing
+  barrel displays from disappearing due to mismatched world-space camera coordinates.
+- Client-side entity collision optimization (`ClientLivingEntityCollisionMixin`) now excludes `LocalPlayer` from
+  canceling `pushEntities()`, so the player retains vanilla mob pushback while non-player mobs continue skipping
+  redundant client-side push scans.
+- Pre-release validation fixes included in `1.0.1`:
+  - Sound distance culling checks OpenAL listener, main camera, and `player.getEyePosition()` with a 4-block safety
+    margin and skips all `TickableSoundInstance`s so teleport sounds (such as Elevator blocks) are never muted when
+    packets arrive before the next rendered frame updates the listener.
+  - Dropped the planned zero-effect FOV modifier shortcut (`AbstractClientPlayerFovMixin`) so zoom mods such as
+    JustZoom remain unaffected when Minecraft's `FOV Effects` setting is `0%`.
 
 ## [1.0.0] - 2026-10-05
 

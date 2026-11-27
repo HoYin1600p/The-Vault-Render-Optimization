@@ -126,6 +126,7 @@ public final class ConfigSettingCatalog {
         toml(settings, Category.CHUNKS, "vertical_distance", ConfigSections.SECTION_DISTANCE_CULLING, false);
         toml(settings, Category.CHUNKS, ConfigKeys.HORIZONTAL_ENABLED, ConfigSections.SECTION_DISTANCE_CULLING, false);
         toml(settings, Category.CHUNKS, "horizontal_distance", ConfigSections.SECTION_DISTANCE_CULLING, false);
+        toml(settings, Category.CHUNKS, ConfigKeys.ANGLE_SECTION_OCCLUSION, ConfigSections.SECTION_DISTANCE_CULLING, false);
 
         // Entities & particles.
         toml(settings, Category.ENTITIES, ConfigKeys.PARTICLE_COLLISION_CACHE, ConfigSections.RENDER_FAST_PATHS, false);
@@ -138,6 +139,8 @@ public final class ConfigSettingCatalog {
         toml(settings, Category.ENTITIES, ConfigKeys.PARTICLE_SHARED_RANDOM, ConfigSections.RENDER_FAST_PATHS, false);
         toml(settings, Category.ENTITIES, ConfigKeys.PARTICLE_PROVIDER_CACHE, ConfigSections.RENDER_FAST_PATHS, false);
         toml(settings, Category.ENTITIES, ConfigKeys.ALLOCATION_FREE_FRUSTUM, ConfigSections.RENDER_FAST_PATHS, false);
+        toml(settings, Category.ENTITIES, ConfigKeys.SOUND_DISTANCE_CULLING, ConfigSections.RENDER_FAST_PATHS, false);
+        toml(settings, Category.ENTITIES, ConfigKeys.SOUND_CHANNEL_CULLING, ConfigSections.RENDER_FAST_PATHS, false);
         toml(settings, Category.ENTITIES, "entity_renderer_cache", ConfigSections.RENDERER_LOOKUP_CACHES, false);
         toml(settings, Category.ENTITIES, "block_entity_renderer_cache", ConfigSections.RENDERER_LOOKUP_CACHES, false);
 
@@ -147,6 +150,7 @@ public final class ConfigSettingCatalog {
                 value -> ClientOptimizationConfig.setHudTextGeometry((Boolean) value)));
         toml(settings, Category.INTERFACE, "skip_empty_toast_render", ConfigSections.RENDER_FAST_PATHS, false);
         toml(settings, Category.INTERFACE, "skip_empty_debug_render", ConfigSections.RENDER_FAST_PATHS, false);
+        toml(settings, Category.INTERFACE, ConfigKeys.SKY_ANGLE_CACHING, ConfigSections.RENDER_FAST_PATHS, false);
         toml(settings, Category.INTERFACE, "skip_inactive_tutorial", ConfigSections.CLIENT_TICK_FAST_PATHS, false);
 
         // Mod compatibility: Farsight, Fastload, Create, Sophisticated Storage, ModernFix, Embeddium.

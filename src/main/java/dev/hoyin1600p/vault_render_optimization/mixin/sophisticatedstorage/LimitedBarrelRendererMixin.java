@@ -103,6 +103,10 @@ public abstract class LimitedBarrelRendererMixin {
             int packedOverlay,
             CallbackInfo ci
     ) {
+        if (!vro$frontDisplayVisible) {
+            ci.cancel();
+            return;
+        }
         if (ClientOptimizationConfig.optimizationsEnabled()
                 && ClientOptimizationConfig.sophisticatedStorageFillFastPath) {
             LimitedBarrelFillRenderer.render(barrel, poseStack, bufferSource, packedLight, packedOverlay);

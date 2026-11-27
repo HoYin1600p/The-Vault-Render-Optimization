@@ -24,11 +24,13 @@ The original fork remains untouched until every removal gate passes.
 
 - Source: [ImmediatelyFast Reforged](https://github.com/CCr4ft3r/ImmediatelyFastReforged), branch
   `1.18.2`, commit `53d41ab0` (1.1.10); upstream [ImmediatelyFast](https://github.com/RaphiMC/ImmediatelyFast)
+  (selected `1.20` backports inspected at `e91270df6a2727f01701aa39e62ec1baeb126fb5`)
 - License: LGPL-3.0-or-later
 
-VRO ships this code as its built-in ImmediatelyFast: immediate-mode batching, HUD batching, fast
-text lookup, font atlas resizing, map atlas generation and buffer-upload reuse. It steps aside
-completely when the standalone mod is installed. See `THIRD_PARTY_NOTICES.md`.
+VRO ships this code as its built-in ImmediatelyFast: immediate-mode batching, HUD batching
+(including ItemBorders slot-border fill batching), fast text lookup, font atlas resizing,
+map atlas generation and buffer-upload reuse (preserving `GL_STATIC_DRAW` buffers). It steps
+aside completely when the standalone mod is installed. See `THIRD_PARTY_NOTICES.md`.
 
 ### Accelerated Rendering - Argon4W
 
@@ -63,18 +65,18 @@ text is retained in the repository and runnable jar.
 ### Flerovium - MoePus and contributors
 
 - Source: [MoePus/Flerovium](https://github.com/MoePus/Flerovium)
-- Adapted source revision: `240f08c62745d57bf200440c9932e0c7907bc5f7`
-- Adapted source path:
-  `src/main/java/com/moepus/flerovium/mixins/Particle/SingleQuadParticleMixin.java`
+- Adapted source revisions:
+  - `240f08c62745d57bf200440c9932e0c7907bc5f7` (`Particle/SingleQuadParticleMixin.java`)
+  - `512e03074126ebdc2920b5197c4e8526bf2eedcf` (`Sound/SoundEngineMixin.java`, `Sound/ClientLevelMixin.java`, and `Chunk/OcclusionCullerMixin.java` concept alongside Sodium PR #2811)
 - License: LGPL-3.0-only
 
-VRO adapts Flerovium's camera-left/up particle billboard calculation, which
-avoids rotating four separate corners with a quaternion. VRO isolates the
-calculation in a reusable allocation-free geometry helper, adds a portable
-Minecraft writer, reuses Rubidium/Embeddium's packed particle writer when it
-is installed, and supplies hot ownership/configuration and diagnostics.
-Flerovium remains the owner when installed, preventing duplicate output. The
-complete upstream LGPL text is retained in the repository and runnable jar.
+VRO adapts Flerovium's camera-left/up particle billboard calculation (which avoids rotating four
+separate corners with a quaternion), sound distance and saturated static-channel culling, and
+angle-based chunk section visibility path occlusion for Embeddium 0.3.18/0.3.19 (with Oculus
+orthographic shadow-pass bypass). VRO isolates the geometry and decision logic in reusable
+helpers with hot configuration, Compare Mode, and diagnostics. Flerovium remains the owner when
+installed, preventing duplicate execution. The complete upstream LGPL text is retained in the
+repository and runnable jar.
 
 ### Forge Update Notifier - HoYin1600p
 
@@ -187,10 +189,10 @@ particle limits.
 ### BadOptimizations - Thosea
 
 - Source: [imthosea/BadOptimizations](https://github.com/imthosea/BadOptimizations)
-- Inspected revision: `5de4a3ad4299909178d8995dc0bc80626be48d44`
-- License observed during research: MIT
+- Inspected revisions: `5de4a3ad4299909178d8995dc0bc80626be48d44` (MIT) and `3.0.0` / `b464270c9fff1519bdb070525de1616cbb2aaf4a` (ISC)
 
-BadOptimizations informed empty-work exits and stable renderer lookup caching.
+BadOptimizations informed empty-work exits, stable renderer lookup caching,
+and single-frame sky-angle reuse inside `LevelRenderer.renderSky`.
 VRO's Forge 1.18.2 implementations use separate classes, configuration,
 resource-reload invalidation, and mod-coexistence gates. Shader-sensitive
 lightmap and sky-color caches were deliberately rejected.

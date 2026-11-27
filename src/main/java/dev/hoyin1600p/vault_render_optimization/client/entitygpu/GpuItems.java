@@ -20,6 +20,7 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.entity.ItemRenderer;
+import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.world.item.ItemStack;
 
 /**
@@ -39,12 +40,15 @@ public final class GpuItems {
         final BakedQuad[] quads;
         final ItemMesh mesh;
         final int first;
+        // Distinct sprites of the list, marked as drawn for Embeddium's animation tracking.
+        final TextureAtlasSprite[] sprites;
 
         Entry(int generation, BakedQuad[] quads, ItemMesh mesh, int first) {
             this.generation = generation;
             this.quads = quads;
             this.mesh = mesh;
             this.first = first;
+            this.sprites = distinctSprites(quads);
         }
 
         boolean gpu() {
@@ -154,9 +158,27 @@ public final class GpuItems {
             }
             start = end;
         }
+        // Embeddium's overwrite marks these while writing the quads; it no longer runs for this list.
+        if (embeddium) EmbeddiumSpriteTracking.markActive(entry.sprites);
         LISTS_GPU.incrementAndGet();
         QUADS_GPU.addAndGet(count);
         return true;
+    }
+
+    /** Each sprite once, in first-use order; a null sprite (a malformed model) is skipped. */
+    static TextureAtlasSprite[] distinctSprites(BakedQuad[] quads) {
+        TextureAtlasSprite[] found = new TextureAtlasSprite[quads.length];
+        int size = 0;
+        outer:
+        for (BakedQuad quad : quads) {
+            TextureAtlasSprite sprite = quad.getSprite();
+            if (sprite == null) continue;
+            for (int i = 0; i < size; i++) {
+                if (found[i] == sprite) continue outer;
+            }
+            found[size++] = sprite;
+        }
+        return Arrays.copyOf(found, size);
     }
 
     /** {@code ItemColors} ARGB to the ABGR word the writers pack (tint alpha is ignored, written as 255). */

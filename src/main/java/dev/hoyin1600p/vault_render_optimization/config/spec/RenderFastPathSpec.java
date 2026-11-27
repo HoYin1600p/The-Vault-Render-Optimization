@@ -19,6 +19,9 @@ public final class RenderFastPathSpec {
     public final ForgeConfigSpec.BooleanValue particleTickCompaction;
     public final ForgeConfigSpec.BooleanValue particleSharedRandom;
     public final ForgeConfigSpec.BooleanValue particleProviderCache;
+    public final ForgeConfigSpec.BooleanValue soundDistanceCulling;
+    public final ForgeConfigSpec.BooleanValue soundChannelCulling;
+    public final ForgeConfigSpec.BooleanValue skyAngleCaching;
 
     public RenderFastPathSpec(ForgeConfigSpec.Builder builder) {
         this.hudTextGeometry = builder.comment(
@@ -84,5 +87,17 @@ public final class RenderFastPathSpec {
                 "Resolve each particle type's provider once instead of a registry key plus hash lookup per spawn.",
                 "Invalidated whenever a provider is registered. Returns exactly the provider vanilla would."
         ).define(ConfigKeys.PARTICLE_PROVIDER_CACHE, true);
+        this.soundDistanceCulling = builder.comment(
+                "Skip playing non-relative, non-looping linearly attenuated sounds beyond their audible range.",
+                "Yields to Flerovium. No audible difference; Compare Mode disables this optimization."
+        ).define(ConfigKeys.SOUND_DISTANCE_CULLING, true);
+        this.soundChannelCulling = builder.comment(
+                "Skip non-streaming sound setup when all OpenAL static sound channels are already in use.",
+                "Yields to Flerovium. Helps during heavy Nova and mob-farm sound bursts."
+        ).define(ConfigKeys.SOUND_CHANNEL_CULLING, true);
+        this.skyAngleCaching = builder.comment(
+                "Cache ClientLevel.getTimeOfDay across calls within a single sky render pass.",
+                "Yields to BadOptimizations. Same visual output with or without shaders."
+        ).define(ConfigKeys.SKY_ANGLE_CACHING, true);
     }
 }
